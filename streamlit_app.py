@@ -216,7 +216,7 @@ if uploaded and restaurant_input:
         data_dict = load_data(uploaded)
 
         # --- 1. Affichage du graphique en barre ---
-        col_viz, col_edit = st.columns([1, 1])
+        col_viz, col_edit = st.columns([1, 2])
 
         with col_viz:
             st.subheader("📊 Fatturato Mensile")
