@@ -88,7 +88,7 @@ def draw_full_report(d, restaurant_name, analysis_text):
 st.title("Rapport Fizzy Automatizzazione ⚡️")
 
 # Sidebar
-restaurant_input = st.sidebar.text_input("Nom du Restaurant *",  default_text ="A'RICCIONE - TERRAZZA")
+restaurant_input = st.sidebar.text_input("Nom du Restaurant *", value="A'RICCIONE - TERRAZZA")
 uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
 
 if uploaded and restaurant_input:
@@ -109,9 +109,21 @@ if uploaded and restaurant_input:
 
     with col_edit:
         st.subheader("✍️ Analyse Narrative")
-        # Le texte que l'utilisateur rédige sera envoyé dans l'image finale
-        default_text = "Dal confronto con lo stesso periodo dell'anno precedente\nemerge che, il fatturato registra un incremento\nsignificativo rispetto al 2024."
-        user_text = st.text_area("Rédigez ici (utilisez Entrée pour les sauts de ligne) :", value=default_text, height=200)
+        
+        # On crée un texte par défaut qui utilise les vraies données du fichier
+        # On utilise f-string pour insérer le mois et le pourcentage automatiquement
+        auto_text = (
+            f"Dal confronto con lo stesso periodo dell'anno precedente emerge che, "
+            f"a {data_dict['month']}, il fatturato registra un "
+            f"{'incremento' if data_dict['diff_fatturato'] > 0 else 'calo'} "
+            f"del {abs(data_dict['diff_fatturato'])}% rispetto au 2024."
+        )
+        
+        user_text = st.text_area(
+            "Rédigez ici (le texte sera intégré à l'image) :", 
+            value=auto_text, 
+            height=200
+        )
 
     st.divider()
 
