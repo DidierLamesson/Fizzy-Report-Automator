@@ -3,7 +3,41 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
-import altair as alt
+import locale
+
+# Essayer de mettre le programme en italien (dépend de votre système)
+try:
+    locale.setlocale(locale.LC_TIME, "it_IT.UTF-8")
+except:
+    pass # Si le système ne supporte pas, on gérera la traduction manuellement
+
+def load_data(file):
+    df = pd.read_excel(file, sheet_name='Dati report', header=None)
+    raw_date = df.iloc[4, 2] # La case C5 (index 4, 2)
+    
+    # Si c'est une date Excel, on extrait le mois en italien et l'année
+    if hasattr(raw_date, 'strftime'):
+        mes_it = raw_date.strftime('%B').capitalize() # ex: Dicembre
+        anno_n = raw_date.year                         # ex: 2025
+    else:
+        # Si la case est du texte, on essaie de deviner (fallback)
+        mes_it = str(raw_date).split()[0]
+        anno_n = 2025 
+
+    return {
+        "month_name": mes_it,
+        "year_n": anno_n,
+        "year_n_1": anno_n - 1,
+        "full_date_n": f"{mes_it} {anno_n}",
+        "full_date_n_1": f"{mes_it} {anno_n - 1}",
+        "fatturato_n": clean_val(df.iloc[8, 2]),
+        "fatturato_n_1": clean_val(df.iloc[9, 2]),
+        "diff_fatturato": round(clean_val(df.iloc[8, 3]) * 100, 1),
+        "ric_cost_n": clean_val(df.iloc[12, 2]),
+        "ric_cost_n_1": clean_val(df.iloc[13, 2]),
+        "marg_n": round(clean_val(df.iloc[16, 2]) * 100, 1),
+        "marg_n_1": round(clean_val(df.iloc[17, 2]) * 100, 1),
+    }
 
 # --- 1. CONFIGURATION & DESIGN ---
 st.set_page_config(page_title="FIZZY Automator", layout="wide")
@@ -104,38 +138,26 @@ if uploaded and restaurant_input:
     with col_viz:
         st.subheader("📊 Aperçu des données")
         
-        # --- PRÉPARATION DES LABELS DYNAMIQUES ---
-        # Mois actuel (ex: Novembre 2025)
-        label_n = data_dict['month'] 
+        # --- RÉCUPÉRATION DES VARIABLES ---
+        label_n = data_dict['full_date_n']     # ex: Dicembre 2025
+        label_n_1 = data_dict['full_date_n_1'] # ex: Dicembre 2024
         
-        # Calcul du mois N-1 (ex: Novembre 2024)
-        # On remplace simplement l'année dans la chaîne de caractères
-        if "2025" in label_n:
-            label_n_1 = label_n.replace("2025", "2024")
-        else:
-            # Sécurité si l'année n'est pas 2025
-            label_n_1 = "Année Précédente (N-1)"
+        # --- VARIATION NOMINALE ---
+        diff_euro = data_dict['fatturato_n'] - data_dict['fatturato_n_1']
+        st.write(f"### Variation : **{int(diff_euro):,} €**".replace(",", " "))
 
-        # --- AFFICHAGE DE LA VARIATION AU-DESSUS ---
-        variation_nominale = data_dict['fatturato_n'] - data_dict['fatturato_n_1']
-        suffixe = "↗︎" if variation_nominale > 0 else "↘︎"
-        
-        # Style pour mettre en avant la variation nominale
-        st.markdown(f"### Variation : **{int(variation_nominale):,} €** {suffixe}".replace(",", " "))
-
-        # --- DONNÉES DU GRAPHIQUE ---
+        # --- GRAPHIQUE NATIF ---
         chart_data = pd.DataFrame({
-            "Mois": [label_n, label_n_1],
+            "Periodo": [label_n, label_n_1],
             "Fatturato (€)": [data_dict["fatturato_n"], data_dict["fatturato_n_1"]]
-        }).set_index("Mois")
+        }).set_index("Periodo")
 
-        # Affichage du graphique natif
-        st.bar_chart(chart_data, color="#918d84") # Utilise votre gris FIZZY [cite: 5, 7]
+        st.bar_chart(chart_data, color="#918d84")
         
-        # Rappel des metrics en bas pour la précision
+        # --- METRICS ---
         c1, c2 = st.columns(2)
         c1.metric(label_n, f"{int(data_dict['fatturato_n']):,}".replace(",", " ") + " €")
-        c2.metric("Variation %", f"{data_dict['diff_fatturato']}%")
+        c2.metric(f"vs {data_dict['year_n_1']}", f"{data_dict['diff_fatturato']}%")
 
     with col_edit:
         st.subheader("✍️ Analyse Narrative")
