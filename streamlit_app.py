@@ -68,7 +68,7 @@ def draw_full_report(d, restaurant_name):
     # Titre principal 
     ax_main.text(0.5, 0.89, "Report Mensile", color=COLORS["white"], fontsize=32, ha='center', fontfamily='serif', fontstyle='italic')
     
-    # Sous-titre dynamique (Correction ici : suppression de letterspacing)
+    # Sous-titre dynamique
     ax_main.text(0.5, 0.86, f"{restaurant_name.upper()}", color=COLORS["white"], fontsize=16, ha='center', fontweight='light')
     
     # Date du rapport
@@ -76,7 +76,7 @@ def draw_full_report(d, restaurant_name):
 
     # --- ZONE B : GRAPHIQUE COMPARATIF (y: 0.55 à 0.80) ---
     # Placement précis du graphique dans sa boîte
-    ax_bar = fig.add_axes([0.15, 0.58, 0.7, 0.20], facecolor=COLORS["bg"])
+    ax_bar = fig.add_axes([0.15, 0.58, 0.35, 0.20], facecolor=COLORS["bg"])
     
     valores = [d["fatturato_n"], d["fatturato_n_1"]]
     positions = [0, 1]
