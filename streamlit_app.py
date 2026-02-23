@@ -255,7 +255,7 @@ if uploaded and restaurant_input:
         bars = ax.bar(
             x,
             values,
-            width=0.9,
+            width=1,
             color=[COLORS["graph1"], COLORS["graph2"]],
             alpha=1.0,
             zorder=3   # ← au-dessus de la grid
@@ -272,7 +272,7 @@ if uploaded and restaurant_input:
                 fontproperties=epilogue_font,
                 fontsize=18,
                 color=COLORS["white"],
-                fontweight="bold"
+                fontweight=800
             )
 
         # Axe X
