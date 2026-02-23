@@ -215,6 +215,9 @@ uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
 if uploaded and restaurant_input:
     data_dict = load_data(uploaded)
 
+    # --- 1. Affichage du graphique en barre ---
+    col_viz, col_edit = st.columns([1, 1])
+
     # --- GRAPH FATTURATO MENSILE ---
 
 st.subheader("📊 Fatturato Mensile")
