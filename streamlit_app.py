@@ -175,6 +175,10 @@ def load_data(file):
         "graph_cost_dates": graph_cost_dates,
         "graph_cost_dates_n_1": graph_cost_dates_n_1,
 
+        # Fatturato Mensile
+        "fatturato_mensile_n": fatturato_mensile_n,
+        "fatturato_mensile_n_1": fatturato_mensile_n_1,
+
         # Food Cost
         "food_cost_monthly_n": food_cost_monthly_n,
         "food_cost_monthly_n_1": food_cost_monthly_n_1,
