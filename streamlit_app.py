@@ -33,16 +33,25 @@ def load_data(file):
     # Lecture de l'onglet 'Dati report'
     df = pd.read_excel(file, sheet_name='Dati report', header=None)
     
-    # On va chercher les valeurs en sécurisant les types
+    # Récupération du mois en C5 (index 4, 2)
+    raw_month = df.iloc[4, 2]
+    
+    # Si c'est une date Python/Excel, on la formate, sinon on prend le texte tel quel
+    if hasattr(raw_month, 'strftime'):
+        formatted_month = raw_month.strftime('%B %Y')
+    else:
+        formatted_month = str(raw_month)
+
+    # On va chercher les autres valeurs
     data = {
-        "month": "Novembre 2025", 
-        "ca_n": clean_val(df.iloc[8, 1]),
-        "ca_n_1": clean_val(df.iloc[9, 1]),
-        "diff_ca": round(clean_val(df.iloc[8, 2]) * 100, 1),
-        "ric_cost_n": clean_val(df.iloc[12, 1]),
-        "ric_cost_n_1": clean_val(df.iloc[13, 1]),
-        "marg_n": round(clean_val(df.iloc[16, 1]) * 100, 1),
-        "marg_n_1": round(clean_val(df.iloc[17, 1]) * 100, 1),
+        "month": formatted_month, 
+        "fatturato_n": clean_val(df.iloc[8, 2]),
+        "fatturato_n_1": clean_val(df.iloc[9, 2]),
+        "diff_ca": round(clean_val(df.iloc[8, 3]) * 100, 1),
+        "ric_cost_n": clean_val(df.iloc[12, 2]),
+        "ric_cost_n_1": clean_val(df.iloc[13, 2]),
+        "marg_n": round(clean_val(df.iloc[16, 2]) * 100, 1),
+        "marg_n_1": round(clean_val(df.iloc[17, 2]) * 100, 1),
     }
     return data
 
