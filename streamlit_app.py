@@ -54,10 +54,10 @@ def load_data(file):
     diff_fatturato = round(clean_val(df.iloc[8, 3]) * 100, 1)  # % variation (ligne 9, colonne D)
 
     # Ricavi - Costi et Margine
-    ric_cost_n = clean_val(df.iloc[12, 2])      # Ricavi - Costi N (ligne 13, colonne C)
-    ric_cost_n_1 = clean_val(df.iloc[13, 2])    # Ricavi - Costi N-1 (ligne 14, colonne C)
-    marg_n = round(clean_val(df.iloc[16, 2]) * 100, 1)  # Margine N (ligne 17, colonne C)
-    marg_n_1 = round(clean_val(df.iloc[17, 2]) * 100, 1)  # Margine N-1 (ligne 18, colonne C)
+    ric_cost_n = clean_val(df.iloc[11, 2])      # Ricavi - Costi N (ligne 12, colonne C)
+    ric_cost_n_1 = clean_val(df.iloc[12, 2])    # Ricavi - Costi N-1 (ligne 13, colonne C)
+    marg_n = round(clean_val(df.iloc[14, 2]) * 100, 1)  # Margine N (ligne 15, colonne C)
+    marg_n_1 = round(clean_val(df.iloc[16, 2]) * 100, 1)  # Margine N-1 (ligne 16, colonne C)
 
     # --- 3. Extraction des dates et données "Food Cost" ---
     food_cost_dates = [df.iloc[i, 1] for i in range(24, 30)]  # Dates en colonne B
