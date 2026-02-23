@@ -248,7 +248,9 @@ if uploaded and restaurant_input:
             x,
             values,
             width=0.9,
-            color=[COLORS["graph1"], COLORS["graph2"]]
+            color=[COLORS["graph1"], COLORS["graph2"]],
+            alpha=1.0,
+            zorder=3   # ← au-dessus de la grid
         )
 
         # Labels au-dessus
@@ -288,7 +290,8 @@ if uploaded and restaurant_input:
             axis='y',
             linestyle='-',
             alpha=0.15,
-            color=COLORS["white"]
+            color=COLORS["white"],
+            zorder = 0 
         )
 
         # Supprimer bordures
