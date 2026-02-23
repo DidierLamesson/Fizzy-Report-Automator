@@ -346,7 +346,7 @@ if uploaded and restaurant_input:
     # =========================
     with col_edit:
 
-        st.subheader("✍️ Analyse Narrative")
+        st.subheader("✍️ AAnalisa scritta")
 
         auto_text = (
             f"À {data_dict['month_name']} {data_dict['year_n']}, "
@@ -355,12 +355,6 @@ if uploaded and restaurant_input:
             f"{data_dict['year_n_1']}. "
             f"Cela représente une variation de "
             f"{(data_dict['fatturato_n'] - data_dict['fatturato_n_1']):,.2f} €."
-        )
-
-        user_text = st.text_area(
-            "Personnalisez votre analyse ici :",
-            value=auto_text,
-            height=300
         )
 
     st.divider()
