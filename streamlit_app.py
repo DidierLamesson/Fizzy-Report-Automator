@@ -277,12 +277,7 @@ if uploaded and restaurant_input:
 
         # Axe X
         ax.set_xticks([0.5])
-        ax.set_xticklabels(
-            [data_dict["month_name"]],
-            fontproperties=epilogue_font,
-            fontsize=20,
-            color=COLORS["white"]
-        )
+        ax.set_xticklabels([])
 
         # Axe Y
         ax.tick_params(axis='y', colors=COLORS["white"], labelsize=14)
@@ -315,6 +310,8 @@ if uploaded and restaurant_input:
                 marker='o',
                 color='none',
                 markerfacecolor=COLORS["graph1"],
+                markeredgecolor='none',   # supprime contour noir
+                markeredgewidth=0,
                 markersize=12,
                 label=f"Fatturato {data_dict['year_n']} €"
             ),
@@ -323,6 +320,8 @@ if uploaded and restaurant_input:
                 marker='o',
                 color='none',
                 markerfacecolor=COLORS["graph2"],
+                markeredgecolor='none',   # supprime contour noir
+                markeredgewidth=0,
                 markersize=12,
                 label=f"Fatturato {data_dict['year_n_1']} €"
             )
