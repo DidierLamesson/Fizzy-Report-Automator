@@ -97,42 +97,38 @@ if uploaded and restaurant_input:
     # MÉTHODE HYBRIDE : 2 Colonnes pour travailler
     col_viz, col_edit = st.columns([1, 1])
     
-   with col_viz:
+    with col_viz:
         st.subheader("📊 Aperçu des données")
         
-        # Préparation des données dynamiques
+        # Données dynamiques basées sur l'Excel [cite: 8, 9, 10]
         chart_df = pd.DataFrame({
             "Période": [f"{data_dict['month']} (N)", "Année Précédente (N-1)"],
-            "Fatturato": [data_dict["fatturato_n"], data_dict["fatturato_n_1"]],
-            "Couleur": [COLORS["graph1"], COLORS["graph2"]] # Gris et Beige
+            "Fatturato": [data_dict["fatturato_n"], data_dict["fatturato_n_1"]]
         })
-        
-        # Création du graphique avec Altair pour un contrôle total
-        import alt_chart as alt # Assurez-vous d'avoir 'altair' dans vos imports si besoin
-        import altair as alt
 
-        c = alt.Chart(chart_df).mark_bar().encode(
+        # Utilisation d'Altair pour forcer l'axe en Euros, sans virgules, avec espaces
+        import altair as alt
+        
+        c = alt.Chart(chart_df).mark_bar(color=COLORS["graph1"]).encode(
             x=alt.X('Période:N', sort=None, axis=alt.Axis(labelAngle=0)),
             y=alt.Y('Fatturato:Q', 
                    axis=alt.Axis(
-                       format="~s",          # Format compact (k pour mille) ou personnalisé
-                       labelExpr="format(datum.value, ',d').replace(',', ' ') + ' €'", # Espaces + €
+                       values=list(range(0, int(max(chart_df["Fatturato"])*1.2), 100000)), # Graduation tous les 100k [cite: 11, 13]
+                       labelExpr="format(datum.value, ',d').replace(',', ' ') + ' €'", 
                        title="Fatturato (€)"
                    )),
-            color=alt.Color('Couleur:N', scale=None) # Utilise nos couleurs Gris/Beige
         ).properties(height=300)
 
         st.altair_chart(c, use_container_width=True)
         
-        # --- Affichage des chiffres sans virgules ---
+        # Affichage des Metrics sans aucune virgule
         col_n, col_n1 = st.columns(2)
         
-        # Utilisation de :.0f pour forcer 0 décimales (pas de virgules)
-        f_n = f"{int(data_dict['fatturato_n']):,}".replace(",", " ")
-        col_n.metric(f"Venduto {data_dict['month']}", f"{f_n} €")
+        # On transforme en int() pour supprimer les virgules définitivement
+        val_euro = f"{int(data_dict['fatturato_n']):,}".replace(",", " ")
+        col_n.metric(f"Venduto {data_dict['month']}", f"{val_euro} €") # [cite: 21, 23]
         
-        col_n1.metric("vs 2024", f"{data_dict['diff_fatturato']}%")
-    with col_edit:
+        col_n1.metric("Variation", f"{data_dict['diff_fatturato']}%", delta_color="normal") # [cite: 22, 24]
         st.subheader("✍️ Analyse Narrative")
         
         # On crée un texte par défaut qui utilise les vraies données du fichier
