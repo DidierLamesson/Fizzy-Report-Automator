@@ -213,21 +213,6 @@ restaurant_input = st.sidebar.text_input("Nom du Restaurant *", value="A'RICCION
 uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
 
 
-if uploaded and restaurant_input:
-    data_dict = load_data(uploaded)
-
-    if st.button("🎨 Générer l'image finale pour le client"):
-        fig = draw_full_report(data_dict, restaurant_input, user_text)
-        st.pyplot(fig)
-
-        fn = f"Rapport_{restaurant_input.replace(' ', '_')}.png"
-        fig.savefig(fn, facecolor=COLORS["bg"], bbox_inches='tight', dpi=200)
-        with open(fn, "rb") as img:
-            st.download_button("📥 Télécharger le rapport (.png)", img, file_name=fn, mime="image/png")
-
-else:
-    st.info("Benvenuto! Carica un file Excel per iniziare.")
-
 
 # --- 4. FONCTION DE DESSIN DU RAPPORT (IMAGE FINALE) ---
 def draw_full_report(d, restaurant_name, analysis_text):
