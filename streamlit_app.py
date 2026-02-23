@@ -36,10 +36,12 @@ def load_data(file):
     
    def load_data(file):
     df = pd.read_excel(file, sheet_name='Dati report', header=None)
-    if uploaded and restaurant_input:
+
+        if uploaded and restaurant_input:
     data_dict = load_data(uploaded)
     st.subheader("🔍 Données extraites")
     st.json(data_dict)  # Affiche toutes les données sous forme de JSON
+
 
 
     # Dictionnaire de traduction des mois
