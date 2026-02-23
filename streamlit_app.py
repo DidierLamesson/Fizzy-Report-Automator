@@ -172,8 +172,8 @@ def load_data(file):
         "marg_n_1": marg_n_1,
 
         # Dates
-        "graph_cost_dates": graph_cost_dates
-        "graph_cost_dates_n_1": graph_cost_dates_n_1
+        "graph_cost_dates": graph_cost_dates,
+        "graph_cost_dates_n_1": graph_cost_dates_n_1,
 
         # Food Cost
         "food_cost_monthly_n": food_cost_monthly_n,
