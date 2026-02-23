@@ -64,11 +64,15 @@ def draw_full_report(d, restaurant_name):
     # --- ZONE A : HEADER ---
     # Logo textuel
     ax_main.text(0.5, 0.94, "We\nare_\nFIZZY", color=COLORS["white"], fontsize=16, fontweight='bold', ha='center', linespacing=0.9)
-    # Titre principal (Simulant Ivy Presto par serif italic)
+    
+    # Titre principal 
     ax_main.text(0.5, 0.89, "Report Mensile", color=COLORS["white"], fontsize=32, ha='center', fontfamily='serif', fontstyle='italic')
-    # Sous-titre dynamique
+    
+    # Sous-titre dynamique (Correction ici : suppression de letterspacing)
     ax_main.text(0.5, 0.86, f"{restaurant_name.upper()}", color=COLORS["white"], fontsize=16, ha='center', fontweight='light')
-    ax_main.text(0.5, 0.84, d["month"].upper(), color=COLORS["highlight"], fontsize=12, ha='center', letterspacing=2)
+    
+    # Date du rapport
+    ax_main.text(0.5, 0.84, d["month"].upper(), color=COLORS["highlight"], fontsize=12, ha='center')
 
     # --- ZONE B : GRAPHIQUE COMPARATIF (y: 0.55 à 0.80) ---
     # Placement précis du graphique dans sa boîte
