@@ -357,6 +357,11 @@ if uploaded and restaurant_input:
             f"{(data_dict['fatturato_n'] - data_dict['fatturato_n_1']):,.2f} €."
         )
 
+        user_text = st.text_area(
+            value=auto_text,
+            height=300
+        )
+
     st.divider()
 
 
