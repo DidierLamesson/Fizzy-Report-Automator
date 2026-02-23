@@ -272,7 +272,7 @@ if uploaded and restaurant_input:
                 fontproperties=epilogue_font,
                 fontsize=18,
                 color=COLORS["white"],
-                fontweight=800
+                fontweight=900
             )
 
         # Axe X
