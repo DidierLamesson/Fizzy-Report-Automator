@@ -16,6 +16,13 @@ COLORS = {
     "white": "#ffffff"
 }
 
+st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@400;700&display=swap');
+    html, body, [class*="css"] { font-family: 'Epilogue', sans-serif !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
 # Fonction de nettoyage ultra-sécurisée
 def clean_val(val):
     if pd.isna(val) or isinstance(val, str):
