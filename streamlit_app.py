@@ -57,10 +57,15 @@ def load_data(file):
     ric_cost_n = clean_val(df.iloc[11, 2])      # Ricavi - Costi N (ligne 12, colonne C)
     ric_cost_n_1 = clean_val(df.iloc[12, 2])    # Ricavi - Costi N-1 (ligne 13, colonne C)
     marg_n = round(clean_val(df.iloc[14, 2]) * 100, 1)  # Margine N (ligne 15, colonne C)
-    marg_n_1 = round(clean_val(df.iloc[16, 2]) * 100, 1)  # Margine N-1 (ligne 16, colonne C)
+    marg_n_1 = round(clean_val(df.iloc[15, 2]) * 100, 1)  # Margine N-1 (ligne 16, colonne C)
+
+    # --- 3. Extraction des dates pour les 6 mois glissants (mêmes pour Food, Beverage & Labour) ---
+
+    graph_cost_dates = [df.iloc[i, 1] for i in range(24, 30)]  # Dates en colonne B
+    graph_cost_dates_n_1 = [df.iloc[i, 7] for i in range(24, 30)]  # Dates en colonne H
 
     # --- 3. Extraction des dates et données "Food Cost" ---
-    food_cost_dates = [df.iloc[i, 1] for i in range(24, 30)]  # Dates en colonne B
+    
     fatturato_mensile_n = [clean_val(df.iloc[i, 2]) for i in range(24, 30)]  # Fatturato mensuel N en colonne C
     fatturato_mensile_n_1 = [clean_val(df.iloc[i, 8]) for i in range(24, 30)]  # Fatturato mensuel N-1 en colonne I
 
@@ -69,7 +74,6 @@ def load_data(file):
     food_cost_monthly_n_1 = [clean_val(df.iloc[i, 9]) for i in range(24, 30)]  # Colonne J (N-1)
 
     # --- 4. Extraction des données "Beverage Cost" ---
-    beverage_cost_dates = [df.iloc[i, 1] for i in range(36, 42)]  # Dates en colonne B
     beverage_cost_monthly_n = [clean_val(df.iloc[i, 3]) for i in range(36, 42)]  # Colonne D (N)
     beverage_cost_monthly_n_1 = [clean_val(df.iloc[i, 9]) for i in range(36, 42)]  # Colonne J (N-1)
 
@@ -167,8 +171,11 @@ def load_data(file):
         "marg_n": marg_n,
         "marg_n_1": marg_n_1,
 
+        # Dates
+        "graph_cost_dates": graph_cost_dates
+        "graph_cost_dates_n_1": graph_cost_dates_n_1
+
         # Food Cost
-        "food_cost_dates": food_cost_dates,
         "food_cost_monthly_n": food_cost_monthly_n,
         "food_cost_monthly_n_1": food_cost_monthly_n_1,
         "food_cost_pctg_n": food_cost_pctg_n,
@@ -177,7 +184,6 @@ def load_data(file):
         "food_cost_avg_n_1": food_cost_avg_n_1,
 
         # Beverage Cost
-        "beverage_cost_dates": beverage_cost_dates,
         "beverage_cost_monthly_n": beverage_cost_monthly_n,
         "beverage_cost_monthly_n_1": beverage_cost_monthly_n_1,
         "beverage_cost_pctg_n": beverage_cost_pctg_n,
