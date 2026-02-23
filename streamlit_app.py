@@ -2,17 +2,25 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import matplotlib.font_manager as fm
+import matplotlib.pyplot as plt
 
 # --- 1. CONFIGURATION & DESIGN ---
 st.set_page_config(page_title="FIZZY Automator", layout="wide")
 
-# Injection de la police Epilogue
-st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@400;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Epilogue', sans-serif !important; }
-    </style>
-""", unsafe_allow_html=True)
+# --- LOAD EPILOGUE FONT (GitHub root) ---
+
+font_path_regular = "Epilogue-Variable.ttf"
+font_path_italic = "Epilogue-VariableItalic.ttf"
+
+fm.fontManager.addfont(font_path_regular)
+fm.fontManager.addfont(font_path_italic)
+
+epilogue_font = fm.FontProperties(fname=font_path_regular)
+epilogue_font_italic = fm.FontProperties(fname=font_path_italic)
+
+# Appliquer globalement à Matplotlib
+plt.rcParams["font.family"] = epilogue_font.get_name()
 
 COLORS = {
     "bg": "#172e4d",
@@ -261,6 +269,7 @@ if uploaded and restaurant_input:
                 f"{v:,.0f}".replace(",", " "),
                 ha="center",
                 va="bottom",
+                fontproperties=epilogue_font,
                 fontsize=18,
                 color=COLORS["white"],
                 fontweight="bold"
@@ -270,6 +279,7 @@ if uploaded and restaurant_input:
         ax.set_xticks([0.5])
         ax.set_xticklabels(
             [data_dict["month_name"]],
+            fontproperties=epilogue_font,
             fontsize=20,
             color=COLORS["white"]
         )
