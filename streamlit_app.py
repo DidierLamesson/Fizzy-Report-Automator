@@ -61,80 +61,56 @@ def human_format(num, pos):
     return f'{int(num):,}'.replace(',', ' ')
 
 def draw_page_1(d, restaurant_name):
-    # Création de la figure avec la couleur de fond
+    # Création de la figure 10x14 (format vertical type PDF)
     fig = plt.figure(figsize=(10, 14), facecolor=COLORS["bg"])
-    # Axe principal invisible pour le fond
     ax_bg = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
     ax_bg.axis('off')
     
-    # --- HEADER GLOBAL ---
-    ax_bg.text(0.05, 0.94, "We\nare_\nFIZZY", color=COLORS["white"], fontsize=18, fontweight='bold')
-    ax_bg.text(0.5, 0.88, restaurant_name.upper(), color=COLORS["white"], fontsize=22, ha='center', fontweight='bold')
-    ax_bg.text(0.5, 0.85, d["month"], color=COLORS["highlight"], fontsize=14, ha='center')
+    # --- HEADER ---
+    ax_bg.text(0.05, 0.95, "We\nare_\nFIZZY", color=COLORS["white"], fontsize=18, fontweight='bold')
+    ax_bg.text(0.5, 0.90, restaurant_name.upper(), color=COLORS["white"], fontsize=22, ha='center', fontweight='bold')
+    ax_bg.text(0.5, 0.87, d["month"], color=COLORS["highlight"], fontsize=14, ha='center')
 
-    # --- NOUVEAU GRAPHIQUE FATTURATO (Style Image Cible) ---
-    # On crée un axe plus grand pour le graphique
-    ax_bar = fig.add_axes([0.1, 0.55, 0.8, 0.25], facecolor=COLORS["bg"])
+    # --- GRAPHIQUE FATTURATO (Occupe la moitié haute : de 0.55 à 0.80) ---
+    ax_bar = fig.add_axes([0.15, 0.58, 0.7, 0.22], facecolor=COLORS["bg"])
     
-    # Données et Couleurs inversées pour coller à l'image cible :
-    # Barre 1 (gauche) = 2025 (N) en GRIS
-    # Barre 2 (droite) = 2024 (N-1) en BEIGE
     valores = [d["fatturato_n"], d["fatturato_n_1"]]
     couleurs = [COLORS["graph1"], COLORS["graph2"]]
     positions = [0, 1]
-    labels_legende = ['Fatturato 2025 €', 'Fatturato 2024 €']
 
-    # Création des barres (plus larges pour être proches)
-    rects = ax_bar.bar(positions, valores, color=couleurs, width=0.9, edgecolor=COLORS["bg"], linewidth=1)
+    # zorder=3 pour que les barres soient devant la grille (zorder=1 ou 2)
+    rects = ax_bar.bar(positions, valores, color=couleurs, width=0.8, zorder=3)
 
-    # --- MISE EN FORME DU GRAPHIQUE ---
-    
-    # Titre du graphique
-    ax_bar.set_title(f"Venduto {restaurant_name.split('-')[0].strip()} {d['month'].split(' ')[0]}\n2025 vs 2024", 
-                     color=COLORS["white"], fontsize=18, fontweight='bold', pad=25)
-
-    # Légende personnalisée au-dessus
-    legend_elements = [
-        Line2D([0], [0], color=COLORS["graph1"], lw=0, marker='o', markersize=12, label=labels_legende[0]),
-        Line2D([0], [0], color=COLORS["graph2"], lw=0, marker='o', markersize=12, label=labels_legende[1])
-    ]
-    ax_bar.legend(handles=legend_elements, loc='lower center', bbox_to_anchor=(0.5, 1.02), 
-                  ncol=2, frameon=False, labelcolor=COLORS["white"], fontsize=12)
-
-    # Axe Y : Visible, formaté et avec grille
-    ax_bar.set_ylim(0, max(valores) * 1.2) # Marge au-dessus pour le texte
+    # Grille horizontale discrète derrière les barres
     ax_bar.yaxis.set_major_formatter(ticker.FuncFormatter(human_format))
-    ax_bar.tick_params(axis='y', colors=COLORS["white"], labelsize=12)
-    ax_bar.grid(axis='y', color=COLORS["white"], linestyle='-', linewidth=0.5, alpha=0.3)
+    ax_bar.grid(axis='y', color=COLORS["white"], linestyle='-', linewidth=0.5, alpha=0.2, zorder=0)
     
-    # Retirer les épines (cadres) sauf celle du bas si on veut
+    # Masquer les bordures
     for spine in ax_bar.spines.values():
         spine.set_visible(False)
-    # ax_bar.spines['bottom'].set_visible(True) # Optionnel : garder la ligne du bas
-
-    # Axe X : Un seul label "Terrazza" (ou le nom du resto)
-    ax_bar.set_xticks([]) # On cache les ticks par défaut
-    # On ajoute le label centré sous le graphique
-    ax_bar.text(0.5, -0.1, restaurant_name.split('-')[-1].strip() if '-' in restaurant_name else restaurant_name, 
-                transform=ax_bar.transAxes, color=COLORS["white"], fontsize=16, ha='center')
-
-    # --- VALEURS SUR LES BARRES ---
+    
+    # Titre et Légende du graphique
+    ax_bar.set_title(f"Venduto {restaurant_name.split('-')[0].strip()} {d['month'].split(' ')[0]}\n2025 vs 2024", 
+                     color=COLORS["white"], fontsize=16, fontweight='bold', pad=35)
+    
+    # Valeurs au-dessus des barres
     for rect in rects:
         height = rect.get_height()
         ax_bar.text(rect.get_x() + rect.get_width()/2., height + (max(valores)*0.02),
                     f'{int(height):,}'.replace(',', ' '),
-                    ha='center', va='bottom', color=COLORS["white"], fontsize=18, fontweight='bold')
+                    ha='center', va='bottom', color=COLORS["white"], fontsize=14, fontweight='bold', zorder=4)
 
-    # --- AUTRES SECTIONS (Plus bas) ---
-    # SECTION RICAVI - COSTI
-    ax_bg.text(0.05, 0.40, "Ricavi - Costi", color=COLORS["accent"], fontsize=18, fontweight='bold')
-    ax_bg.text(0.05, 0.34, f"€ {d['ric_cost_n']:,.0f}".replace(',', ' '), color=COLORS["white"], fontsize=24)
-    ax_bg.text(0.35, 0.34, f"€ {d['ric_cost_n_1']:,.0f}".replace(',', ' '), color=COLORS["graph1"], fontsize=24)
+    # --- SECTIONS DU BAS (Alignées sous le graphique) ---
+    
+    # Section RICAVI - COSTI (Positionnée à 0.40)
+    ax_bg.text(0.15, 0.45, "RICAVI - COSTI", color=COLORS["accent"], fontsize=14, fontweight='bold')
+    ax_bg.text(0.15, 0.40, f"€ {d['ric_cost_n']:,.0f}".replace(',', ' '), color=COLORS["white"], fontsize=28, fontweight='bold')
+    ax_bg.text(0.50, 0.40, f"€ {d['ric_cost_n_1']:,.0f}".replace(',', ' '), color=COLORS["graph1"], fontsize=28, alpha=0.8)
 
-    # SECTION MARGINE
-    ax_bg.text(0.05, 0.22, "Margine % su ricavi", color=COLORS["accent"], fontsize=18, fontweight='bold')
-    ax_bg.text(0.05, 0.14, f"{d['marg_n']}%", color=COLORS["white"], fontsize=45, fontweight='bold')
-    ax_bg.text(0.25, 0.14, f"{d['marg_n_1']}%", color=COLORS["graph1"], fontsize=45)
+    # Section MARGINE (Positionnée à 0.25)
+    ax_bg.text(0.15, 0.28, "MARGINE % SU RICAVI", color=COLORS["accent"], fontsize=14, fontweight='bold')
+    ax_bg.text(0.15, 0.20, f"{d['marg_n']}%", color=COLORS["white"], fontsize=50, fontweight='bold')
+    ax_bg.text(0.45, 0.20, f"{d['marg_n_1']}%", color=COLORS["graph1"], fontsize=50, alpha=0.8)
 
     return fig
 
