@@ -255,11 +255,12 @@ if uploaded and restaurant_input:
         bars = ax.bar(
             x,
             values,
-            width=1,
+            width=0.9,
             color=[COLORS["graph1"], COLORS["graph2"]],
             alpha=1.0,
             zorder=3   # ← au-dessus de la grid
         )
+        ax.set_xlim(-0.45, 1.45)
 
         # Labels au-dessus
         for i, v in enumerate(values):
