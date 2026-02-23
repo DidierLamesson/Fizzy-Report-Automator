@@ -7,6 +7,13 @@ import numpy as np
 # --- 1. CONFIGURATION & DESIGN ---
 st.set_page_config(page_title="FIZZY Automator", layout="wide")
 
+st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@400;700&display=swap');
+    html, body, [class*="css"] { font-family: 'Epilogue', sans-serif !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
 COLORS = {
     "bg": "#172e4d",
     "accent": "#edf86c",
@@ -81,7 +88,7 @@ def draw_full_report(d, restaurant_name, analysis_text):
 st.title("Rapport Fizzy Automatizzazione ⚡️")
 
 # Sidebar
-restaurant_input = st.sidebar.text_input("Nom du Restaurant *", value="A'RICCIONE - TERRAZZA")
+restaurant_input = st.sidebar.text_input("Nom du Restaurant *",  default_text ="A'RICCIONE - TERRAZZA")
 uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
 
 if uploaded and restaurant_input:
