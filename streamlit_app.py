@@ -219,20 +219,35 @@ if uploaded and restaurant_input:
     col_viz, col_edit = st.columns([1, 1])
 
     with col_viz:
-        st.subheader("📊 Fatturato Mensile")
+    st.subheader("📊 Fatturato Mensile")
 
-        # Création du DataFrame pour le graphique
-        chart_data = pd.DataFrame({
-            f"{data_dict['month_name']} {data_dict['year_n']}": [data_dict["fatturato_n"]],
-            f"{data_dict['month_name']} {data_dict['year_n_1']}": [data_dict["fatturato_n_1"]]
-        })
+    # Création du graphique en barre avec matplotlib
+    fig, ax = plt.subplots(figsize=(6, 4))
 
-        # Affichage du graphique en barre
-        st.bar_chart(chart_data)
+    # Position des barres
+    x = [0, 1]  # Positions pour N et N-1
+    width = 0.35  # Largeur des barres
 
-        # Affichage des valeurs brutes
-        st.write(f"Fatturato {data_dict['year_n']}: **{data_dict['fatturato_n']:,.2f} €**")
-        st.write(f"Fatturato {data_dict['year_n_1']}: **{data_dict['fatturato_n_1']:,.2f} €**")
+    # Barres pour N et N-1
+    bar1 = ax.bar(x[0], data_dict["fatturato_n"], width, color=COLORS["graph1"], label=f"{data_dict['year_n']}")
+    bar2 = ax.bar(x[1], data_dict["fatturato_n_1"], width, color=COLORS["graph2"], label=f"{data_dict['year_n_1']}")
+
+    # Personnalisation du graphique
+    ax.set_xticks(x)
+    ax.set_xticklabels([f"{data_dict['month_name']}\n{data_dict['year_n']}", f"{data_dict['month_name']}\n{data_dict['year_n_1']}"])
+    ax.set_ylabel("Fatturato (€)", color=COLORS["white"])
+    ax.legend()
+
+    # Style
+    ax.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+
+    # Affichage du graphique
+    st.pyplot(fig)
+
+    # Affichage des valeurs brutes
+    st.write(f"Fatturato {data_dict['year_n']}: **{data_dict['fatturato_n']:,.2f} €**")
+    st.write(f"Fatturato {data_dict['year_n_1']}: **{data_dict['fatturato_n_1']:,.2f} €**")
 
     # --- 2. Zone de texte personnalisable ---
     with col_edit:
