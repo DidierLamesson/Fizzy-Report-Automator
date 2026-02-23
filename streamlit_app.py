@@ -208,127 +208,146 @@ def load_data(file):
 # --- 3. INTERFACE UTILISATEUR ---
 st.title("Rapport Fizzy Automatizzazione ⚡️")
 
-# Sidebar
-restaurant_input = st.sidebar.text_input("Nom du Restaurant *", value="A'RICCIONE - TERRAZZA")
-uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
+restaurant_input = st.sidebar.text_input(
+    "Nom du Restaurant *",
+    value="A'RICCIONE - TERRAZZA"
+)
+uploaded = st.sidebar.file_uploader(
+    "Charger le fichier Excel",
+    type="xlsx"
+)
 
 if uploaded and restaurant_input:
+
     data_dict = load_data(uploaded)
 
-    # --- 1. Affichage du graphique en barre ---
+    # Colonnes
     col_viz, col_edit = st.columns([1, 1])
 
-    # --- GRAPH FATTURATO MENSILE ---
+    # =========================
+    # 📊 COLONNE GRAPH
+    # =========================
+    with col_viz:
 
-st.subheader("📊 Fatturato Mensile")
+        st.subheader("📊 Fatturato Mensile")
 
-fig, ax = plt.subplots(figsize=(8, 6))
+        fig, ax = plt.subplots(figsize=(8, 6))
 
-# --- Background ---
-fig.patch.set_facecolor(COLORS["bg"])
-ax.set_facecolor(COLORS["bg"])
+        # Background
+        fig.patch.set_facecolor(COLORS["bg"])
+        ax.set_facecolor(COLORS["bg"])
 
-# --- Données ---
-values = [data["fatturato_n"], data["fatturato_n_1"]]
-x = [0, 1]
+        # Données
+        values = [
+            data_dict["fatturato_n"],
+            data_dict["fatturato_n_1"]
+        ]
+        x = [0, 1]
 
-bars = ax.bar(
-    x,
-    values,
-    width=0.9,
-    color=[COLORS["graph1"], COLORS["graph2"]]
-)
-
-# --- Labels au-dessus des barres ---
-for i, v in enumerate(values):
-    ax.text(
-        i,
-        v + max(values) * 0.02,
-        f"{v:,.0f}".replace(",", " "),
-        ha="center",
-        va="bottom",
-        fontsize=20,
-        color=COLORS["white"],
-        fontweight="bold"
-    )
-
-# --- Axe X (nom du mois uniquement centré) ---
-ax.set_xticks([0.5])
-ax.set_xticklabels(
-    [data["month_name"]],
-    fontsize=22,
-    color=COLORS["white"]
-)
-
-# --- Axe Y ---
-ax.tick_params(axis='y', colors=COLORS["white"], labelsize=18)
-
-ax.yaxis.set_major_formatter(
-    ticker.FuncFormatter(lambda x, p: f"{int(x):,}".replace(",", " "))
-)
-
-# Limite dynamique
-ax.set_ylim(0, max(values) * 1.2)
-
-# --- Grille horizontale ---
-ax.grid(
-    axis='y',
-    linestyle='-',
-    alpha=0.15,
-    color=COLORS["white"]
-)
-
-# --- Suppression des bordures ---
-for spine in ax.spines.values():
-    spine.set_visible(False)
-
-# --- Légende custom ronde ---
-legend_handles = [
-    plt.Line2D(
-        [0], [0],
-        marker='o',
-        color='none',
-        markerfacecolor=COLORS["graph1"],
-        markersize=14,
-        label=f"Fatturato {data['year_n']} €"
-    ),
-    plt.Line2D(
-        [0], [0],
-        marker='o',
-        color='none',
-        markerfacecolor=COLORS["graph2"],
-        markersize=14,
-        label=f"Fatturato {data['year_n_1']} €"
-    )
-]
-
-ax.legend(
-    handles=legend_handles,
-    loc="upper center",
-    bbox_to_anchor=(0.5, 1.12),
-    ncol=2,
-    frameon=False,
-    fontsize=18,
-    labelcolor=COLORS["white"]
-)
-
-plt.tight_layout()
-
-st.pyplot(fig)
-
-    # --- 2. Zone de texte personnalisable ---
-    with col_edit:
-        st.subheader("✍️ Analyse Narrative")
-
-        # Texte pré-rempli avec les données
-        auto_text = (
-            f"À {data_dict['month_name']} {data_dict['year_n']}, le Fatturato est de {data_dict['fatturato_n']:,.2f} €, "
-            f"contre {data_dict['fatturato_n_1']:,.2f} € en {data_dict['year_n_1']}. "
-            f"Cela représente une variation de {(data_dict['fatturato_n'] - data_dict['fatturato_n_1']):,.2f} €."
+        bars = ax.bar(
+            x,
+            values,
+            width=0.9,
+            color=[COLORS["graph1"], COLORS["graph2"]]
         )
 
-        # Zone de texte pour personnaliser l'analyse
-        user_text = st.text_area("Personnalisez votre analyse ici :", value=auto_text, height=300)
+        # Labels au-dessus
+        for i, v in enumerate(values):
+            ax.text(
+                i,
+                v + max(values) * 0.02,
+                f"{v:,.0f}".replace(",", " "),
+                ha="center",
+                va="bottom",
+                fontsize=18,
+                color=COLORS["white"],
+                fontweight="bold"
+            )
+
+        # Axe X
+        ax.set_xticks([0.5])
+        ax.set_xticklabels(
+            [data_dict["month_name"]],
+            fontsize=20,
+            color=COLORS["white"]
+        )
+
+        # Axe Y
+        ax.tick_params(axis='y', colors=COLORS["white"], labelsize=14)
+        ax.yaxis.set_major_formatter(
+            ticker.FuncFormatter(
+                lambda x, p: f"{int(x):,}".replace(",", " ")
+            )
+        )
+
+        ax.set_ylim(0, max(values) * 1.2)
+
+        # Grille
+        ax.grid(
+            axis='y',
+            linestyle='-',
+            alpha=0.15,
+            color=COLORS["white"]
+        )
+
+        # Supprimer bordures
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+        # Légende
+        legend_handles = [
+            plt.Line2D(
+                [0], [0],
+                marker='o',
+                color='none',
+                markerfacecolor=COLORS["graph1"],
+                markersize=12,
+                label=f"Fatturato {data_dict['year_n']} €"
+            ),
+            plt.Line2D(
+                [0], [0],
+                marker='o',
+                color='none',
+                markerfacecolor=COLORS["graph2"],
+                markersize=12,
+                label=f"Fatturato {data_dict['year_n_1']} €"
+            )
+        ]
+
+        ax.legend(
+            handles=legend_handles,
+            loc="upper center",
+            bbox_to_anchor=(0.5, 1.12),
+            ncol=2,
+            frameon=False,
+            fontsize=14,
+            labelcolor=COLORS["white"]
+        )
+
+        plt.tight_layout()
+        st.pyplot(fig)
+
+    # =========================
+    # ✍️ COLONNE ANALYSE
+    # =========================
+    with col_edit:
+
+        st.subheader("✍️ Analyse Narrative")
+
+        auto_text = (
+            f"À {data_dict['month_name']} {data_dict['year_n']}, "
+            f"le Fatturato est de {data_dict['fatturato_n']:,.2f} €, "
+            f"contre {data_dict['fatturato_n_1']:,.2f} € en "
+            f"{data_dict['year_n_1']}. "
+            f"Cela représente une variation de "
+            f"{(data_dict['fatturato_n'] - data_dict['fatturato_n_1']):,.2f} €."
+        )
+
+        user_text = st.text_area(
+            "Personnalisez votre analyse ici :",
+            value=auto_text,
+            height=300
+        )
 
     st.divider()
 
