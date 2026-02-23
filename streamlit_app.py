@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 # --- CONFIGURATION & DESIGN ---
 st.set_page_config(page_title="FIZZY Automator", layout="wide")
@@ -21,31 +22,31 @@ COLORS = {
     "white": "#ffffff"
 }
 
-# Fonction pour éviter les erreurs de texte dans les chiffres
-def safe_float(value):
-    try:
-        return float(value)
-    except (ValueError, TypeError):
+# Fonction de nettoyage ultra-sécurisée
+def clean_val(val):
+    if pd.isna(val) or isinstance(val, str):
         return 0.0
+    return float(val)
 
 def load_data(file):
     # Lecture de l'onglet 'Dati report'
     df = pd.read_excel(file, sheet_name='Dati report', header=None)
     
-    # Coordonnées basées sur ton fichier v2
+    # On va chercher les valeurs en sécurisant les types
     data = {
         "month": "Novembre 2025", 
-        "ca_n": safe_float(df.iloc[8, 1]),
-        "ca_n_1": safe_float(df.iloc[9, 1]),
-        "diff_ca": round(safe_float(df.iloc[8, 2]) * 100, 1),
-        "ric_cost_n": safe_float(df.iloc[12, 1]),
-        "ric_cost_n_1": safe_float(df.iloc[13, 1]),
-        "marg_n": round(safe_float(df.iloc[16, 1]) * 100, 1),
-        "marg_n_1": round(safe_float(df.iloc[17, 1]) * 100, 1),
+        "ca_n": clean_val(df.iloc[8, 1]),
+        "ca_n_1": clean_val(df.iloc[9, 1]),
+        "diff_ca": round(clean_val(df.iloc[8, 2]) * 100, 1),
+        "ric_cost_n": clean_val(df.iloc[12, 1]),
+        "ric_cost_n_1": clean_val(df.iloc[13, 1]),
+        "marg_n": round(clean_val(df.iloc[16, 1]) * 100, 1),
+        "marg_n_1": round(clean_val(df.iloc[17, 1]) * 100, 1),
     }
     return data
 
 def draw_page_1(d):
+    # Création de la figure avec la couleur de fond
     fig = plt.figure(figsize=(10, 14), facecolor=COLORS["bg"])
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
     
@@ -54,26 +55,27 @@ def draw_page_1(d):
     ax.text(0.5, 0.88, "A'RICCIONE - TERRAZZA", color=COLORS["white"], fontsize=22, ha='center', fontweight='bold')
     ax.text(0.5, 0.85, d["month"], color=COLORS["highlight"], fontsize=14, ha='center')
 
-    # Bloc Fatturato
+    # --- SECTION FATTURATO ---
     ax.text(0.05, 0.78, "Fatturato", color=COLORS["accent"], fontsize=18, fontweight='bold')
     
-    # Graphique CA
+    # Graphique CA (Histogramme)
     ax_bar = fig.add_axes([0.1, 0.62, 0.35, 0.12], facecolor=COLORS["bg"])
     ax_bar.bar(["2024", "2025"], [d["ca_n_1"], d["ca_n"]], color=[COLORS["graph1"], COLORS["graph2"]], width=0.5)
     ax_bar.set_frame_on(False)
-    ax_bar.tick_params(colors=COLORS["white"])
+    ax_bar.tick_params(colors=COLORS["white"], labelsize=10)
     ax_bar.get_yaxis().set_visible(False)
 
-    # Chiffres CA
-    ax.text(0.55, 0.72, f"{int(d['ca_n']):,} €".replace(',', ' '), color=COLORS["white"], fontsize=30, fontweight='bold')
+    # Chiffres CA à droite du graphique
+    # On utilise :.0f pour éviter les erreurs d'entiers si c'est un NaN
+    ax.text(0.55, 0.72, f"{d['ca_n']:,.0f} €".replace(',', ' '), color=COLORS["white"], fontsize=30, fontweight='bold')
     ax.text(0.55, 0.68, f"{d['diff_ca']}% vs 2024", color=COLORS["accent"], fontsize=16)
 
-    # Bloc Ricavi - Costi
+    # --- SECTION RICAVI - COSTI ---
     ax.text(0.05, 0.50, "Ricavi - Costi", color=COLORS["accent"], fontsize=18, fontweight='bold')
-    ax.text(0.05, 0.44, f"€ {int(d['ric_cost_n']):,}".replace(',', ' '), color=COLORS["white"], fontsize=24)
-    ax.text(0.35, 0.44, f"€ {int(d['ric_cost_n_1']):,}".replace(',', ' '), color=COLORS["graph1"], fontsize=24)
+    ax.text(0.05, 0.44, f"€ {d['ric_cost_n']:,.0f}".replace(',', ' '), color=COLORS["white"], fontsize=24)
+    ax.text(0.35, 0.44, f"€ {d['ric_cost_n_1']:,.0f}".replace(',', ' '), color=COLORS["graph1"], fontsize=24)
 
-    # Bloc Margine
+    # --- SECTION MARGINE ---
     ax.text(0.05, 0.30, "Margine % su ricavi", color=COLORS["accent"], fontsize=18, fontweight='bold')
     ax.text(0.05, 0.22, f"{d['marg_n']}%", color=COLORS["white"], fontsize=45, fontweight='bold')
     ax.text(0.25, 0.22, f"{d['marg_n_1']}%", color=COLORS["graph1"], fontsize=45)
@@ -81,22 +83,23 @@ def draw_page_1(d):
     plt.axis('off')
     return fig
 
-# --- INTERFACE ---
+# --- INTERFACE STREAMLIT ---
 st.title("FIZZY Automator 🥂")
 uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
 
 if uploaded:
     try:
         data_dict = load_data(uploaded)
-        st.pyplot(draw_page_1(data_dict))
+        fig = draw_page_1(data_dict)
+        st.pyplot(fig)
         
-        # Petit bouton pour télécharger l'image
-        fn = "rapport_p1.png"
-        plt.savefig(fn, facecolor=COLORS["bg"])
+        # Option de téléchargement
+        fn = "rapport_fizzy_p1.png"
+        fig.savefig(fn, facecolor=COLORS["bg"], bbox_inches='tight', dpi=150)
         with open(fn, "rb") as img:
-            st.download_button("Télécharger l'image du rapport", img, file_name=fn, mime="image/png")
+            st.download_button("📥 Télécharger la Page 1 (Image)", img, file_name=fn, mime="image/png")
             
     except Exception as e:
-        st.error(f"Erreur : {e}")
+        st.error(f"Oups ! Une erreur est survenue : {e}")
 else:
-    st.info("En attente du fichier Excel dans la barre latérale.")
+    st.info("👋 Bonjour ! Dépose ton fichier Excel dans la barre de gauche pour générer le rapport.")
