@@ -350,11 +350,11 @@ if uploaded and restaurant_input:
 
         auto_text = (
             f"In {data_dict['month_name']} {data_dict['year_n']} "
-            f"il fatturato è di {data_dict['fatturato_n']:.,2f} €, "
-            f"contre {data_dict['fatturato_n_1']:.,2f} € en "
+            f"il fatturato è di {data_dict['fatturato_n']:,2f} €, "
+            f"contre {data_dict['fatturato_n_1']:,2f} € en "
             f"{data_dict['year_n_1']}. "
             f"Cela représente une variation de "
-            f"{(data_dict['fatturato_n'] - data_dict['fatturato_n_1']):.,2f} €."
+            f"{(data_dict['fatturato_n'] - data_dict['fatturato_n_1']):,2f} €."
         )
 
         user_text = st.text_area(
