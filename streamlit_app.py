@@ -104,7 +104,14 @@ if uploaded and restaurant_input:
             "Année": ["2025", "2024"],
             "Fatturato": [data_dict["fatturato_n"], data_dict["fatturato_n_1"]]
         })
-        st.bar_chart(data=chart_df, x="Année", y="Fatturato")
+        # Exemple de personnalisation native
+        st.bar_chart(
+            data=chart_df, 
+            x="Année", 
+            y="Fatturato", 
+            color="#918d84", # Change le bleu par le gris de votre charte
+            use_container_width=True
+        )
         st.metric("Variation", f"{data_dict['diff_fatturato']}%")
 
     with col_edit:
