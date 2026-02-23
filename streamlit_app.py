@@ -346,7 +346,7 @@ if uploaded and restaurant_input:
     # =========================
     with col_edit:
 
-        st.subheader("✍️ AAnalisa scritta")
+        st.subheader("✍️ AAnalisa")
 
         auto_text = (
             f"À {data_dict['month_name']} {data_dict['year_n']}, "
