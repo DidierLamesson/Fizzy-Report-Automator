@@ -3,45 +3,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
-import locale
-
-# Essayer de mettre le programme en italien (dépend de votre système)
-try:
-    locale.setlocale(locale.LC_TIME, "it_IT.UTF-8")
-except:
-    pass # Si le système ne supporte pas, on gérera la traduction manuellement
-
-def load_data(file):
-    df = pd.read_excel(file, sheet_name='Dati report', header=None)
-    raw_date = df.iloc[4, 2] # La case C5 (index 4, 2)
-    
-    # Si c'est une date Excel, on extrait le mois en italien et l'année
-    if hasattr(raw_date, 'strftime'):
-        mes_it = raw_date.strftime('%B').capitalize() # ex: Dicembre
-        anno_n = raw_date.year                         # ex: 2025
-    else:
-        # Si la case est du texte, on essaie de deviner (fallback)
-        mes_it = str(raw_date).split()[0]
-        anno_n = 2025 
-
-    return {
-        "month_name": mes_it,
-        "year_n": anno_n,
-        "year_n_1": anno_n - 1,
-        "full_date_n": f"{mes_it} {anno_n}",
-        "full_date_n_1": f"{mes_it} {anno_n - 1}",
-        "fatturato_n": clean_val(df.iloc[8, 2]),
-        "fatturato_n_1": clean_val(df.iloc[9, 2]),
-        "diff_fatturato": round(clean_val(df.iloc[8, 3]) * 100, 1),
-        "ric_cost_n": clean_val(df.iloc[12, 2]),
-        "ric_cost_n_1": clean_val(df.iloc[13, 2]),
-        "marg_n": round(clean_val(df.iloc[16, 2]) * 100, 1),
-        "marg_n_1": round(clean_val(df.iloc[17, 2]) * 100, 1),
-    }
+import altair as alt
 
 # --- 1. CONFIGURATION & DESIGN ---
 st.set_page_config(page_title="FIZZY Automator", layout="wide")
 
+# Injection de la police Epilogue pour l'interface Streamlit
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@400;700&display=swap');
@@ -53,8 +20,8 @@ COLORS = {
     "bg": "#172e4d",
     "accent": "#edf86c",
     "highlight": "#c8bcab",
-    "graph1": "#918d84",  # Gris 2025
-    "graph2": "#ece8e1",  # Beige 2024
+    "graph1": "#918d84",  # Gris 2025 (N)
+    "graph2": "#ece8e1",  # Beige 2024 (N-1)
     "white": "#ffffff"
 }
 
@@ -65,18 +32,35 @@ def clean_val(val):
 
 def load_data(file):
     df = pd.read_excel(file, sheet_name='Dati report', header=None)
-    raw_month = df.iloc[4, 2]
-    # Extraction du mois et année [cite: 8]
-    formatted_month = raw_month.strftime('%B %Y') if hasattr(raw_month, 'strftime') else str(raw_month)
+    raw_date = df.iloc[4, 2] # Case C5
+    
+    # Dictionnaire de traduction manuel pour l'italien
+    months_it = {
+        1: "Gennaio", 2: "Febbraio", 3: "Marzo", 4: "Aprile",
+        5: "Maggio", 6: "Giugno", 7: "Luglio", 8: "Agosto",
+        9: "Settembre", 10: "Ottobre", 11: "Novembre", 12: "Dicembre"
+    }
+
+    if hasattr(raw_date, 'month'):
+        mes_it = months_it[raw_date.month]
+        anno_n = raw_date.year
+    else:
+        mes_it = "Mese"
+        anno_n = 2026 # Par défaut si erreur lecture date
+
     return {
-        "month": formatted_month, 
-        "fatturato_n": clean_val(df.iloc[8, 2]), # [cite: 12, 23]
-        "fatturato_n_1": clean_val(df.iloc[9, 2]), # [cite: 20]
-        "diff_fatturato": round(clean_val(df.iloc[8, 3]) * 100, 1), # [cite: 24]
-        "ric_cost_n": clean_val(df.iloc[12, 2]), # [cite: 29]
-        "ric_cost_n_1": clean_val(df.iloc[13, 2]), # [cite: 29]
-        "marg_n": round(clean_val(df.iloc[16, 2]) * 100, 1), # [cite: 34]
-        "marg_n_1": round(clean_val(df.iloc[17, 2]) * 100, 1), # [cite: 35]
+        "month_name": mes_it,
+        "year_n": anno_n,
+        "year_n_1": anno_n - 1,
+        "full_date_n": f"{mes_it} {anno_n}",
+        "full_date_n_1": f"{mes_it} {anno_n - 1}",
+        "fatturato_n": clean_val(df.iloc[8, 2]),     #
+        "fatturato_n_1": clean_val(df.iloc[9, 2]),   #
+        "diff_fatturato": round(clean_val(df.iloc[8, 3]) * 100, 1), #
+        "ric_cost_n": clean_val(df.iloc[12, 2]),
+        "ric_cost_n_1": clean_val(df.iloc[13, 2]),
+        "marg_n": round(clean_val(df.iloc[16, 2]) * 100, 1),
+        "marg_n_1": round(clean_val(df.iloc[17, 2]) * 100, 1),
     }
 
 # --- 3. FONCTION DE DESSIN DU RAPPORT (IMAGE FINALE) ---
@@ -85,37 +69,38 @@ def draw_full_report(d, restaurant_name, analysis_text):
     ax_main = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
     ax_main.axis('off')
 
-    # Header [cite: 1, 2, 3, 4]
+    # Header
     ax_main.text(0.5, 0.94, "We\nare_\nFIZZY", color=COLORS["white"], fontsize=16, fontweight='bold', ha='center', linespacing=0.9)
     ax_main.text(0.5, 0.89, "Report Mensile", color=COLORS["white"], fontsize=32, ha='center', fontfamily='serif', fontstyle='italic')
     ax_main.text(0.5, 0.86, f"{restaurant_name.upper()}", color=COLORS["white"], fontsize=16, ha='center')
-    ax_main.text(0.5, 0.84, d["month"].upper(), color=COLORS["highlight"], fontsize=12, ha='center')
+    ax_main.text(0.5, 0.84, d["full_date_n"].upper(), color=COLORS["highlight"], fontsize=12, ha='center')
 
-    # Graphique (Moitié gauche) [cite: 6, 7]
-    ax_bar = fig.add_axes([0.1, 0.58, 0.35, 0.20], facecolor=COLORS["bg"])
+    # Graphique (Moitié gauche)
+    ax_bar = fig.add_axes([0.15, 0.58, 0.35, 0.20], facecolor=COLORS["bg"])
     vals = [d["fatturato_n"], d["fatturato_n_1"]]
     rects = ax_bar.bar([0, 1], vals, color=[COLORS["graph1"], COLORS["graph2"]], width=0.8, zorder=3)
     
-    # Formatage Axe Y (Espaces milliers) [cite: 11, 13, 14]
+    # Formatage Axe Y
     ax_bar.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: f'{int(x):,}'.replace(',', ' ')))
     ax_bar.grid(axis='y', color=COLORS["white"], linestyle='-', linewidth=0.5, alpha=0.2, zorder=0)
     ax_bar.tick_params(axis='y', colors=COLORS["white"], labelsize=9)
     for s in ax_bar.spines.values(): s.set_visible(False)
     ax_bar.set_xticks([])
 
-    # Chiffres Fatturato (À droite du graph) [cite: 23, 24]
-    ax_main.text(0.52, 0.72, f"{int(d['fatturato_n']):,}".replace(',', ' ') + " €", color=COLORS["white"], fontsize=35, fontweight='bold')
-    ax_main.text(0.52, 0.68, f"{d['diff_fatturato']}% vs 2024", color=COLORS["accent"], fontsize=18)
+    # Chiffres Fatturato (À droite du graph)
+    val_txt = f"{int(d['fatturato_n']):,}".replace(',', ' ') + " €"
+    ax_main.text(0.55, 0.72, val_txt, color=COLORS["white"], fontsize=35, fontweight='bold')
+    ax_main.text(0.55, 0.68, f"{d['diff_fatturato']}% vs {d['year_n_1']}", color=COLORS["accent"], fontsize=18)
     
-    # Texte d'analyse [cite: 25]
-    ax_main.text(0.52, 0.64, analysis_text, color=COLORS["white"], fontsize=10, linespacing=1.5, va='top', wrap=True)
+    # Texte d'analyse
+    ax_main.text(0.55, 0.64, analysis_text, color=COLORS["white"], fontsize=10, linespacing=1.5, va='top', wrap=True)
 
-    # Section Ricavi - Costi [cite: 26, 29]
+    # Section Ricavi - Costi
     ax_main.text(0.1, 0.48, "RICAVI - COSTI", color=COLORS["accent"], fontsize=14, fontweight='bold')
     ax_main.text(0.1, 0.42, f"€ {int(d['ric_cost_n']):,}".replace(',', ' '), color=COLORS["white"], fontsize=28, fontweight='bold')
     ax_main.text(0.40, 0.42, f"€ {int(d['ric_cost_n_1']):,}".replace(',', ' '), color=COLORS["graph1"], fontsize=28)
 
-    # Section Margine [cite: 31, 34, 35]
+    # Section Margine
     ax_main.text(0.1, 0.28, "MARGINE % SU RICAVI", color=COLORS["accent"], fontsize=14, fontweight='bold')
     ax_main.text(0.1, 0.18, f"{int(d['marg_n'])}%", color=COLORS["white"], fontsize=55, fontweight='bold')
     ax_main.text(0.35, 0.18, f"{int(d['marg_n_1'])}%", color=COLORS["graph1"], fontsize=55, alpha=0.7)
@@ -132,41 +117,40 @@ uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
 if uploaded and restaurant_input:
     data_dict = load_data(uploaded)
     
-    # MÉTHODE HYBRIDE : 2 Colonnes
     col_viz, col_edit = st.columns([1, 1])
     
     with col_viz:
         st.subheader("📊 Aperçu des données")
         
-        # --- RÉCUPÉRATION DES VARIABLES ---
-        label_n = data_dict['full_date_n']     # ex: Dicembre 2025
-        label_n_1 = data_dict['full_date_n_1'] # ex: Dicembre 2024
+        label_n = data_dict['full_date_n']
+        label_n_1 = data_dict['full_date_n_1']
         
-        # --- VARIATION NOMINALE ---
+        # Variation nominale au-dessus
         diff_euro = data_dict['fatturato_n'] - data_dict['fatturato_n_1']
-        st.write(f"### Variation : **{int(diff_euro):,} €**".replace(",", " "))
+        suffixe = "↗︎" if diff_euro > 0 else "↘︎"
+        st.markdown(f"### Variation : **{int(diff_euro):,} €** {suffixe}".replace(",", " "))
 
-        # --- GRAPHIQUE NATIF ---
+        # Graphique natif indexé par les mois italiens
         chart_data = pd.DataFrame({
-            "Periodo": [label_n, label_n_1],
             "Fatturato (€)": [data_dict["fatturato_n"], data_dict["fatturato_n_1"]]
-        }).set_index("Periodo")
+        }, index=[label_n, label_n_1])
 
-        st.bar_chart(chart_data, color="#918d84")
+        st.bar_chart(chart_data, color=COLORS["graph1"])
         
-        # --- METRICS ---
+        # Metrics en bas
         c1, c2 = st.columns(2)
-        c1.metric(label_n, f"{int(data_dict['fatturato_n']):,}".replace(",", " ") + " €")
+        val_n = f"{int(data_dict['fatturato_n']):,}".replace(",", " ")
+        c1.metric(label_n, f"{val_n} €")
         c2.metric(f"vs {data_dict['year_n_1']}", f"{data_dict['diff_fatturato']}%")
 
     with col_edit:
         st.subheader("✍️ Analyse Narrative")
-        # Texte dynamique automatique [cite: 25]
+        # Pré-remplissage intelligent
         auto_text = (
             f"Dal confronto con lo stesso periodo dell'anno precedente emerge che, "
-            f"a {data_dict['month']}, il fatturato registra un "
+            f"a {data_dict['month_name']} {data_dict['year_n']}, il fatturato registra un "
             f"{'incremento' if data_dict['diff_fatturato'] > 0 else 'calo'} "
-            f"del {abs(data_dict['diff_fatturato'])}% rispetto al 2024."
+            f"del {abs(data_dict['diff_fatturato'])}% rispetto al {data_dict['year_n_1']}."
         )
         user_text = st.text_area("Personnalisez votre analyse ici :", value=auto_text, height=300)
 
@@ -182,4 +166,4 @@ if uploaded and restaurant_input:
             st.download_button("📥 Télécharger le rapport (.png)", img, file_name=fn, mime="image/png")
 
 else:
-    st.info("Veuillez configurer le nom du restaurant et charger un fichier Excel.")
+    st.info("Benvenuto! Carica un file Excel per iniziare.")
