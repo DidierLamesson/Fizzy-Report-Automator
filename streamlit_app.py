@@ -249,6 +249,7 @@ if uploaded and restaurant_input:
             values,
             width=0.9,
             color=[COLORS["graph1"], COLORS["graph2"]]
+            alpha=1.0   
         )
 
         # Labels au-dessus
