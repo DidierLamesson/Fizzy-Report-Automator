@@ -47,7 +47,7 @@ def load_data(file):
         "month": formatted_month, 
         "fatturato_n": clean_val(df.iloc[8, 2]),
         "fatturato_n_1": clean_val(df.iloc[9, 2]),
-        "diff_ca": round(clean_val(df.iloc[8, 3]) * 100, 1),
+        "diff_fatturato": round(clean_val(df.iloc[8, 3]) * 100, 1),
         "ric_cost_n": clean_val(df.iloc[12, 2]),
         "ric_cost_n_1": clean_val(df.iloc[13, 2]),
         "marg_n": round(clean_val(df.iloc[16, 2]) * 100, 1),
@@ -77,8 +77,8 @@ def draw_page_1(d):
 
     # Chiffres CA à droite du graphique
     # On utilise :.0f pour éviter les erreurs d'entiers si c'est un NaN
-    ax.text(0.55, 0.72, f"{d['ca_n']:,.0f} €".replace(',', ' '), color=COLORS["white"], fontsize=30, fontweight='bold')
-    ax.text(0.55, 0.68, f"{d['diff_ca']}% vs 2024", color=COLORS["accent"], fontsize=16)
+    ax.text(0.55, 0.72, f"{d['fatturato_n']:,.0f} €".replace(',', ' '), color=COLORS["white"], fontsize=30, fontweight='bold')
+    ax.text(0.55, 0.68, f"{d['diff_fatturato']}% vs 2024", color=COLORS["accent"], fontsize=16)
 
     # --- SECTION RICAVI - COSTI ---
     ax.text(0.05, 0.50, "Ricavi - Costi", color=COLORS["accent"], fontsize=18, fontweight='bold')
