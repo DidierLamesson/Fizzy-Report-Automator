@@ -253,6 +253,74 @@ st.title("Rapport Fizzy Automatizzazione ⚡️")
 restaurant_input = st.sidebar.text_input("Nom du Restaurant *", value="A'RICCIONE - TERRAZZA")
 uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
 
+
+if uploaded and restaurant_input:
+    data_dict = load_data(uploaded)
+
+    # Affichage des données extraites (optionnel, pour vérification)
+    st.subheader("🔍 Données extraites")
+    st.json(data_dict)
+
+    # --- 1. Graphique pour le Fatturato ---
+    st.subheader("📊 Évolution du Fatturato")
+    fatturato_data = pd.DataFrame({
+        "Mois": data_dict["graph_cost_dates"],
+        f"{data_dict['year_n']}": data_dict["fatturato_mensile_n"],
+        f"{data_dict['year_n_1']}": data_dict["fatturato_mensile_n_1"]
+    }).set_index("Mois")
+    st.line_chart(fatturato_data)
+
+    # --- 2. Graphiques pour Food Cost, Beverage Cost et Incidenza Staff ---
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.subheader("🍽️ Food Cost")
+        food_cost_data = pd.DataFrame({
+            "Mois": data_dict["graph_cost_dates"],
+            f"{data_dict['year_n']} (€)": data_dict["food_cost_monthly_n"],
+            f"{data_dict['year_n_1']} (€)": data_dict["food_cost_monthly_n_1"],
+            f"% {data_dict['year_n']}": data_dict["food_cost_pctg_n"],
+            f"% {data_dict['year_n_1']}": data_dict["food_cost_pctg_n_1"]
+        }).set_index("Mois")
+        st.line_chart(food_cost_data)
+
+    with col2:
+        st.subheader("🍹 Beverage Cost")
+        beverage_cost_data = pd.DataFrame({
+            "Mois": data_dict["graph_cost_dates"],
+            f"{data_dict['year_n']} (€)": data_dict["beverage_cost_monthly_n"],
+            f"{data_dict['year_n_1']} (€)": data_dict["beverage_cost_monthly_n_1"],
+            f"% {data_dict['year_n']}": data_dict["beverage_cost_pctg_n"],
+            f"% {data_dict['year_n_1']}": data_dict["beverage_cost_pctg_n_1"]
+        }).set_index("Mois")
+        st.line_chart(beverage_cost_data)
+
+    with col3:
+        st.subheader("👥 Incidenza Staff")
+        staff_cost_data = pd.DataFrame({
+            "Mois": data_dict["graph_cost_dates"],
+            f"% {data_dict['year_n']}": data_dict["staff_cost_pctg_n"],
+            f"% {data_dict['year_n_1']}": data_dict["staff_cost_pctg_n_1"]
+        }).set_index("Mois")
+        st.line_chart(staff_cost_data)
+
+    # --- 3. Métriques Clés ---
+    st.subheader("📌 Métriques Clés")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.metric(f"Fatturato {data_dict['year_n']}", f"{data_dict['fatturato_n']:,.2f} €")
+        st.metric(f"Fatturato {data_dict['year_n_1']}", f"{data_dict['fatturato_n_1']:,.2f} €")
+        st.metric("Variation", f"{data_dict['diff_fatturato']}%")
+
+    with c2:
+        st.metric(f"Food Cost Avg {data_dict['year_n']}", f"{data_dict['food_cost_avg_n']:,.2f} €")
+        st.metric(f"Food Cost Avg {data_dict['year_n_1']}", f"{data_dict['food_cost_avg_n_1']:,.2f} €")
+
+    with c3:
+        st.metric(f"Beverage Cost Avg {data_dict['year_n']}", f"{data_dict['beverage_cost_avg_n']:,.2f} €")
+        st.metric(f"Beverage Cost Avg {data_dict['year_n_1']}", f"{data_dict['beverage_cost_avg_n_1']:,.2f} €")
+
+
 if uploaded and restaurant_input:
     data_dict = load_data(uploaded)
 
