@@ -218,7 +218,7 @@ st.title("Report Fizzy Automatizzazione ⚡️")
 
 restaurant_input = st.sidebar.text_input(
     "Nome clienti *",
-    default_value="A'RICCIONE - TERRAZZA"
+    value="A'RICCIONE - TERRAZZA"
 )
 uploaded = st.sidebar.file_uploader(
     "Charger le fichier Excel",
