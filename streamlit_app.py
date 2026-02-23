@@ -233,7 +233,7 @@ if uploaded and restaurant_input:
         bar2 = ax.bar(x[1], data_dict["fatturato_n_1"], width, color=COLORS["graph2"], label=f"{data_dict['year_n_1']}")
 
         # Personnalisation du graphique
-        ax.set_xticks(x)
+        ax.set_xticks(0)
         ax.set_xticklabels([f"{data_dict['month_name']}\n{data_dict['year_n']}", f"{data_dict['month_name']}\n{data_dict['year_n_1']}"])
         ax.set_ylabel("Fatturato (€)", color=COLORS["white"])
         ax.legend()
