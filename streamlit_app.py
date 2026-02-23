@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-import numpy as np
 
 # --- 1. CONFIGURATION & DESIGN ---
 st.set_page_config(page_title="FIZZY Automator", layout="wide")
@@ -40,7 +39,7 @@ def load_data(file):
         9: "Settembre", 10: "Ottobre", 11: "Novembre", 12: "Dicembre"
     }
 
-    # --- 1. Extraction de la date (ex: "Dicembre 2025") ---
+    # --- 1. Extraction de la date ---
     raw_date = df.iloc[4, 2]  # Supposons que la date est en C5
     if hasattr(raw_date, 'month'):
         mes_it = months_it[raw_date.month]
@@ -49,45 +48,110 @@ def load_data(file):
         mes_it = "Mese"
         anno_n = 2026  # Valeur par défaut
 
-    # --- 2. Extraction dynamique des données "Fatturato" ---
-    # Chercher les lignes contenant "Fatturato 2025" et "Fatturato 2024"
-    fatturato_n_row = df[df.apply(lambda row: row.astype(str).str.contains("Fatturato.*2025", na=False, regex=True).any(), axis=1)].index[0]
-    fatturato_n_1_row = df[df.apply(lambda row: row.astype(str).str.contains("Fatturato.*2024", na=False, regex=True).any(), axis=1)].index[0]
+    # --- 2. Extraction des données "Fatturato" ---
+    fatturato_n = clean_val(df.iloc[8, 2])      # Fatturato N (ligne 9, colonne C)
+    fatturato_n_1 = clean_val(df.iloc[9, 2])    # Fatturato N-1 (ligne 10, colonne C)
+    diff_fatturato = round(clean_val(df.iloc[8, 3]) * 100, 1)  # % variation (ligne 9, colonne D)
 
-    fatturato_n = clean_val(df.iloc[fatturato_n_row, 2])
-    fatturato_n_1 = clean_val(df.iloc[fatturato_n_1_row, 2])
-    diff_fatturato = round(clean_val(df.iloc[fatturato_n_row, 3]) * 100, 1)
+    # Ricavi - Costi et Margine
+    ric_cost_n = clean_val(df.iloc[12, 2])      # Ricavi - Costi N (ligne 13, colonne C)
+    ric_cost_n_1 = clean_val(df.iloc[13, 2])    # Ricavi - Costi N-1 (ligne 14, colonne C)
+    marg_n = round(clean_val(df.iloc[16, 2]) * 100, 1)  # Margine N (ligne 17, colonne C)
+    marg_n_1 = round(clean_val(df.iloc[17, 2]) * 100, 1)  # Margine N-1 (ligne 18, colonne C)
 
-    # Ricavi - Costi et Margine (offsets relatifs)
-    ric_cost_n = clean_val(df.iloc[fatturato_n_row + 4, 2])
-    ric_cost_n_1 = clean_val(df.iloc[fatturato_n_row + 5, 2])
-    marg_n = round(clean_val(df.iloc[fatturato_n_row + 8, 2]) * 100, 1)
-    marg_n_1 = round(clean_val(df.iloc[fatturato_n_row + 9, 2]) * 100, 1)
+    # --- 3. Extraction des dates et données "Food Cost" ---
+    food_cost_dates = [df.iloc[i, 1] for i in range(24, 30)]  # Dates en colonne B
+    fatturato_mensile_n = [clean_val(df.iloc[i, 2]) for i in range(24, 30)]  # Fatturato mensuel N en colonne C
+    fatturato_mensile_n_1 = [clean_val(df.iloc[i, 8]) for i in range(24, 30)]  # Fatturato mensuel N-1 en colonne I
 
-    # --- 3. Extraction dynamique des données "Food & Beverage Cost" ---
-    # Chercher les titres "Food Cost" et "Beverage Cost"
-    food_cost_title_row = df[df.apply(lambda row: row.astype(str).str.contains("Food Cost", na=False).any(), axis=1)].index[0]
-    beverage_cost_title_row = df[df.apply(lambda row: row.astype(str).str.contains("Beverage Cost", na=False).any(), axis=1)].index[0]
+    # Food Cost mensuel (N et N-1)
+    food_cost_monthly_n = [clean_val(df.iloc[i, 3]) for i in range(24, 30)]  # Colonne D (N)
+    food_cost_monthly_n_1 = [clean_val(df.iloc[i, 9]) for i in range(24, 30)]  # Colonne J (N-1)
 
-    # Extraire les valeurs mensuelles (6 prochaines lignes)
-    food_cost_monthly = [clean_val(df.iloc[food_cost_title_row + i, 2]) for i in range(1, 7)]
-    beverage_cost_monthly = [clean_val(df.iloc[beverage_cost_title_row + i, 2]) for i in range(1, 7)]
+    # --- 4. Extraction des données "Beverage Cost" ---
+    beverage_cost_dates = [df.iloc[i, 1] for i in range(36, 42)]  # Dates en colonne B
+    beverage_cost_monthly_n = [clean_val(df.iloc[i, 3]) for i in range(36, 42)]  # Colonne D (N)
+    beverage_cost_monthly_n_1 = [clean_val(df.iloc[i, 9]) for i in range(36, 42)]  # Colonne J (N-1)
 
-    # Moyennes (1 ligne après les valeurs mensuelles)
-    food_cost_avg = clean_val(df.iloc[food_cost_title_row + 7, 2])
-    beverage_cost_avg = clean_val(df.iloc[beverage_cost_title_row + 7, 2])
+    # --- 5. Extraction des données "Incidenza Staff" ---
+    staff_monthly_n = [clean_val(df.iloc[i, 3]) for i in range(50, 55)]  # Colonne D (N)
+    staff_monthly_n_1 = [clean_val(df.iloc[i, 9]) for i in range(50, 55)]  # Colonne J (N-1)
 
-    # --- 4. Extraction dynamique des données "Incidenza Staff" ---
-    # Chercher le titre "Incidenza Staff" ou "Labour Cost"
-    staff_cost_title_row = df[df.apply(lambda row: row.astype(str).str.contains("Incidenza Staff|Labour Cost", na=False).any(), axis=1)].index[0]
+    # --- 6. Calcul des pourcentages de Food Cost ---
+    food_cost_pctg_n = []
+    for i in range(len(food_cost_monthly_n)):
+        fatturato = fatturato_mensile_n[i]
+        food_cost = food_cost_monthly_n[i]
+        if fatturato > 0:  # Évite la division par zéro
+            pctg = (food_cost / fatturato) * 100
+        else:
+            pctg = 0.0
+        food_cost_pctg_n.append(round(pctg, 2))
 
-    # Extraire les pourcentages (3 prochaines lignes)
-    staff_cost_dec = clean_val(df.iloc[staff_cost_title_row + 1, 2])
-    staff_cost_nov = clean_val(df.iloc[staff_cost_title_row + 2, 2])
-    staff_cost_dec_2024 = clean_val(df.iloc[staff_cost_title_row + 3, 2])
-    staff_benchmark = clean_val(df.iloc[staff_cost_title_row + 4, 2])
+    # Même chose pour N-1
+    food_cost_pctg_n_1 = []
+    for i in range(len(food_cost_monthly_n_1)):
+        fatturato = fatturato_mensile_n_1[i]
+        food_cost = food_cost_monthly_n_1[i]
+        if fatturato > 0:
+            pctg = (food_cost / fatturato) * 100
+        else:
+            pctg = 0.0
+        food_cost_pctg_n_1.append(round(pctg, 2))
 
-    # --- 5. Retour des données ---
+    # --- 7. Calcul des pourcentages de Beverage Cost ---
+    beverage_cost_pctg_n = []
+    for i in range(len(beverage_cost_monthly_n)):
+        fatturato = clean_val(df.iloc[36 + i, 2])  # Fatturato mensuel N en colonne C
+        beverage_cost = beverage_cost_monthly_n[i]
+        if fatturato > 0:
+            pctg = (beverage_cost / fatturato) * 100
+        else:
+            pctg = 0.0
+        beverage_cost_pctg_n.append(round(pctg, 2))
+
+    # Même chose pour N-1
+    beverage_cost_pctg_n_1 = []
+    for i in range(len(beverage_cost_monthly_n_1)):
+        fatturato = clean_val(df.iloc[36 + i, 8])  # Fatturato mensuel N-1 en colonne I
+        beverage_cost = beverage_cost_monthly_n_1[i]
+        if fatturato > 0:
+            pctg = (beverage_cost / fatturato) * 100
+        else:
+            pctg = 0.0
+        beverage_cost_pctg_n_1.append(round(pctg, 2))
+
+    # --- 8. Calcul des pourcentages de Staff Cost ---
+    staff_cost_pctg_n = []
+    for i in range(len(staff_monthly_n)):
+        fatturato = clean_val(df.iloc[50 + i, 2])  # Fatturato mensuel N en colonne C
+        staff_cost = staff_monthly_n[i]
+        if fatturato > 0:
+            pctg = (staff_cost / fatturato) * 100
+        else:
+            pctg = 0.0
+        staff_cost_pctg_n.append(round(pctg, 2))
+
+    # Même chose pour N-1
+    staff_cost_pctg_n_1 = []
+    for i in range(len(staff_monthly_n_1)):
+        fatturato = clean_val(df.iloc[50 + i, 8])  # Fatturato mensuel N-1 en colonne I
+        staff_cost = staff_monthly_n_1[i]
+        if fatturato > 0:
+            pctg = (staff_cost / fatturato) * 100
+        else:
+            pctg = 0.0
+        staff_cost_pctg_n_1.append(round(pctg, 2))
+
+    # --- 9. Calcul des moyennes ---
+    food_cost_avg_n = sum(food_cost_monthly_n) / len(food_cost_monthly_n)
+    food_cost_avg_n_1 = sum(food_cost_monthly_n_1) / len(food_cost_monthly_n_1)
+    beverage_cost_avg_n = sum(beverage_cost_monthly_n) / len(beverage_cost_monthly_n)
+    beverage_cost_avg_n_1 = sum(beverage_cost_monthly_n_1) / len(beverage_cost_monthly_n_1)
+    staff_cost_avg_n = sum(staff_monthly_n) / len(staff_monthly_n)
+    staff_cost_avg_n_1 = sum(staff_monthly_n_1) / len(staff_monthly_n_1)
+
+    # --- 10. Retour des données ---
     return {
         # Fatturato
         "month_name": mes_it,
@@ -103,18 +167,33 @@ def load_data(file):
         "marg_n": marg_n,
         "marg_n_1": marg_n_1,
 
-        # Food & Beverage Cost
-        "food_cost_monthly": food_cost_monthly,
-        "beverage_cost_monthly": beverage_cost_monthly,
-        "food_cost_avg": food_cost_avg,
-        "beverage_cost_avg": beverage_cost_avg,
+        # Food Cost
+        "food_cost_dates": food_cost_dates,
+        "food_cost_monthly_n": food_cost_monthly_n,
+        "food_cost_monthly_n_1": food_cost_monthly_n_1,
+        "food_cost_pctg_n": food_cost_pctg_n,
+        "food_cost_pctg_n_1": food_cost_pctg_n_1,
+        "food_cost_avg_n": food_cost_avg_n,
+        "food_cost_avg_n_1": food_cost_avg_n_1,
+
+        # Beverage Cost
+        "beverage_cost_dates": beverage_cost_dates,
+        "beverage_cost_monthly_n": beverage_cost_monthly_n,
+        "beverage_cost_monthly_n_1": beverage_cost_monthly_n_1,
+        "beverage_cost_pctg_n": beverage_cost_pctg_n,
+        "beverage_cost_pctg_n_1": beverage_cost_pctg_n_1,
+        "beverage_cost_avg_n": beverage_cost_avg_n,
+        "beverage_cost_avg_n_1": beverage_cost_avg_n_1,
 
         # Incidenza Staff
-        "staff_cost_dec": staff_cost_dec,
-        "staff_cost_nov": staff_cost_nov,
-        "staff_cost_dec_2024": staff_cost_dec_2024,
-        "staff_benchmark": staff_benchmark,
+        "staff_monthly_n": staff_monthly_n,
+        "staff_monthly_n_1": staff_monthly_n_1,
+        "staff_cost_pctg_n": staff_cost_pctg_n,
+        "staff_cost_pctg_n_1": staff_cost_pctg_n_1,
+        "staff_cost_avg_n": staff_cost_avg_n,
+        "staff_cost_avg_n_1": staff_cost_avg_n_1,
     }
+
 
 # --- 3. FONCTION DE DESSIN DU RAPPORT (IMAGE FINALE) ---
 def draw_full_report(d, restaurant_name, analysis_text):
