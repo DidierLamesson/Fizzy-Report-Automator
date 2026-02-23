@@ -216,10 +216,13 @@ if uploaded and restaurant_input:
         data_dict = load_data(uploaded)
 
         # --- 1. Affichage du graphique en barre ---
-        col_viz, col_edit = st.columns([1, 2])
+        col_viz, col_edit = st.columns([1, 1])
 
-        with col_viz:
-            st.subheader("📊 Fatturato Mensile")
+        # Création du DataFrame pour le graphique
+            chart_data = pd.DataFrame({
+                f"{data_dict['month_name']} {data_dict['year_n']}": [data_dict["fatturato_n"]],
+                f"{data_dict['month_name']} {data_dict['year_n_1']}": [data_dict["fatturato_n_1"]]
+            })
 
 
 
