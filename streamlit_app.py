@@ -122,7 +122,6 @@ if uploaded and restaurant_input:
         
         # Style pour mettre en avant la variation nominale
         st.markdown(f"### Variation : **{int(variation_nominale):,} €** {suffixe}".replace(",", " "))
-        st.caption(f"Comparaison entre {label_n} et {label_n_1}")
 
         # --- DONNÉES DU GRAPHIQUE ---
         chart_data = pd.DataFrame({
