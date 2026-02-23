@@ -213,16 +213,26 @@ restaurant_input = st.sidebar.text_input("Nom du Restaurant *", value="A'RICCION
 uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
 
 if uploaded and restaurant_input:
-        data_dict = load_data(uploaded)
+    data_dict = load_data(uploaded)
 
-        # --- 1. Affichage du graphique en barre ---
-        col_viz, col_edit = st.columns([1, 1])
+    # --- 1. Affichage du graphique en barre ---
+    col_viz, col_edit = st.columns([1, 1])
+
+    with col_viz:
+        st.subheader("📊 Fatturato Mensile")
 
         # Création du DataFrame pour le graphique
-            chart_data = pd.DataFrame({
-                f"{data_dict['month_name']} {data_dict['year_n']}": [data_dict["fatturato_n"]],
-                f"{data_dict['month_name']} {data_dict['year_n_1']}": [data_dict["fatturato_n_1"]]
-            })
+        chart_data = pd.DataFrame({
+            f"{data_dict['month_name']} {data_dict['year_n']}": [data_dict["fatturato_n"]],
+            f"{data_dict['month_name']} {data_dict['year_n_1']}": [data_dict["fatturato_n_1"]]
+        })
+
+        # Affichage du graphique en barre
+        st.bar_chart(chart_data)
+
+        # Affichage des valeurs brutes
+        st.write(f"Fatturato {data_dict['year_n']}: **{data_dict['fatturato_n']:,.2f} €**")
+        st.write(f"Fatturato {data_dict['year_n_1']}: **{data_dict['fatturato_n_1']:,.2f} €**")
 
 
 
