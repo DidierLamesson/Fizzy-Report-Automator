@@ -104,7 +104,7 @@ if uploaded and restaurant_input:
         # On crée le DataFrame avec les vraies clés du dictionnaire
         # Le mois actuel et le mois N-1 sont extraits de load_data
         chart_df = pd.DataFrame({
-            "Période": [f"{data_dict['month']} (N)", "Année Précédente (N-1)"],
+            "Période": [f"{data_dict['month']} ", f"{data_dict['month']} N-1"],
             "Fatturato": [data_dict["fatturato_n"], data_dict["fatturato_n_1"]]
         })
         
