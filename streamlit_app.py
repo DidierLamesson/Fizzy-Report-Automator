@@ -70,7 +70,7 @@ def draw_page_1(d):
     
     # Graphique CA (Histogramme)
     ax_bar = fig.add_axes([0.1, 0.62, 0.35, 0.12], facecolor=COLORS["bg"])
-    ax_bar.bar(["2024", "2025"], [d["ca_n_1"], d["ca_n"]], color=[COLORS["graph1"], COLORS["graph2"]], width=0.5)
+    ax_bar.bar(["2024", "2025"], [d["fatturato_n_1"], d["fatturato_n"]], color=[COLORS["graph1"], COLORS["graph2"]], width=0.5)
     ax_bar.set_frame_on(False)
     ax_bar.tick_params(colors=COLORS["white"], labelsize=10)
     ax_bar.get_yaxis().set_visible(False)
