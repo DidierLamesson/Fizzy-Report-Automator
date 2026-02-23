@@ -106,29 +106,51 @@ if uploaded and restaurant_input:
             "Fatturato": [data_dict["fatturato_n"], data_dict["fatturato_n_1"]]
         })
 
-        # Utilisation d'Altair pour forcer l'axe en Euros, sans virgules, avec espaces
+        # MÉTHODE HYBRIDE : 2 Colonnes pour travailler
+    col_viz, col_edit = st.columns([1, 1])
+    
+    with col_viz:
+        st.subheader("📊 Aperçu des données")
+        
+        # 1. Préparation des données
+        chart_df = pd.DataFrame({
+            "Période": [f"{data_dict['month']} (N)", "Année Précédente (N-1)"],
+            "Fatturato": [data_dict["fatturato_n"], data_dict["fatturato_n_1"]],
+            "color": [COLORS["graph1"], COLORS["graph2"]]
+        })
+
+        # 2. Création du graphique Altair
         import altair as alt
         
-        c = alt.Chart(chart_df).mark_bar(color=COLORS["graph1"]).encode(
-            x=alt.X('Période:N', sort=None, axis=alt.Axis(labelAngle=0)),
+        chart = alt.Chart(chart_df).mark_bar().encode(
+            x=alt.X('Période:N', sort=None, axis=alt.Axis(labelAngle=0, title=None)),
             y=alt.Y('Fatturato:Q', 
                    axis=alt.Axis(
-                       values=list(range(0, int(max(chart_df["Fatturato"])*1.2), 100000)), # Graduation tous les 100k [cite: 11, 13]
                        labelExpr="format(datum.value, ',d').replace(',', ' ') + ' €'", 
                        title="Fatturato (€)"
                    )),
-        ).properties(height=300)
+            color=alt.Color('color:N', scale=None) # Applique Gris et Beige
+        ).properties(height=350)
 
-        st.altair_chart(c, use_container_width=True)
+        # 3. Affichage effectif du graphique
+        st.altair_chart(chart, use_container_width=True)
         
-        # Affichage des Metrics sans aucune virgule
-        col_n, col_n1 = st.columns(2)
+        # 4. Metrics en dessous sans virgules
+        c1, c2 = st.columns(2)
+        val_n = f"{int(data_dict['fatturato_n']):,}".replace(",", " ")
+        c1.metric(f"Venduto {data_dict['month']}", f"{val_n} €")
+        c2.metric("Variation", f"{data_dict['diff_fatturato']}%")
+
+    with col_edit:
+        st.subheader("✍️ Analyse Narrative")
+        auto_text = (
+            f"Dal confronto con lo stesso periodo dell'anno precedente emerge che, "
+            f"a {data_dict['month']}, il fatturato registra un "
+            f"{'incremento' if data_dict['diff_fatturato'] > 0 else 'calo'} "
+            f"del {abs(data_dict['diff_fatturato'])}% rispetto al 2024."
+        )
+        user_text = st.text_area("Rédigez ici :", value=auto_text, height=250)
         
-        # On transforme en int() pour supprimer les virgules définitivement
-        val_euro = f"{int(data_dict['fatturato_n']):,}".replace(",", " ")
-        col_n.metric(f"Venduto {data_dict['month']}", f"{val_euro} €") # [cite: 21, 23]
-        
-        col_n1.metric("Variation", f"{data_dict['diff_fatturato']}%", delta_color="normal") # [cite: 22, 24]
         st.subheader("✍️ Analyse Narrative")
         
         # On crée un texte par défaut qui utilise les vraies données du fichier
