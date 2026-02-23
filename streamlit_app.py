@@ -214,11 +214,11 @@ def load_data(file):
 
 
 # --- 3. INTERFACE UTILISATEUR ---
-st.title("Rapport Fizzy Automatizzazione ⚡️")
+st.title("Report Fizzy Automatizzazione ⚡️")
 
 restaurant_input = st.sidebar.text_input(
-    "Nom du Restaurant *",
-    value="A'RICCIONE - TERRAZZA"
+    "Nome clienti *",
+    default_value="A'RICCIONE - TERRAZZA"
 )
 uploaded = st.sidebar.file_uploader(
     "Charger le fichier Excel",
