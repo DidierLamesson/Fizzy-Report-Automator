@@ -99,20 +99,29 @@ if uploaded and restaurant_input:
     
     with col_viz:
         st.subheader("📊 Aperçu des données")
-        # Petit graphique interactif rapide
+        
+        # --- POINT 2 : DONNÉES DYNAMIQUES ---
+        # On crée le DataFrame avec les vraies clés du dictionnaire
+        # Le mois actuel et le mois N-1 sont extraits de load_data
         chart_df = pd.DataFrame({
-            "Année": ["2025", "2024"],
+            "Période": [f"{data_dict['month']} (N)", "Année Précédente (N-1)"],
             "Fatturato": [data_dict["fatturato_n"], data_dict["fatturato_n_1"]]
         })
-        # Exemple de personnalisation native
+        
+        # --- POINT 1 : FORMATAGE EUROS ET ESPACES ---
+        # On utilise st.bar_chart avec une configuration d'axe
         st.bar_chart(
             data=chart_df, 
-            x="Année", 
+            x="Période", 
             y="Fatturato", 
-            color="#918d84", # Change le bleu par le gris de votre charte
+            color="#918d84",  # Application de votre gris charte
             use_container_width=True
         )
-        st.metric("Variation", f"{data_dict['diff_fatturato']}%")
+        
+        # Pour afficher proprement les chiffres avec espaces sous le graph
+        col_n, col_n1 = st.columns(2)
+        col_n.metric(f"Venduto {data_dict['month']}", f"{data_dict['fatturato_n']:,.0f} €".replace(",", " "))
+        col_n1.metric("vs 2024", f"{data_dict['diff_fatturato']}%", delta_color="normal")
 
     with col_edit:
         st.subheader("✍️ Analyse Narrative")
