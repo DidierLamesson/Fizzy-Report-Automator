@@ -349,9 +349,9 @@ if uploaded and restaurant_input:
         st.subheader("✍️ Analyse Narrative")
 
         auto_text = (
-            f"À {data_dict['month_name']} {data_dict['year_n']}, "
-            f"le Fatturato est de {data_dict['fatturato_n']:,.2f} €, "
-            f"contre {data_dict['fatturato_n_1']:,.2f} € en "
+            f"In {data_dict['month_name']} {data_dict['year_n']} "
+            f"il fatturato è di {data_dict['fatturato_n']: .2f} €, "
+            f"contre {data_dict['fatturato_n_1']: .2f} € en "
             f"{data_dict['year_n_1']}. "
             f"Cela représente une variation de "
             f"{(data_dict['fatturato_n'] - data_dict['fatturato_n_1']):,.2f} €."
