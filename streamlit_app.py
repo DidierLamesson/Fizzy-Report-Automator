@@ -139,7 +139,7 @@ def draw_page_1(d, restaurant_name):
     return fig
 
 # --- INTERFACE STREAMLIT ---
-st.title("FIZZY Automator 🥂")
+st.title("Report mensile Fizzy 📊")
 
 # 1. Barre de saisie du nom (obligatoire)
 restaurant_input = st.sidebar.text_input("Nom du Restaurant *", value="", placeholder="Ex: A'RICCIONE - TERRAZZA")
