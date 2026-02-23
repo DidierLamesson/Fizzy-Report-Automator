@@ -260,7 +260,7 @@ if uploaded and restaurant_input:
             alpha=1.0,
             zorder=3   # ← au-dessus de la grid
         )
-        ax.set_xlim(-0.475 - 0.10, 1.475)
+        ax.set_xlim(-0.475 - 0.05, 1.475)
 
         # Labels au-dessus
         for i, v in enumerate(values):
