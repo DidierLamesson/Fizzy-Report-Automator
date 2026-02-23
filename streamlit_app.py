@@ -274,7 +274,6 @@ if uploaded and restaurant_input:
 
         # Axe Y
         ax.tick_params(axis='y', colors=COLORS["white"], labelsize=14)
-        ax.set_yticks([])
         ax.yaxis.set_major_formatter(
             ticker.FuncFormatter(
                 lambda x, p: f"{int(x):,}".replace(",", " ")
