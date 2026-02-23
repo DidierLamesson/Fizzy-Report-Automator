@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+from matplotlib.lines import Line2D
 import numpy as np
 
 # --- CONFIGURATION & DESIGN ---
@@ -10,8 +12,8 @@ COLORS = {
     "bg": "#172e4d",
     "accent": "#edf86c",
     "highlight": "#c8bcab",
-    "graph1": "#918d84",
-    "graph2": "#ece8e1",
+    "graph1": "#918d84",  # Gris (pour 2025 selon l'image cible)
+    "graph2": "#ece8e1",  # Beige (pour 2024 selon l'image cible)
     "white": "#ffffff"
 }
 
@@ -35,7 +37,7 @@ def load_data(file):
     # Récupération du mois en C5 (index 4, 2)
     raw_month = df.iloc[4, 2]
     
-    # Si c'est une date Python/Excel, on la formate, sinon on prend le texte tel quel
+    # Formate le mois si c'est une date, sinon prend le texte
     if hasattr(raw_month, 'strftime'):
         formatted_month = raw_month.strftime('%B %Y')
     else:
@@ -44,8 +46,8 @@ def load_data(file):
     # On va chercher les autres valeurs
     data = {
         "month": formatted_month, 
-        "fatturato_n": clean_val(df.iloc[8, 2]),
-        "fatturato_n_1": clean_val(df.iloc[9, 2]),
+        "fatturato_n": clean_val(df.iloc[8, 2]),    # N = 2025
+        "fatturato_n_1": clean_val(df.iloc[9, 2]),  # N-1 = 2024
         "diff_fatturato": round(clean_val(df.iloc[8, 3]) * 100, 1),
         "ric_cost_n": clean_val(df.iloc[12, 2]),
         "ric_cost_n_1": clean_val(df.iloc[13, 2]),
@@ -54,43 +56,86 @@ def load_data(file):
     }
     return data
 
+# Fonction pour formater les grands nombres avec des espaces (ex: 500 000)
+def human_format(num, pos):
+    return f'{int(num):,}'.replace(',', ' ')
+
 def draw_page_1(d, restaurant_name):
     # Création de la figure avec la couleur de fond
     fig = plt.figure(figsize=(10, 14), facecolor=COLORS["bg"])
-    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
+    # Axe principal invisible pour le fond
+    ax_bg = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
+    ax_bg.axis('off')
     
-    # Header
-    ax.text(0.05, 0.94, "We\nare_\nFIZZY", color=COLORS["white"], fontsize=18, fontweight='bold')
+    # --- HEADER GLOBAL ---
+    ax_bg.text(0.05, 0.94, "We\nare_\nFIZZY", color=COLORS["white"], fontsize=18, fontweight='bold')
+    ax_bg.text(0.5, 0.88, restaurant_name.upper(), color=COLORS["white"], fontsize=22, ha='center', fontweight='bold')
+    ax_bg.text(0.5, 0.85, d["month"], color=COLORS["highlight"], fontsize=14, ha='center')
+
+    # --- NOUVEAU GRAPHIQUE FATTURATO (Style Image Cible) ---
+    # On crée un axe plus grand pour le graphique
+    ax_bar = fig.add_axes([0.1, 0.55, 0.8, 0.25], facecolor=COLORS["bg"])
     
-    # Utilisation du nom saisi dans la barre
-    ax.text(0.5, 0.88, restaurant_name.upper(), color=COLORS["white"], fontsize=22, ha='center', fontweight='bold')
-    ax.text(0.5, 0.85, d["month"], color=COLORS["highlight"], fontsize=14, ha='center')
+    # Données et Couleurs inversées pour coller à l'image cible :
+    # Barre 1 (gauche) = 2025 (N) en GRIS
+    # Barre 2 (droite) = 2024 (N-1) en BEIGE
+    valores = [d["fatturato_n"], d["fatturato_n_1"]]
+    couleurs = [COLORS["graph1"], COLORS["graph2"]]
+    positions = [0, 1]
+    labels_legende = ['Fatturato 2025 €', 'Fatturato 2024 €']
 
-    # --- SECTION FATTURATO ---
-    ax.text(0.05, 0.78, "Fatturato", color=COLORS["accent"], fontsize=18, fontweight='bold')
+    # Création des barres (plus larges pour être proches)
+    rects = ax_bar.bar(positions, valores, color=couleurs, width=0.9, edgecolor=COLORS["bg"], linewidth=1)
+
+    # --- MISE EN FORME DU GRAPHIQUE ---
     
-    # Graphique CA (Histogramme)
-    ax_bar = fig.add_axes([0.1, 0.62, 0.35, 0.12], facecolor=COLORS["bg"])
-    ax_bar.bar(["2024", "2025"], [d["fatturato_n_1"], d["fatturato_n"]], color=[COLORS["graph1"], COLORS["graph2"]], width=0.5)
-    ax_bar.set_frame_on(False)
-    ax_bar.tick_params(colors=COLORS["white"], labelsize=10)
-    ax_bar.get_yaxis().set_visible(False)
+    # Titre du graphique
+    ax_bar.set_title(f"Venduto {restaurant_name.split('-')[0].strip()} {d['month'].split(' ')[0]}\n2025 vs 2024", 
+                     color=COLORS["white"], fontsize=18, fontweight='bold', pad=25)
 
-    # Chiffres CA à droite du graphique
-    ax.text(0.55, 0.72, f"{d['fatturato_n']:,.0f} €".replace(',', ' '), color=COLORS["white"], fontsize=30, fontweight='bold')
-    ax.text(0.55, 0.68, f"{d['diff_fatturato']}% vs 2024", color=COLORS["accent"], fontsize=16)
+    # Légende personnalisée au-dessus
+    legend_elements = [
+        Line2D([0], [0], color=COLORS["graph1"], lw=0, marker='o', markersize=12, label=labels_legende[0]),
+        Line2D([0], [0], color=COLORS["graph2"], lw=0, marker='o', markersize=12, label=labels_legende[1])
+    ]
+    ax_bar.legend(handles=legend_elements, loc='lower center', bbox_to_anchor=(0.5, 1.02), 
+                  ncol=2, frameon=False, labelcolor=COLORS["white"], fontsize=12)
 
-    # --- SECTION RICAVI - COSTI ---
-    ax.text(0.05, 0.50, "Ricavi - Costi", color=COLORS["accent"], fontsize=18, fontweight='bold')
-    ax.text(0.05, 0.44, f"€ {d['ric_cost_n']:,.0f}".replace(',', ' '), color=COLORS["white"], fontsize=24)
-    ax.text(0.35, 0.44, f"€ {d['ric_cost_n_1']:,.0f}".replace(',', ' '), color=COLORS["graph1"], fontsize=24)
+    # Axe Y : Visible, formaté et avec grille
+    ax_bar.set_ylim(0, max(valores) * 1.2) # Marge au-dessus pour le texte
+    ax_bar.yaxis.set_major_formatter(ticker.FuncFormatter(human_format))
+    ax_bar.tick_params(axis='y', colors=COLORS["white"], labelsize=12)
+    ax_bar.grid(axis='y', color=COLORS["white"], linestyle='-', linewidth=0.5, alpha=0.3)
+    
+    # Retirer les épines (cadres) sauf celle du bas si on veut
+    for spine in ax_bar.spines.values():
+        spine.set_visible(False)
+    # ax_bar.spines['bottom'].set_visible(True) # Optionnel : garder la ligne du bas
 
-    # --- SECTION MARGINE ---
-    ax.text(0.05, 0.30, "Margine % su ricavi", color=COLORS["accent"], fontsize=18, fontweight='bold')
-    ax.text(0.05, 0.22, f"{d['marg_n']}%", color=COLORS["white"], fontsize=45, fontweight='bold')
-    ax.text(0.25, 0.22, f"{d['marg_n_1']}%", color=COLORS["graph1"], fontsize=45)
+    # Axe X : Un seul label "Terrazza" (ou le nom du resto)
+    ax_bar.set_xticks([]) # On cache les ticks par défaut
+    # On ajoute le label centré sous le graphique
+    ax_bar.text(0.5, -0.1, restaurant_name.split('-')[-1].strip() if '-' in restaurant_name else restaurant_name, 
+                transform=ax_bar.transAxes, color=COLORS["white"], fontsize=16, ha='center')
 
-    plt.axis('off')
+    # --- VALEURS SUR LES BARRES ---
+    for rect in rects:
+        height = rect.get_height()
+        ax_bar.text(rect.get_x() + rect.get_width()/2., height + (max(valores)*0.02),
+                    f'{int(height):,}'.replace(',', ' '),
+                    ha='center', va='bottom', color=COLORS["white"], fontsize=18, fontweight='bold')
+
+    # --- AUTRES SECTIONS (Plus bas) ---
+    # SECTION RICAVI - COSTI
+    ax_bg.text(0.05, 0.40, "Ricavi - Costi", color=COLORS["accent"], fontsize=18, fontweight='bold')
+    ax_bg.text(0.05, 0.34, f"€ {d['ric_cost_n']:,.0f}".replace(',', ' '), color=COLORS["white"], fontsize=24)
+    ax_bg.text(0.35, 0.34, f"€ {d['ric_cost_n_1']:,.0f}".replace(',', ' '), color=COLORS["graph1"], fontsize=24)
+
+    # SECTION MARGINE
+    ax_bg.text(0.05, 0.22, "Margine % su ricavi", color=COLORS["accent"], fontsize=18, fontweight='bold')
+    ax_bg.text(0.05, 0.14, f"{d['marg_n']}%", color=COLORS["white"], fontsize=45, fontweight='bold')
+    ax_bg.text(0.25, 0.14, f"{d['marg_n_1']}%", color=COLORS["graph1"], fontsize=45)
+
     return fig
 
 # --- INTERFACE STREAMLIT ---
@@ -105,7 +150,7 @@ uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
 # Vérification du nom
 if not restaurant_input:
     st.warning("⚠️ Veuillez saisir le nom du restaurant dans la barre latérale pour continuer.")
-    st.stop() # Arrête le code ici tant que le nom est vide
+    st.stop()
 
 if uploaded:
     try:
