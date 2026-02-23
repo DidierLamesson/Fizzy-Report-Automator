@@ -104,31 +104,39 @@ if uploaded and restaurant_input:
     with col_viz:
         st.subheader("📊 Aperçu des données")
         
-        # Préparation des données pour Altair [cite: 9, 10]
-        chart_df = pd.DataFrame({
-            "Période": [f"{data_dict['month']} (N)", "Année Précédente (N-1)"],
-            "Fatturato": [data_dict["fatturato_n"], data_dict["fatturato_n_1"]],
-            "color": [COLORS["graph1"], COLORS["graph2"]]
-        })
-
-        # Graphique Altair personnalisé (Euros, pas de virgules, espaces)
-        chart = alt.Chart(chart_df).mark_bar().encode(
-            x=alt.X('Période:N', sort=None, axis=alt.Axis(labelAngle=0, title=None)),
-            y=alt.Y('Fatturato:Q', 
-                   axis=alt.Axis(
-                       labelExpr="format(datum.value, ',d').replace(',', ' ') + ' €'", 
-                       title="Fatturato (€)"
-                   )),
-            color=alt.Color('color:N', scale=None)
-        ).properties(height=350)
-
-        st.altair_chart(chart, use_container_width=True)
+        # --- PRÉPARATION DES LABELS DYNAMIQUES ---
+        # Mois actuel (ex: Novembre 2025)
+        label_n = data_dict['month'] 
         
-        # Metrics simplifiées
+        # Calcul du mois N-1 (ex: Novembre 2024)
+        # On remplace simplement l'année dans la chaîne de caractères
+        if "2025" in label_n:
+            label_n_1 = label_n.replace("2025", "2024")
+        else:
+            # Sécurité si l'année n'est pas 2025
+            label_n_1 = "Année Précédente (N-1)"
+
+        # --- AFFICHAGE DE LA VARIATION AU-DESSUS ---
+        variation_nominale = data_dict['fatturato_n'] - data_dict['fatturato_n_1']
+        suffixe = "↗︎" if variation_nominale > 0 else "↘︎"
+        
+        # Style pour mettre en avant la variation nominale
+        st.markdown(f"### Variation : **{int(variation_nominale):,} €** {suffixe}".replace(",", " "))
+        st.caption(f"Comparaison entre {label_n} et {label_n_1}")
+
+        # --- DONNÉES DU GRAPHIQUE ---
+        chart_data = pd.DataFrame({
+            "Mois": [label_n, label_n_1],
+            "Fatturato (€)": [data_dict["fatturato_n"], data_dict["fatturato_n_1"]]
+        }).set_index("Mois")
+
+        # Affichage du graphique natif
+        st.bar_chart(chart_data, color="#918d84") # Utilise votre gris FIZZY [cite: 5, 7]
+        
+        # Rappel des metrics en bas pour la précision
         c1, c2 = st.columns(2)
-        val_n = f"{int(data_dict['fatturato_n']):,}".replace(",", " ")
-        c1.metric(f"Venduto {data_dict['month']}", f"{val_n} €")
-        c2.metric("Variation", f"{data_dict['diff_fatturato']}%")
+        c1.metric(label_n, f"{int(data_dict['fatturato_n']):,}".replace(",", " ") + " €")
+        c2.metric("Variation %", f"{data_dict['diff_fatturato']}%")
 
     with col_edit:
         st.subheader("✍️ Analyse Narrative")
