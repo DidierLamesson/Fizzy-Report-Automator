@@ -205,7 +205,62 @@ def load_data(file):
     }
 
 
-# --- 3. FONCTION DE DESSIN DU RAPPORT (IMAGE FINALE) ---
+# --- 3. INTERFACE UTILISATEUR ---
+    # --- 3. INTERFACE UTILISATEUR ---
+    st.title("Rapport Fizzy Automatizzazione ⚡️")
+
+    # Sidebar
+    restaurant_input = st.sidebar.text_input("Nom du Restaurant *", value="A'RICCIONE - TERRAZZA")
+    uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
+
+    if uploaded and restaurant_input:
+        data_dict = load_data(uploaded)
+
+        # --- 1. Affichage du graphique en barre ---
+        col_viz, col_edit = st.columns([1, 1])
+
+        with col_viz:
+            st.subheader("📊 Fatturato Mensile")
+
+            # Création du DataFrame pour le graphique
+            chart_data = pd.DataFrame({
+                f"{data_dict['month_name']} {data_dict['year_n']}": [data_dict["fatturato_n"]],
+                f"{data_dict['month_name']} {data_dict['year_n_1']}": [data_dict["fatturato_n_1"]]
+            })
+
+            # Affichage du graphique en barre
+            st.bar_chart(chart_data)
+
+            # Affichage des valeurs brutes
+            st.write(f"Fatturato {data_dict['year_n']}: **{data_dict['fatturato_n']:,.2f} €**")
+            st.write(f"Fatturato {data_dict['year_n_1']}: **{data_dict['fatturato_n_1']:,.2f} €**")
+
+        # --- 2. Zone de texte personnalisable ---
+        with col_edit:
+            st.subheader("✍️ Analyse Narrative")
+
+            # Texte pré-rempli avec les données
+            auto_text = (
+                f"À {data_dict['month_name']} {data_dict['year_n']}, le Fatturato est de {data_dict['fatturato_n']:,.2f} €, "
+                f"contre {data_dict['fatturato_n_1']:,.2f} € en {data_dict['year_n_1']}. "
+                f"Cela représente une variation de {(data_dict['fatturato_n'] - data_dict['fatturato_n_1']):,.2f} €."
+            )
+
+            # Zone de texte pour personnaliser l'analyse
+            user_text = st.text_area("Personnalisez votre analyse ici :", value=auto_text, height=300)
+
+        st.divider()
+
+        # Bouton pour générer le rapport final (optionnel)
+        if st.button("Générer le rapport final"):
+            st.success("Rapport généré avec succès !")
+
+    else:
+        st.info("Benvenuto! Carica un file Excel per iniziare.")
+
+
+
+# --- 4. FONCTION DE DESSIN DU RAPPORT (IMAGE FINALE) ---
 def draw_full_report(d, restaurant_name, analysis_text):
     fig = plt.figure(figsize=(10, 14), facecolor=COLORS["bg"])
     ax_main = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
@@ -250,133 +305,4 @@ def draw_full_report(d, restaurant_name, analysis_text):
 
     return fig
 
-# --- 4. INTERFACE UTILISATEUR ---
-st.title("Rapport Fizzy Automatizzazione ⚡️")
 
-# Sidebar
-restaurant_input = st.sidebar.text_input("Nom du Restaurant *", value="A'RICCIONE - TERRAZZA")
-uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
-
-
-if uploaded and restaurant_input:
-    data_dict = load_data(uploaded)
-
-    # Affichage des données extraites (optionnel, pour vérification)
-    st.subheader("🔍 Données extraites")
-    st.json(data_dict)
-
-    # --- 1. Graphique pour le Fatturato ---
-    st.subheader("📊 Évolution du Fatturato")
-    fatturato_data = pd.DataFrame({
-        "Mois": data_dict["graph_cost_dates"],
-        f"{data_dict['year_n']}": data_dict["fatturato_mensile_n"],
-        f"{data_dict['year_n_1']}": data_dict["fatturato_mensile_n_1"]
-    }).set_index("Mois")
-    st.line_chart(fatturato_data)
-
-    # --- 2. Graphiques pour Food Cost, Beverage Cost et Incidenza Staff ---
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.subheader("🍽️ Food Cost")
-        food_cost_data = pd.DataFrame({
-            "Mois": data_dict["graph_cost_dates"],
-            f"{data_dict['year_n']} (€)": data_dict["food_cost_monthly_n"],
-            f"{data_dict['year_n_1']} (€)": data_dict["food_cost_monthly_n_1"],
-            f"% {data_dict['year_n']}": data_dict["food_cost_pctg_n"],
-            f"% {data_dict['year_n_1']}": data_dict["food_cost_pctg_n_1"]
-        }).set_index("Mois")
-        st.line_chart(food_cost_data)
-
-    with col2:
-        st.subheader("🍹 Beverage Cost")
-        beverage_cost_data = pd.DataFrame({
-            "Mois": data_dict["graph_cost_dates"],
-            f"{data_dict['year_n']} (€)": data_dict["beverage_cost_monthly_n"],
-            f"{data_dict['year_n_1']} (€)": data_dict["beverage_cost_monthly_n_1"],
-            f"% {data_dict['year_n']}": data_dict["beverage_cost_pctg_n"],
-            f"% {data_dict['year_n_1']}": data_dict["beverage_cost_pctg_n_1"]
-        }).set_index("Mois")
-        st.line_chart(beverage_cost_data)
-
-    with col3:
-        st.subheader("👥 Incidenza Staff")
-        staff_cost_data = pd.DataFrame({
-            "Mois": data_dict["graph_cost_dates"],
-            f"% {data_dict['year_n']}": data_dict["staff_cost_pctg_n"],
-            f"% {data_dict['year_n_1']}": data_dict["staff_cost_pctg_n_1"]
-        }).set_index("Mois")
-        st.line_chart(staff_cost_data)
-
-    # --- 3. Métriques Clés ---
-    st.subheader("📌 Métriques Clés")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.metric(f"Fatturato {data_dict['year_n']}", f"{data_dict['fatturato_n']:,.2f} €")
-        st.metric(f"Fatturato {data_dict['year_n_1']}", f"{data_dict['fatturato_n_1']:,.2f} €")
-        st.metric("Variation", f"{data_dict['diff_fatturato']}%")
-
-    with c2:
-        st.metric(f"Food Cost Avg {data_dict['year_n']}", f"{data_dict['food_cost_avg_n']:,.2f} €")
-        st.metric(f"Food Cost Avg {data_dict['year_n_1']}", f"{data_dict['food_cost_avg_n_1']:,.2f} €")
-
-    with c3:
-        st.metric(f"Beverage Cost Avg {data_dict['year_n']}", f"{data_dict['beverage_cost_avg_n']:,.2f} €")
-        st.metric(f"Beverage Cost Avg {data_dict['year_n_1']}", f"{data_dict['beverage_cost_avg_n_1']:,.2f} €")
-
-
-if uploaded and restaurant_input:
-    data_dict = load_data(uploaded)
-
-    # Affichage des données extraites (pour vérification)
-    st.subheader("🔍 Données extraites")
-    st.json(data_dict)
-
-    col_viz, col_edit = st.columns([1, 1])
-
-    with col_viz:
-        st.subheader("📊 Aperçu des données")
-
-        label_n = data_dict['full_date_n']
-        label_n_1 = data_dict['full_date_n_1']
-
-        # Variation nominale
-        diff_euro = data_dict['fatturato_n'] - data_dict['fatturato_n_1']
-        suffixe = "↗︎" if diff_euro > 0 else "↘︎"
-        st.markdown(f"### Variation : **{int(diff_euro):,} €** {suffixe}".replace(",", " "))
-
-        # Graphique Fatturato
-        chart_data = pd.DataFrame({
-            "Fatturato (€)": [data_dict["fatturato_n"], data_dict["fatturato_n_1"]]
-        }, index=[label_n, label_n_1])
-        st.bar_chart(chart_data, color=COLORS["graph1"])
-
-        # Metrics
-        c1, c2 = st.columns(2)
-        val_n = f"{int(data_dict['fatturato_n']):,}".replace(",", " ")
-        c1.metric(label_n, f"{val_n} €")
-        c2.metric(f"vs {data_dict['year_n_1']}", f"{data_dict['diff_fatturato']}%")
-
-    with col_edit:
-        st.subheader("✍️ Analyse Narrative")
-        auto_text = (
-            f"Dal confronto con lo stesso periodo dell'anno precedente emerge che, "
-            f"a {data_dict['month_name']} {data_dict['year_n']}, il fatturato registra un "
-            f"{'incremento' if data_dict['diff_fatturato'] > 0 else 'calo'} "
-            f"del {abs(data_dict['diff_fatturato'])}% rispetto al {data_dict['year_n_1']}."
-        )
-        user_text = st.text_area("Personnalisez votre analyse ici :", value=auto_text, height=300)
-
-    st.divider()
-
-    if st.button("🎨 Générer l'image finale pour le client"):
-        fig = draw_full_report(data_dict, restaurant_input, user_text)
-        st.pyplot(fig)
-
-        fn = f"Rapport_{restaurant_input.replace(' ', '_')}.png"
-        fig.savefig(fn, facecolor=COLORS["bg"], bbox_inches='tight', dpi=200)
-        with open(fn, "rb") as img:
-            st.download_button("📥 Télécharger le rapport (.png)", img, file_name=fn, mime="image/png")
-
-else:
-    st.info("Benvenuto! Carica un file Excel per iniziare.")
