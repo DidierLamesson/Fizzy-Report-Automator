@@ -358,7 +358,7 @@ if uploaded and restaurant_input:
         )
 
         user_text = st.text_area(
-            "Personnalisez votre analyse ici :",
+            ,
             value=auto_text,
             height=300
         )
