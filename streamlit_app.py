@@ -239,7 +239,7 @@ if uploaded and restaurant_input:
 
         st.subheader("📊 Fatturato Mensile")
 
-        fig, ax = plt.subplots(figsize=(8, 6))
+        fig, ax = plt.subplots(figsize=(6, 6))
 
         # Background
         fig.patch.set_facecolor(COLORS["bg"])
