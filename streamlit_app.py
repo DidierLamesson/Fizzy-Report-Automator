@@ -215,39 +215,103 @@ uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
 if uploaded and restaurant_input:
     data_dict = load_data(uploaded)
 
-    # --- 1. Affichage du graphique en barre ---
-    col_viz, col_edit = st.columns([1, 1])
+    # --- GRAPH FATTURATO MENSILE ---
 
-    with col_viz:
-        st.subheader("📊 Fatturato Mensile")
+st.subheader("📊 Fatturato Mensile")
 
-        # Création du graphique en barre avec matplotlib
-        fig, ax = plt.subplots(figsize=(6, 4))
+fig, ax = plt.subplots(figsize=(8, 6))
 
-        # Position des barres
-        x = [0, 1]  # Positions pour N et N-1
-        width = 0.35  # Largeur des barres
+# --- Background ---
+fig.patch.set_facecolor(COLORS["bg"])
+ax.set_facecolor(COLORS["bg"])
 
-        # Barres pour N et N-1
-        bar1 = ax.bar(x[0], data_dict["fatturato_n"], width, color=COLORS["graph1"], label=f"{data_dict['year_n']}")
-        bar2 = ax.bar(x[1], data_dict["fatturato_n_1"], width, color=COLORS["graph2"], label=f"{data_dict['year_n_1']}")
+# --- Données ---
+values = [data["fatturato_n"], data["fatturato_n_1"]]
+x = [0, 1]
 
-        # Personnalisation du graphique
-        ax.set_xticks(0)
-        ax.set_xticklabels([f"{data_dict['month_name']}\n{data_dict['year_n']}", f"{data_dict['month_name']}\n{data_dict['year_n_1']}"])
-        ax.set_ylabel("Fatturato (€)", color=COLORS["white"])
-        ax.legend()
+bars = ax.bar(
+    x,
+    values,
+    width=0.9,
+    color=[COLORS["graph1"], COLORS["graph2"]]
+)
 
-        # Style
-        ax.grid(axis='y', linestyle='--', alpha=0.7)
-        plt.tight_layout()
+# --- Labels au-dessus des barres ---
+for i, v in enumerate(values):
+    ax.text(
+        i,
+        v + max(values) * 0.02,
+        f"{v:,.0f}".replace(",", " "),
+        ha="center",
+        va="bottom",
+        fontsize=20,
+        color=COLORS["white"],
+        fontweight="bold"
+    )
 
-        # Affichage du graphique
-        st.pyplot(fig)
+# --- Axe X (nom du mois uniquement centré) ---
+ax.set_xticks([0.5])
+ax.set_xticklabels(
+    [data["month_name"]],
+    fontsize=22,
+    color=COLORS["white"]
+)
 
-        # Affichage des valeurs brutes
-        st.write(f"Fatturato {data_dict['year_n']}: **{data_dict['fatturato_n']:,.2f} €**")
-        st.write(f"Fatturato {data_dict['year_n_1']}: **{data_dict['fatturato_n_1']:,.2f} €**")
+# --- Axe Y ---
+ax.tick_params(axis='y', colors=COLORS["white"], labelsize=18)
+
+ax.yaxis.set_major_formatter(
+    ticker.FuncFormatter(lambda x, p: f"{int(x):,}".replace(",", " "))
+)
+
+# Limite dynamique
+ax.set_ylim(0, max(values) * 1.2)
+
+# --- Grille horizontale ---
+ax.grid(
+    axis='y',
+    linestyle='-',
+    alpha=0.15,
+    color=COLORS["white"]
+)
+
+# --- Suppression des bordures ---
+for spine in ax.spines.values():
+    spine.set_visible(False)
+
+# --- Légende custom ronde ---
+legend_handles = [
+    plt.Line2D(
+        [0], [0],
+        marker='o',
+        color='none',
+        markerfacecolor=COLORS["graph1"],
+        markersize=14,
+        label=f"Fatturato {data['year_n']} €"
+    ),
+    plt.Line2D(
+        [0], [0],
+        marker='o',
+        color='none',
+        markerfacecolor=COLORS["graph2"],
+        markersize=14,
+        label=f"Fatturato {data['year_n_1']} €"
+    )
+]
+
+ax.legend(
+    handles=legend_handles,
+    loc="upper center",
+    bbox_to_anchor=(0.5, 1.12),
+    ncol=2,
+    frameon=False,
+    fontsize=18,
+    labelcolor=COLORS["white"]
+)
+
+plt.tight_layout()
+
+st.pyplot(fig)
 
     # --- 2. Zone de texte personnalisable ---
     with col_edit:
