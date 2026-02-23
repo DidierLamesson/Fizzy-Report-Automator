@@ -6,7 +6,6 @@ import numpy as np
 # --- CONFIGURATION & DESIGN ---
 st.set_page_config(page_title="FIZZY Automator", layout="wide")
 
-
 COLORS = {
     "bg": "#172e4d",
     "accent": "#edf86c",
@@ -55,14 +54,16 @@ def load_data(file):
     }
     return data
 
-def draw_page_1(d):
+def draw_page_1(d, restaurant_name):
     # Création de la figure avec la couleur de fond
     fig = plt.figure(figsize=(10, 14), facecolor=COLORS["bg"])
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
     
     # Header
     ax.text(0.05, 0.94, "We\nare_\nFIZZY", color=COLORS["white"], fontsize=18, fontweight='bold')
-    ax.text(0.5, 0.88, "A'RICCIONE - TERRAZZA", color=COLORS["white"], fontsize=22, ha='center', fontweight='bold')
+    
+    # Utilisation du nom saisi dans la barre
+    ax.text(0.5, 0.88, restaurant_name.upper(), color=COLORS["white"], fontsize=22, ha='center', fontweight='bold')
     ax.text(0.5, 0.85, d["month"], color=COLORS["highlight"], fontsize=14, ha='center')
 
     # --- SECTION FATTURATO ---
@@ -76,7 +77,6 @@ def draw_page_1(d):
     ax_bar.get_yaxis().set_visible(False)
 
     # Chiffres CA à droite du graphique
-    # On utilise :.0f pour éviter les erreurs d'entiers si c'est un NaN
     ax.text(0.55, 0.72, f"{d['fatturato_n']:,.0f} €".replace(',', ' '), color=COLORS["white"], fontsize=30, fontweight='bold')
     ax.text(0.55, 0.68, f"{d['diff_fatturato']}% vs 2024", color=COLORS["accent"], fontsize=16)
 
@@ -95,16 +95,28 @@ def draw_page_1(d):
 
 # --- INTERFACE STREAMLIT ---
 st.title("FIZZY Automator 🥂")
+
+# 1. Barre de saisie du nom (obligatoire)
+restaurant_input = st.sidebar.text_input("Nom du Restaurant *", value="", placeholder="Ex: A'RICCIONE - TERRAZZA")
+
+# 2. Upload du fichier
 uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
+
+# Vérification du nom
+if not restaurant_input:
+    st.warning("⚠️ Veuillez saisir le nom du restaurant dans la barre latérale pour continuer.")
+    st.stop() # Arrête le code ici tant que le nom est vide
 
 if uploaded:
     try:
         data_dict = load_data(uploaded)
-        fig = draw_page_1(data_dict)
+        
+        # On passe le nom saisi à la fonction de dessin
+        fig = draw_page_1(data_dict, restaurant_input)
         st.pyplot(fig)
         
         # Option de téléchargement
-        fn = "rapport_fizzy_p1.png"
+        fn = f"rapport_{restaurant_input.replace(' ', '_')}_p1.png"
         fig.savefig(fn, facecolor=COLORS["bg"], bbox_inches='tight', dpi=150)
         with open(fn, "rb") as img:
             st.download_button("📥 Télécharger la Page 1 (Image)", img, file_name=fn, mime="image/png")
@@ -112,4 +124,4 @@ if uploaded:
     except Exception as e:
         st.error(f"Oups ! Une erreur est survenue : {e}")
 else:
-    st.info("👋 Bonjour ! Dépose ton fichier Excel dans la barre de gauche pour générer le rapport.")
+    st.info(f"✅ Nom configuré : **{restaurant_input}**. Dépose maintenant ton fichier Excel pour générer le rapport.")
