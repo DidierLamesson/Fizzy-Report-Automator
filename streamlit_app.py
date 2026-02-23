@@ -97,32 +97,41 @@ if uploaded and restaurant_input:
     # MÉTHODE HYBRIDE : 2 Colonnes pour travailler
     col_viz, col_edit = st.columns([1, 1])
     
-    with col_viz:
+   with col_viz:
         st.subheader("📊 Aperçu des données")
         
-        # --- POINT 2 : DONNÉES DYNAMIQUES ---
-        # On crée le DataFrame avec les vraies clés du dictionnaire
-        # Le mois actuel et le mois N-1 sont extraits de load_data
+        # Préparation des données dynamiques
         chart_df = pd.DataFrame({
-            "Période": [f"{data_dict['month']} ", f"{data_dict['month']} N-1"],
-            "Fatturato": [data_dict["fatturato_n"], data_dict["fatturato_n_1"]]
+            "Période": [f"{data_dict['month']} (N)", "Année Précédente (N-1)"],
+            "Fatturato": [data_dict["fatturato_n"], data_dict["fatturato_n_1"]],
+            "Couleur": [COLORS["graph1"], COLORS["graph2"]] # Gris et Beige
         })
         
-        # --- POINT 1 : FORMATAGE EUROS ET ESPACES ---
-        # On utilise st.bar_chart avec une configuration d'axe
-        st.bar_chart(
-            data=chart_df, 
-            x="Période", 
-            y="Fatturato", 
-            color="#918d84",  # Application de votre gris charte
-            use_container_width=True
-        )
-        
-        # Pour afficher proprement les chiffres avec espaces sous le graph
-        col_n, col_n1 = st.columns(2)
-        col_n.metric(f"Venduto {data_dict['month']}", f"{data_dict['fatturato_n']:,.0f} €".replace(",", " "))
-        col_n1.metric("vs 2024", f"{data_dict['diff_fatturato']}%", delta_color="normal")
+        # Création du graphique avec Altair pour un contrôle total
+        import alt_chart as alt # Assurez-vous d'avoir 'altair' dans vos imports si besoin
+        import altair as alt
 
+        c = alt.Chart(chart_df).mark_bar().encode(
+            x=alt.X('Période:N', sort=None, axis=alt.Axis(labelAngle=0)),
+            y=alt.Y('Fatturato:Q', 
+                   axis=alt.Axis(
+                       format="~s",          # Format compact (k pour mille) ou personnalisé
+                       labelExpr="format(datum.value, ',d').replace(',', ' ') + ' €'", # Espaces + €
+                       title="Fatturato (€)"
+                   )),
+            color=alt.Color('Couleur:N', scale=None) # Utilise nos couleurs Gris/Beige
+        ).properties(height=300)
+
+        st.altair_chart(c, use_container_width=True)
+        
+        # --- Affichage des chiffres sans virgules ---
+        col_n, col_n1 = st.columns(2)
+        
+        # Utilisation de :.0f pour forcer 0 décimales (pas de virgules)
+        f_n = f"{int(data_dict['fatturato_n']):,}".replace(",", " ")
+        col_n.metric(f"Venduto {data_dict['month']}", f"{f_n} €")
+        
+        col_n1.metric("vs 2024", f"{data_dict['diff_fatturato']}%")
     with col_edit:
         st.subheader("✍️ Analyse Narrative")
         
