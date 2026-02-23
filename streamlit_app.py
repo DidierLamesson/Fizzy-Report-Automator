@@ -235,6 +235,24 @@ if uploaded and restaurant_input:
         st.write(f"Fatturato {data_dict['year_n_1']}: **{data_dict['fatturato_n_1']:,.2f} €**")
 
 
+        # --- 2. Zone de texte personnalisable ---
+            with col_edit:
+                st.subheader("✍️ Analyse Narrative")
+
+                # Texte pré-rempli avec les données
+                auto_text = (
+                    f"À {data_dict['month_name']} {data_dict['year_n']}, le Fatturato est de {data_dict['fatturato_n']:,.2f} €, "
+                    f"contre {data_dict['fatturato_n_1']:,.2f} € en {data_dict['year_n_1']}. "
+                    f"Cela représente une variation de {(data_dict['fatturato_n'] - data_dict['fatturato_n_1']):,.2f} €."
+                )
+
+                # Zone de texte pour personnaliser l'analyse
+                user_text = st.text_area("Personnalisez votre analyse ici :", value=auto_text, height=300)
+
+            st.divider()
+
+
+
 
 # --- 4. FONCTION DE DESSIN DU RAPPORT (IMAGE FINALE) ---
 def draw_full_report(d, restaurant_name, analysis_text):
