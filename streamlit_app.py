@@ -212,6 +212,15 @@ st.title("Rapport Fizzy Automatizzazione ⚡️")
 restaurant_input = st.sidebar.text_input("Nom du Restaurant *", value="A'RICCIONE - TERRAZZA")
 uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
 
+if uploaded and restaurant_input:
+        data_dict = load_data(uploaded)
+
+        # --- 1. Affichage du graphique en barre ---
+        col_viz, col_edit = st.columns([1, 1])
+
+        with col_viz:
+            st.subheader("📊 Fatturato Mensile")
+
 
 
 # --- 4. FONCTION DE DESSIN DU RAPPORT (IMAGE FINALE) ---
