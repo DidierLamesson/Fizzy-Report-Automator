@@ -206,58 +206,27 @@ def load_data(file):
 
 
 # --- 3. INTERFACE UTILISATEUR ---
-    # --- 3. INTERFACE UTILISATEUR ---
-    st.title("Rapport Fizzy Automatizzazione ⚡️")
+st.title("Rapport Fizzy Automatizzazione ⚡️")
 
-    # Sidebar
-    restaurant_input = st.sidebar.text_input("Nom du Restaurant *", value="A'RICCIONE - TERRAZZA")
-    uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
+# Sidebar
+restaurant_input = st.sidebar.text_input("Nom du Restaurant *", value="A'RICCIONE - TERRAZZA")
+uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
 
-    if uploaded and restaurant_input:
-        data_dict = load_data(uploaded)
 
-        # --- 1. Affichage du graphique en barre ---
-        col_viz, col_edit = st.columns([1, 1])
+if uploaded and restaurant_input:
+    data_dict = load_data(uploaded)
 
-        with col_viz:
-            st.subheader("📊 Fatturato Mensile")
+    if st.button("🎨 Générer l'image finale pour le client"):
+        fig = draw_full_report(data_dict, restaurant_input, user_text)
+        st.pyplot(fig)
 
-            # Création du DataFrame pour le graphique
-            chart_data = pd.DataFrame({
-                f"{data_dict['month_name']} {data_dict['year_n']}": [data_dict["fatturato_n"]],
-                f"{data_dict['month_name']} {data_dict['year_n_1']}": [data_dict["fatturato_n_1"]]
-            })
+        fn = f"Rapport_{restaurant_input.replace(' ', '_')}.png"
+        fig.savefig(fn, facecolor=COLORS["bg"], bbox_inches='tight', dpi=200)
+        with open(fn, "rb") as img:
+            st.download_button("📥 Télécharger le rapport (.png)", img, file_name=fn, mime="image/png")
 
-            # Affichage du graphique en barre
-            st.bar_chart(chart_data)
-
-            # Affichage des valeurs brutes
-            st.write(f"Fatturato {data_dict['year_n']}: **{data_dict['fatturato_n']:,.2f} €**")
-            st.write(f"Fatturato {data_dict['year_n_1']}: **{data_dict['fatturato_n_1']:,.2f} €**")
-
-        # --- 2. Zone de texte personnalisable ---
-        with col_edit:
-            st.subheader("✍️ Analyse Narrative")
-
-            # Texte pré-rempli avec les données
-            auto_text = (
-                f"À {data_dict['month_name']} {data_dict['year_n']}, le Fatturato est de {data_dict['fatturato_n']:,.2f} €, "
-                f"contre {data_dict['fatturato_n_1']:,.2f} € en {data_dict['year_n_1']}. "
-                f"Cela représente une variation de {(data_dict['fatturato_n'] - data_dict['fatturato_n_1']):,.2f} €."
-            )
-
-            # Zone de texte pour personnaliser l'analyse
-            user_text = st.text_area("Personnalisez votre analyse ici :", value=auto_text, height=300)
-
-        st.divider()
-
-        # Bouton pour générer le rapport final (optionnel)
-        if st.button("Générer le rapport final"):
-            st.success("Rapport généré avec succès !")
-
-    else:
-        st.info("Benvenuto! Carica un file Excel per iniziare.")
-
+else:
+    st.info("Benvenuto! Carica un file Excel per iniziare.")
 
 
 # --- 4. FONCTION DE DESSIN DU RAPPORT (IMAGE FINALE) ---
