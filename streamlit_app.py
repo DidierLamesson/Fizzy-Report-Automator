@@ -78,7 +78,7 @@ def draw_full_report(d, restaurant_name, analysis_text):
     return fig
 
 # --- 4. INTERFACE UTILISATEUR ---
-st.title("FIZZY Automator 🥂")
+st.title("Rapport Fizzy Automatizzazione ⚡️")
 
 # Sidebar
 restaurant_input = st.sidebar.text_input("Nom du Restaurant *", value="A'RICCIONE - TERRAZZA")
