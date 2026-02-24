@@ -15,7 +15,7 @@ from PIL import Image
 # =========================
 # 1) CONFIG STREAMLIT
 # =========================
-st.set_page_config(page_title="FIZZY Automator", layout="wide", color="#172e4d")
+st.set_page_config(page_title="FIZZY Automator", layout="wide", color_theme="#172e4d")
 
 
 # =========================
