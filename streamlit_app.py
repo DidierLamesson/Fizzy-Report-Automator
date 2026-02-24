@@ -711,7 +711,6 @@ def _draw_header1(ax, W_PX, H_PX, month_label: str, restaurant_name: str, dpi: i
             (x0, y0),
             w_ax,
             h_ax,
-            boxstyle="round,pad=0.0",
             boxstyle=f"round,pad=0.0,rounding_size={h_ax/2}",  # ✅ pill bien arrondie
             transform=ax.transAxes,
             facecolor=COLORS["bg"],
