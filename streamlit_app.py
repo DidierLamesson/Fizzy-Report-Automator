@@ -1014,12 +1014,18 @@ if uploaded and restaurant_input:
         st.text_area(
             "📝 Commento Beverage Cost", value="", height=280, key="beverage_comment"
         )
-    # --- UI : Download PDF ---
-    st.divider()
+# --- UI : Download PDF ---
+st.divider()
 
-    png_bytes = build_a4_png_preview_bytes(data, restaurant_input, dpi=150)
+# (assure-toi que png_bytes est généré avant)
+png_bytes = build_a4_png_preview_bytes(data, restaurant_input, dpi=150)
+
+c1, c2 = st.columns([1, 2])
+
+with c1:
     st.image(png_bytes, caption="Aperçu (PNG)", use_container_width=True)
 
+with c2:
     st.subheader("📄 Export PDF")
 
     pdf_bytes = build_a4_pdf_bytes(data, restaurant_input, dpi=300)
