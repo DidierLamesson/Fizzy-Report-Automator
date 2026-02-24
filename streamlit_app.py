@@ -1084,20 +1084,20 @@ with bev_col_text:
     )
 
     # --- Export PDF en bas ---
-    st.divider()
-    st.subheader("📄 Export PDF")
+st.divider()
+st.subheader("📄 Export PDF")
 
-    if st.button("📄 Générer PDF (Page 1)"):
-        pdf_bytes = build_page1_pdf_bytes(data, restaurant_input, analysis_text)
-        st.session_state["page1_pdf_bytes"] = pdf_bytes
+if st.button("📄 Générer PDF (Page 1)"):
+    pdf_bytes = build_page1_pdf_bytes(data, restaurant_input, analysis_text)
+    st.session_state["page1_pdf_bytes"] = pdf_bytes
 
-    if "page1_pdf_bytes" in st.session_state:
-        file_name = f"Report_{restaurant_input}_{data['month_name']}_{data['year_n']}_page1.pdf".replace(
-            " ", "_"
-        )
-        st.download_button(
-            "⬇️ Télécharger le PDF (Page 1)",
-            data=st.session_state["page1_pdf_bytes"],
-            file_name=file_name,
-            mime="application/pdf",
-        )
+if "page1_pdf_bytes" in st.session_state:
+    file_name = f"Report_{restaurant_input}_{data['month_name']}_{data['year_n']}_page1.pdf".replace(
+        " ", "_"
+    )
+    st.download_button(
+        "⬇️ Télécharger le PDF (Page 1)",
+        data=st.session_state["page1_pdf_bytes"],
+        file_name=file_name,
+        mime="application/pdf",
+    )
