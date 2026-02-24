@@ -907,10 +907,10 @@ if uploaded and restaurant_input:
         )
 # --- UI : Download PDF A4 blanc ---
 st.divider()
-png_bytes = build_a4_png_preview_bytes(d, restaurant_name, dpi=150)
+png_bytes = build_a4_png_preview_bytes(d, restaurant_input, dpi=150)
 st.image(png_bytes, use_container_width=True)
 
-pdf_bytes = build_a4_pdf_bytes(d, restaurant_name, dpi=300)
+pdf_bytes = build_a4_pdf_bytes(d, restaurant_input, dpi=300)
 st.download_button(
     "⬇️ Télécharger le PDF",
     data=pdf_bytes,
