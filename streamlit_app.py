@@ -623,6 +623,11 @@ def build_a4_pdf_bytes(draw_fn=None, dpi=300) -> bytes:
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
     ax.set_axis_off()
 
+    # ✅ PATCH: verrouille le repère "page" (0..1) et empêche imshow de modifier l'axe
+    ax.set_aspect("auto")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
     # --- Dimensions en pixels de la page (pixel-perfect) ---
     W_PX = int(round(fig.get_figwidth() * fig.dpi))
     H_PX = int(round(fig.get_figheight() * fig.dpi))
@@ -649,14 +654,15 @@ def build_a4_pdf_bytes(draw_fn=None, dpi=300) -> bytes:
         x0, y0 = px_to_axes(x0_px, y0_px)
         x1, y1 = px_to_axes(x1_px, y1_px)
 
-        ax.imshow(img, extent=[x0, x1, y0, y1], zorder=z)
+        # ✅ PATCH: aspect="auto" pour ne pas déclencher le "letterboxing" de l'axe
+        ax.imshow(img, extent=[x0, x1, y0, y1], zorder=z, aspect="auto")
 
     def place_img_px_top_center(img, center_x_px, top_px, width_px, z=1000):
         """Variante centrée horizontalement (pixel-perfect)."""
         left_px = center_x_px - width_px / 2
         place_img_px_top_left(img, left_px, top_px, width_px, z=z)
 
-    # --- Bordure pleine page (toujours en coords axes, couvre 100%) ---
+    # --- Bordure pleine page (coords axes, couvre 100%) ---
     ax.add_patch(
         Rectangle(
             (0, 0),
@@ -671,10 +677,6 @@ def build_a4_pdf_bytes(draw_fn=None, dpi=300) -> bytes:
     )
 
     # --- Logo Fizzy positionné AU PIXEL PRÈS ---
-    # Exemples de valeurs (à ajuster):
-    # - 24 px depuis le haut
-    # - centré horizontalement
-    # - 320 px de large
     if LOGO_PATH.exists():
         logo = _img_rgba(LOGO_PATH)
         place_img_px_top_center(
