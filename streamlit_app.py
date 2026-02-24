@@ -640,8 +640,8 @@ def _draw_a4_page(ax, W_PX, H_PX):
     # logo pixel-perfect
     if LOGO_PATH.exists():
         logo = _img_rgba(LOGO_PATH)
-        width_px = 320
-        top_px = 24
+        width_px = 520
+        top_px = 12
         aspect = logo.width / logo.height
         height_px = width_px / aspect
 
