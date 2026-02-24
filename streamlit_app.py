@@ -603,26 +603,27 @@ def make_beverage_cost_fig(d, label):
 # =========================
 # 9) PDF PAGE 1 (layout)
 # =========================
+
+
 from io import BytesIO
 import matplotlib.pyplot as plt
 
 A4_INCH = (210 / 25.4, 297 / 25.4)
 
 
-def generate_pdf_a4_pixel_perfect(draw_fn, dpi=300):
+def build_blank_a4_pdf_bytes(dpi=300) -> bytes:
     fig = plt.figure(figsize=A4_INCH, dpi=dpi, facecolor="white")
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+
     ax = fig.add_axes([0, 0, 1, 1], facecolor="white")
     ax.set_axis_off()
-
-    draw_fn(fig, ax)
 
     buf = BytesIO()
     fig.savefig(
         buf,
         format="pdf",
-        bbox_inches=None,
-        pad_inches=0,
+        bbox_inches=None,  # conserve EXACTEMENT A4
+        pad_inches=0,  # aucun padding
         facecolor=fig.get_facecolor(),
         edgecolor="none",
     )
@@ -694,7 +695,7 @@ st.divider()
 st.subheader("📄 Export PDF (A4 blanc)")
 
 # build_blank_a4_pdf_bytes() doit retourner des bytes (PDF), pas une figure.
-pdf_bytes = build_blank_a4_pdf_bytes(dpi=300)
+pdf_bytes = generate_pdf_a4_pixel_perfect(lambda fig, ax: None, dpi=300)
 
 st.download_button(
     label="⬇️ Télécharger le PDF A4 blanc",
