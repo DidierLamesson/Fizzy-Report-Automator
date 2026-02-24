@@ -656,7 +656,16 @@ def render_page1_fig_base_a4():
     logo = _img_rgba(LOGO_PATH)
 
     # Centré en haut
-    _place_img(ax, logo, x=0.5, y=0.92, w=0.22, z=10)
+    # --- Placement logo "collé en haut" sans clipping ---
+    w_logo = 0.22
+    margin_top = 0.01  # 1% de marge (mets 0.0 si tu veux coller au max)
+    aspect = logo.width / logo.height
+    h_logo = w_logo / aspect
+
+    # On calcule le y du CENTRE pour que le bord HAUT soit à (1 - margin_top)
+    y_center = 1.0 - margin_top - (h_logo / 2)
+
+    _place_img(ax, logo, x=0.5, y=y_center, w=w_logo, z=10)
 
     return fig
 
