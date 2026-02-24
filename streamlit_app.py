@@ -649,13 +649,13 @@ HEADER1_CFG = {
     "pill_top_px": 80,  # distance depuis le haut
     "pill_right_margin_px": 100,  # marge droite
     "pill_font_px": 14,
-    "pill_pad_x_px": 4,
-    "pill_pad_y_px": 4,
+    "pill_pad_x_px": 6,
+    "pill_pad_y_px": 6,
     "pill_border_width_px": 2,
     # --- Espacements verticaux (le layout “suit” automatiquement) ---
-    "gap_after_toprow_px": 5,  # espace après la ligne logo/pill avant le titre
+    "gap_after_toprow_px": 10,  # espace après la ligne logo/pill avant le titre
     "gap_title_to_restaurant_px": 5,  # espace titre -> restaurant
-    "gap_restaurant_to_line_px": 5,  # espace restaurant -> ligne
+    "gap_restaurant_to_line_px": 10,  # espace restaurant -> ligne
     # --- Titre ---
     "title_text": "Report Mensile",
     "title_font_px": 64,
