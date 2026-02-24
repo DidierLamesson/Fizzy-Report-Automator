@@ -771,7 +771,7 @@ def _draw_header1(ax, W_PX, H_PX, month_label: str, restaurant_name: str, dpi: i
     # 5) Ligne en bas du header
     # ======================
     LINE_TOP_PX = 450
-    SIDE_MARGIN_PX = 260
+    SIDE_MARGIN_PX = 180
     ax.hlines(
         y=y_from_top(LINE_TOP_PX),
         xmin=x(SIDE_MARGIN_PX),
