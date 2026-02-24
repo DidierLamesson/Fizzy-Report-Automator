@@ -604,12 +604,14 @@ def make_beverage_cost_fig(d, label):
 # 9) PDF PAGE 1 (layout)
 # =========================
 
-from io import BytesIO
-import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-from PIL import Image, ImageChops
+from matplotlib.patches import Rectangle, FancyBboxPatch
+from PIL import Image
 
-A4_INCH = (210 / 25.4, 297 / 25.4)
+
+def _px_to_pt(px, dpi):
+    # Matplotlib taille les fonts/linewidths en points.
+    # 1 pt = 1/72 inch ; px -> pt dépend du dpi.
+    return px * 72.0 / dpi
 
 
 def _img_rgba(path):
@@ -617,12 +619,167 @@ def _img_rgba(path):
 
 
 def _trim_transparent(img: Image.Image) -> Image.Image:
-    """Supprime les marges transparentes autour d'un PNG RGBA."""
     if img.mode != "RGBA":
         img = img.convert("RGBA")
     alpha = img.split()[-1]
-    bbox = alpha.getbbox()  # bounding box des pixels non transparents
+    bbox = alpha.getbbox()
     return img.crop(bbox) if bbox else img
+
+
+def _draw_header1(ax, W_PX, H_PX, month_label: str, restaurant_name: str, dpi: int):
+    # --- repère page ---
+    ax.set_axis_off()
+    ax.set_aspect("auto")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
+    # helpers px -> axes
+    def x(px):
+        return px / W_PX
+
+    def y_from_top(top_px):
+        return 1.0 - (top_px / H_PX)
+
+    def rect_from_top(left_px, top_px, w_px, h_px):
+        x0 = x(left_px)
+        y1 = y_from_top(top_px)
+        y0 = y_from_top(top_px + h_px)
+        return x0, y0, w_px / W_PX, h_px / H_PX, y1  # y1 utile pour align "top"
+
+    # --- bordure full page ---
+    ax.add_patch(
+        Rectangle(
+            (0, 0),
+            1,
+            1,
+            transform=ax.transAxes,
+            facecolor="none",
+            edgecolor=COLORS["white"],
+            linewidth=_px_to_pt(2, dpi),
+            zorder=999,
+        )
+    )
+
+    # ======================
+    # 1) Logo Fizzy (haut centre)
+    # ======================
+    if LOGO_PATH.exists():
+        logo = _trim_transparent(_img_rgba(LOGO_PATH))
+
+        LOGO_W_PX = 360  # <-- augmente pour grossir
+        LOGO_TOP_PX = 70  # <-- diminue pour remonter
+
+        aspect = logo.width / logo.height
+        logo_h_px = LOGO_W_PX / aspect
+
+        left_px = (W_PX - LOGO_W_PX) / 2
+        x0_px, x1_px = left_px, left_px + LOGO_W_PX
+        y1_px = H_PX - LOGO_TOP_PX
+        y0_px = y1_px - logo_h_px
+
+        ax.imshow(
+            logo,
+            extent=[x(x0_px), x(x1_px), (y0_px / H_PX), (y1_px / H_PX)],
+            zorder=1000,
+            aspect="auto",
+        )
+
+    # ======================
+    # 2) Pill date (droite)
+    # ======================
+    pill_text = month_label  # ex: "Dicembre 2025"
+
+    PILL_TOP_PX = 240
+    PILL_RIGHT_MARGIN_PX = 260
+
+    pill_font_px = 44
+    pad_x_px = 34
+    pad_y_px = 18
+
+    # largeur approx basée sur nb de caractères (simple & stable)
+    approx_text_w_px = len(pill_text) * (pill_font_px * 0.55)
+    PILL_W_PX = int(approx_text_w_px + 2 * pad_x_px)
+    PILL_H_PX = int(pill_font_px + 2 * pad_y_px)
+
+    pill_left_px = W_PX - PILL_RIGHT_MARGIN_PX - PILL_W_PX
+    x0, y0, w_ax, h_ax, y1 = rect_from_top(
+        pill_left_px, PILL_TOP_PX, PILL_W_PX, PILL_H_PX
+    )
+
+    ax.add_patch(
+        FancyBboxPatch(
+            (x0, y0),
+            w_ax,
+            h_ax,
+            boxstyle="round,pad=0.0",
+            transform=ax.transAxes,
+            facecolor=COLORS["bg"],
+            edgecolor=COLORS["highlight"],
+            linewidth=_px_to_pt(3, dpi),
+            zorder=900,
+        )
+    )
+    ax.text(
+        x0 + w_ax / 2,
+        y0 + h_ax / 2,
+        pill_text,
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=_px_to_pt(pill_font_px, dpi),
+        fontproperties=epilogue_regular,
+        zorder=901,
+    )
+
+    # ======================
+    # 3) Titre (centre)
+    # ======================
+    TITLE_TOP_PX = 500
+    title_fs_px = 160
+    ax.text(
+        0.5,
+        y_from_top(TITLE_TOP_PX),
+        "Report Mensile",
+        ha="center",
+        va="top",
+        color=COLORS["highlight"],
+        fontsize=_px_to_pt(title_fs_px, dpi),
+        fontproperties=ivy_title,
+        fontstyle="italic",
+        zorder=850,
+    )
+
+    # ======================
+    # 4) Restaurant (centre, dessous)
+    # ======================
+    RESTO_TOP_PX = 760
+    resto_fs_px = 64
+    ax.text(
+        0.5,
+        y_from_top(RESTO_TOP_PX),
+        (restaurant_name or "").upper(),
+        ha="center",
+        va="top",
+        color=COLORS["accent"],
+        fontsize=_px_to_pt(resto_fs_px, dpi),
+        fontproperties=epilogue_semibold,
+        zorder=850,
+    )
+
+    # ======================
+    # 5) Ligne en bas du header
+    # ======================
+    LINE_TOP_PX = 900
+    SIDE_MARGIN_PX = 260
+    ax.hlines(
+        y=y_from_top(LINE_TOP_PX),
+        xmin=x(SIDE_MARGIN_PX),
+        xmax=x(W_PX - SIDE_MARGIN_PX),
+        colors=COLORS["highlight"],
+        linewidth=_px_to_pt(3, dpi),
+        zorder=800,
+    )
 
 
 def _draw_a4_page(ax, W_PX, H_PX):
@@ -664,6 +821,15 @@ def _draw_a4_page(ax, W_PX, H_PX):
         y0, y1 = y0_px / H_PX, y1_px / H_PX
 
         ax.imshow(logo, extent=[x0, x1, y0, y1], zorder=1000, aspect="auto")
+
+    _draw_header1(
+        ax,
+        W_PX=W_PX,
+        H_PX=H_PX,
+        month_label=d["full_date_n"],  # ex "Dicembre 2025"
+        restaurant_name=restaurant_name,  # ex "A'RICCIONE - TERRAZZA"
+        dpi=int(ax.figure.dpi),
+    )
 
 
 def build_a4_pdf_bytes(dpi=300) -> bytes:
