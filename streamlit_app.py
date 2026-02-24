@@ -161,6 +161,29 @@ def load_data(file):
         mes_it = "Mese"
         anno_n = 2026  # Valeur par défaut
 
+    def month_labels_from_graph_dates(d):
+        months_it = {
+            1: "Gennaio",
+            2: "Febbraio",
+            3: "Marzo",
+            4: "Aprile",
+            5: "Maggio",
+            6: "Giugno",
+            7: "Luglio",
+            8: "Agosto",
+            9: "Settembre",
+            10: "Ottobre",
+            11: "Novembre",
+            12: "Dicembre",
+        }
+        labels = []
+        for dt in d["graph_cost_dates"]:
+            if hasattr(dt, "month"):
+                labels.append(months_it.get(dt.month, str(dt)))
+            else:
+                labels.append(str(dt))
+        return labels
+
     # --- 2. Extraction des données "Fatturato" ---
     fatturato_n = clean_val(df.iloc[8, 2])  # Fatturato N (ligne 9, colonne C)
     fatturato_n_1 = clean_val(df.iloc[9, 2])  # Fatturato N-1 (ligne 10, colonne C)
@@ -440,6 +463,132 @@ def make_fatturato_fig(d, label):
         fontsize=10,
         labelcolor=COLORS["white"],
     )
+
+    plt.tight_layout()
+    return fig
+
+
+def make_food_cost_fig(d, label):
+    fig, ax = plt.subplots(figsize=(6, 3.6))
+    fig.patch.set_facecolor(COLORS["bg"])
+    ax.set_facecolor(COLORS["bg"])
+
+    x_labels = month_labels_from_graph_dates(d)
+    y = d["food_cost_pctg_n"]  # année en cours (déjà en %)
+
+    ax.plot(
+        range(len(y)),
+        y,
+        marker="o",
+        linewidth=3,
+        markersize=10,
+        color=COLORS["graph1"],
+        zorder=3,
+    )
+
+    ax.set_title(
+        f"Andamento Food Cost Mensile {d['year_n']}",
+        color=COLORS["white"],
+        fontsize=16,
+        fontproperties=epilogue_semibold,
+        loc="left",
+        pad=10,
+    )
+
+    # Legend style "• Terrazza"
+    ax.plot([], [], marker="o", linestyle="None", color=COLORS["graph1"], label=label)
+    leg = ax.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.02),
+        frameon=False,
+        fontsize=10,
+        labelcolor=COLORS["white"],
+        handlelength=0,
+    )
+    for t in leg.get_texts():
+        t.set_fontproperties(epilogue_regular)
+
+    ax.set_xticks(range(len(x_labels)))
+    ax.set_xticklabels(
+        x_labels,
+        rotation=45,
+        ha="right",
+        color=COLORS["white"],
+        fontsize=9,
+        fontproperties=epilogue_regular,
+    )
+
+    ax.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
+    ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
+    ax.set_ylim(0, max(25, (max(y) if y else 0) + 5))
+
+    ax.grid(axis="y", color=COLORS["white"], alpha=0.12, linewidth=1)
+    for s in ax.spines.values():
+        s.set_visible(False)
+
+    plt.tight_layout()
+    return fig
+
+
+def make_beverage_cost_fig(d, label):
+    fig, ax = plt.subplots(figsize=(6, 3.6))
+    fig.patch.set_facecolor(COLORS["bg"])
+    ax.set_facecolor(COLORS["bg"])
+
+    x_labels = month_labels_from_graph_dates(d)
+    y = d["beverage_cost_pctg_n"]  # année en cours (déjà en %)
+
+    # On garde un rouge proche de ton exemple, sinon dis-moi si tu veux une autre teinte.
+    BEV_COLOR = "#e74c3c"
+
+    ax.plot(
+        range(len(y)),
+        y,
+        marker="o",
+        linewidth=3,
+        markersize=10,
+        color=BEV_COLOR,
+        zorder=3,
+    )
+
+    ax.set_title(
+        f"Andamento Beverage Cost Mensile {d['year_n']}",
+        color=COLORS["white"],
+        fontsize=16,
+        fontproperties=epilogue_semibold,
+        loc="left",
+        pad=10,
+    )
+
+    ax.plot([], [], marker="o", linestyle="None", color=BEV_COLOR, label=label)
+    leg = ax.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.02),
+        frameon=False,
+        fontsize=10,
+        labelcolor=COLORS["white"],
+        handlelength=0,
+    )
+    for t in leg.get_texts():
+        t.set_fontproperties(epilogue_regular)
+
+    ax.set_xticks(range(len(x_labels)))
+    ax.set_xticklabels(
+        x_labels,
+        rotation=45,
+        ha="right",
+        color=COLORS["white"],
+        fontsize=9,
+        fontproperties=epilogue_regular,
+    )
+
+    ax.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
+    ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
+    ax.set_ylim(0, max(12, (max(y) if y else 0) + 2))
+
+    ax.grid(axis="y", color=COLORS["white"], alpha=0.12, linewidth=1)
+    for s in ax.spines.values():
+        s.set_visible(False)
 
     plt.tight_layout()
     return fig
@@ -893,6 +1042,13 @@ if uploaded and restaurant_input:
         st.subheader("📊 Fatturato Mensile (preview)")
         preview_fig = make_fatturato_fig(data, label=restaurant_input)
         st.pyplot(preview_fig)
+        st.subheader("📈 Food Cost (anno corrente)")
+        food_fig = make_food_cost_fig(data, label=restaurant_input)
+        st.pyplot(food_fig)
+
+        st.subheader("📈 Beverage Cost (anno corrente)")
+        bev_fig = make_beverage_cost_fig(data, label=restaurant_input)
+        st.pyplot(bev_fig)
 
     with col_edit:
         st.subheader("✍️ Analyse Narrative")
