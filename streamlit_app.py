@@ -621,6 +621,20 @@ def build_a4_pdf_bytes(draw_fn=None, dpi=300) -> bytes:
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
     ax.set_axis_off()
 
+    # Rectangle plein axe (0..1) avec bordure blanche
+    ax.add_patch(
+        Rectangle(
+            (0, 0),
+            1,
+            1,
+            transform=ax.transAxes,
+            facecolor="none",
+            edgecolor="white",
+            linewidth=2,
+            zorder=999,
+        )
+    )
+
     if draw_fn is not None:
         draw_fn(fig, ax)
 
