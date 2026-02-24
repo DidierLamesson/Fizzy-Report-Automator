@@ -1,28 +1,48 @@
+import re
+import textwrap
+from io import BytesIO
+from pathlib import Path
+
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.font_manager as fm
-import matplotlib.pyplot as plt
-import re
+from matplotlib.patches import FancyBboxPatch
+from PIL import Image
 
-# --- 1. CONFIGURATION & DESIGN ---
+
+# =========================
+# 1) CONFIG STREAMLIT
+# =========================
 st.set_page_config(page_title="FIZZY Automator", layout="wide")
 
-# --- LOAD EPILOGUE FONT (GitHub root) ---
 
-font_path_regular = "Epilogue-Variable.ttf"
-font_path_italic = "Epilogue-VariableItalic.ttf"
+# =========================
+# 2) PATHS ASSETS (ton repo)
+# =========================
+BASE_DIR = Path(__file__).resolve().parent
+ASSETS_DIR = BASE_DIR / "assets"
+FONTS_DIR = ASSETS_DIR / "fonts"
+IMG_DIR = ASSETS_DIR / "img"
 
-fm.fontManager.addfont(font_path_regular)
-fm.fontManager.addfont(font_path_italic)
+# Fonts (d'après ton screenshot repo)
+FONT_EPILOGUE_REG = FONTS_DIR / "Epilogue-Regular.otf"
+FONT_EPILOGUE_ITALIC = FONTS_DIR / "Epilogue-Italic.otf"
+FONT_EPILOGUE_SEMIBOLD = FONTS_DIR / "Epilogue-SemiBold.otf"
+FONT_EPILOGUE_SEMIBOLD_ITALIC = FONTS_DIR / "Epilogue-SemiBoldItalic.otf"
+FONT_IVY = FONTS_DIR / "fonnts.com-Ivy-Presto-Display-Light.otf"
 
-epilogue_font = fm.FontProperties(fname=font_path_regular)
-epilogue_font_italic = fm.FontProperties(fname=font_path_italic)
+# Images
+LOGO_PATH = IMG_DIR / "Logo Fizzy.png"
+ARROW_UP_PATH = IMG_DIR / "Arrow_up.png"
+ARROW_DOWN_PATH = IMG_DIR / "Arrow_down.png"
+ARROW_ROUND_PATH = IMG_DIR / "Arrow_round.png"
 
-# Appliquer globalement à Matplotlib
-plt.rcParams["font.family"] = epilogue_font.get_name()
 
+# =========================
+# 3) COULEURS (ta palette)
+# =========================
 COLORS = {
     "bg": "#172e4d",
     "accent": "#edf86c",
@@ -33,7 +53,34 @@ COLORS = {
 }
 
 
-# --- 2. FONCTIONS DE TRAITEMENT ---
+# =========================
+# 4) FONTS MATPLOTLIB
+# =========================
+def _register_font(path: Path):
+    if path.exists():
+        fm.fontManager.addfont(str(path))
+
+
+_register_font(FONT_EPILOGUE_REG)
+_register_font(FONT_EPILOGUE_ITALIC)
+_register_font(FONT_EPILOGUE_SEMIBOLD)
+_register_font(FONT_EPILOGUE_SEMIBOLD_ITALIC)
+_register_font(FONT_IVY)
+
+epilogue_regular = fm.FontProperties(fname=str(FONT_EPILOGUE_REG))
+epilogue_italic = fm.FontProperties(fname=str(FONT_EPILOGUE_ITALIC))
+epilogue_semibold = fm.FontProperties(fname=str(FONT_EPILOGUE_SEMIBOLD))
+epilogue_semibold_italic = fm.FontProperties(fname=str(FONT_EPILOGUE_SEMIBOLD_ITALIC))
+ivy_title = fm.FontProperties(fname=str(FONT_IVY))
+
+plt.rcParams["font.family"] = epilogue_regular.get_name()
+plt.rcParams["pdf.fonttype"] = 42
+plt.rcParams["ps.fonttype"] = 42
+
+
+# =========================
+# 5) HELPERS (format + wrap)
+# =========================
 def clean_val(val):
     """Robuste: gère NaN, float/int, et strings '507 767' / '507.767' / '507,767'."""
     if pd.isna(val):
@@ -42,15 +89,12 @@ def clean_val(val):
         return float(val)
     if isinstance(val, str):
         s = val.strip()
-        # garde chiffres + séparateurs
         s = re.sub(r"[^\d,.\-]", "", s)
         if not s:
             return 0.0
-        # heuristique: si virgule et point, on suppose virgule décimale
         if "," in s and "." in s:
             s = s.replace(".", "").replace(",", ".")
         else:
-            # si seulement virgule -> décimale
             if "," in s:
                 s = s.replace(",", ".")
         try:
@@ -60,6 +104,35 @@ def clean_val(val):
     return 0.0
 
 
+def fmt_eur_dot(x, decimals=0):
+    # 507767 -> "507.767 €"
+    if decimals == 0:
+        s = f"{int(round(x)):,}".replace(",", ".")
+    else:
+        s = f"{x:,.{decimals}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"{s} €"
+
+
+def fmt_pct_1(x):
+    sign = "+" if x >= 0 else ""
+    return f"{sign}{x:.1f}%"
+
+
+def wrap_for_box(text, width=44):
+    lines = []
+    for para in (text or "").split("\n"):
+        para = para.strip()
+        if not para:
+            lines.append("")
+            continue
+        lines.extend(textwrap.wrap(para, width=width))
+        lines.append("")
+    return "\n".join(lines).strip()
+
+
+# =========================
+# 6) LOAD DATA (TON ANCIEN COMPLET)
+# =========================
 def load_data(file):
     df = pd.read_excel(file, sheet_name="Dati report", header=None)
 
@@ -106,12 +179,10 @@ def load_data(file):
     )  # Margine N-1 (ligne 16, colonne C)
 
     # --- 3. Extraction des dates pour les 6 mois glissants (mêmes pour Food, Beverage & Labour) ---
-
     graph_cost_dates = [df.iloc[i, 1] for i in range(24, 30)]  # Dates en colonne B
     graph_cost_dates_n_1 = [df.iloc[i, 7] for i in range(24, 30)]  # Dates en colonne H
 
     # --- 3. Extraction des dates et données "Food Cost" ---
-
     fatturato_mensile_n = [
         clean_val(df.iloc[i, 2]) for i in range(24, 30)
     ]  # Fatturato mensuel N en colonne C
@@ -146,13 +217,12 @@ def load_data(file):
     for i in range(len(food_cost_monthly_n)):
         fatturato = fatturato_mensile_n[i]
         food_cost = food_cost_monthly_n[i]
-        if fatturato > 0:  # Évite la division par zéro
+        if fatturato > 0:
             pctg = (food_cost / fatturato) * 100
         else:
             pctg = 0.0
         food_cost_pctg_n.append(round(pctg, 2))
 
-    # Même chose pour N-1
     food_cost_pctg_n_1 = []
     for i in range(len(food_cost_monthly_n_1)):
         fatturato = fatturato_mensile_n_1[i]
@@ -166,7 +236,7 @@ def load_data(file):
     # --- 7. Calcul des pourcentages de Beverage Cost ---
     beverage_cost_pctg_n = []
     for i in range(len(beverage_cost_monthly_n)):
-        fatturato = clean_val(df.iloc[36 + i, 2])  # Fatturato mensuel N en colonne C
+        fatturato = clean_val(df.iloc[36 + i, 2])
         beverage_cost = beverage_cost_monthly_n[i]
         if fatturato > 0:
             pctg = (beverage_cost / fatturato) * 100
@@ -174,10 +244,9 @@ def load_data(file):
             pctg = 0.0
         beverage_cost_pctg_n.append(round(pctg, 2))
 
-    # Même chose pour N-1
     beverage_cost_pctg_n_1 = []
     for i in range(len(beverage_cost_monthly_n_1)):
-        fatturato = clean_val(df.iloc[36 + i, 8])  # Fatturato mensuel N-1 en colonne I
+        fatturato = clean_val(df.iloc[36 + i, 8])
         beverage_cost = beverage_cost_monthly_n_1[i]
         if fatturato > 0:
             pctg = (beverage_cost / fatturato) * 100
@@ -188,7 +257,7 @@ def load_data(file):
     # --- 8. Calcul des pourcentages de Staff Cost ---
     staff_cost_pctg_n = []
     for i in range(len(staff_monthly_n)):
-        fatturato = clean_val(df.iloc[50 + i, 2])  # Fatturato mensuel N en colonne C
+        fatturato = clean_val(df.iloc[50 + i, 2])
         staff_cost = staff_monthly_n[i]
         if fatturato > 0:
             pctg = (staff_cost / fatturato) * 100
@@ -196,10 +265,9 @@ def load_data(file):
             pctg = 0.0
         staff_cost_pctg_n.append(round(pctg, 2))
 
-    # Même chose pour N-1
     staff_cost_pctg_n_1 = []
     for i in range(len(staff_monthly_n_1)):
-        fatturato = clean_val(df.iloc[50 + i, 8])  # Fatturato mensuel N-1 en colonne I
+        fatturato = clean_val(df.iloc[50 + i, 8])
         staff_cost = staff_monthly_n_1[i]
         if fatturato > 0:
             pctg = (staff_cost / fatturato) * 100
@@ -262,24 +330,13 @@ def load_data(file):
     }
 
 
-def fmt_eur_it(x, decimals=0):
-    # 507767 -> "507 767 €"
-    if decimals == 0:
-        s = f"{int(round(x)):,}".replace(",", " ")
-    else:
-        # 507767.89 -> "507 767,89"
-        s = f"{x:,.{decimals}f}".replace(",", "X").replace(".", ",").replace("X", " ")
-    return f"{s} €"
-
-
-def fmt_pct(x, decimals=1, signed=True):
-    sign = "+" if (signed and x >= 0) else ""
-    return f"{sign}{x:.{decimals}f}%"
-
-
+# =========================
+# 7) SUGGESTIONS TEXT (page 1)
+# =========================
 def build_page1_suggestions(d):
     fatt_n = d["fatturato_n"]
     fatt_p = d["fatturato_n_1"]
+
     delta = fatt_n - fatt_p
     pct_calc = (delta / fatt_p * 100) if fatt_p else 0.0
     pct = d.get("diff_fatturato", pct_calc)
@@ -290,7 +347,7 @@ def build_page1_suggestions(d):
 
     marg_n = d["marg_n"]
     marg_p = d["marg_n_1"]
-    marg_delta = marg_n - marg_p  # points %
+    marg_delta = marg_n - marg_p
 
     trend_word = "incremento" if pct >= 0 else "calo"
     ric_word = "miglioramento" if ric_delta >= 0 else "peggioramento"
@@ -300,87 +357,60 @@ def build_page1_suggestions(d):
         f"Dal confronto con lo stesso periodo dell’anno precedente emerge che, a "
         f"{d['month_name']} {d['year_n']}, il fatturato registra un {trend_word} "
         f"del {abs(pct):.1f}% rispetto a {d['month_name']} {d['year_n_1']} "
-        f"({fmt_eur_it(fatt_n)} vs {fmt_eur_it(fatt_p)})."
+        f"({fmt_eur_dot(fatt_n)} vs {fmt_eur_dot(fatt_p)})."
     )
 
     p2 = (
-        f"Oltre alla dinamica dei ricavi, si evidenzia un {ric_word} del risultato economico: "
-        f"Ricavi - Costi pari a {fmt_eur_it(ric_n)} "
-        f"(vs {fmt_eur_it(ric_p)}), con un {marg_word} dei margini "
+        f"Oltre alla dinamica dei ricavi, si osserva una variazione del risultato economico: "
+        f"Ricavi - Costi pari a {fmt_eur_dot(ric_n)} "
+        f"(vs {fmt_eur_dot(ric_p)}), con un {marg_word} dei margini "
         f"({marg_n:.1f}% vs {marg_p:.1f}%)."
     )
 
-    # Varianti più corte
-    p1_short = (
-        f"A {d['month_name']} {d['year_n']} il fatturato è {fmt_eur_it(fatt_n)}, "
-        f"{fmt_pct(pct, 1, True)} vs {d['year_n_1']}."
-    )
-    p2_short = (
-        f"Ricavi - Costi: {fmt_eur_it(ric_n)} (vs {fmt_eur_it(ric_p)}); "
-        f"Margine: {marg_n:.1f}% (vs {marg_p:.1f}%)."
-    )
-
-    return {
-        "long": (p1, p2),
-        "short": (p1_short, p2_short),
-    }
+    return p1, p2
 
 
-def make_fatturato_fig(d, label=""):
+# =========================
+# 8) PREVIEW FIG (simple)
+# =========================
+def make_fatturato_fig(d, label):
     fig, ax = plt.subplots(figsize=(6, 6))
-
-    # Background
     fig.patch.set_facecolor(COLORS["bg"])
     ax.set_facecolor(COLORS["bg"])
 
-    # Données
     values = [d["fatturato_n"], d["fatturato_n_1"]]
     x = [0, 1]
 
-    ax.bar(
-        x,
-        values,
-        width=0.95,
-        color=[COLORS["graph1"], COLORS["graph2"]],
-        alpha=1.0,
-        zorder=3,
-    )
-    ax.set_xlim(-0.475 - 0.05, 1.475)
+    ax.bar(x, values, width=0.95, color=[COLORS["graph1"], COLORS["graph2"]], zorder=3)
+    ax.set_xlim(-0.55, 1.55)
 
-    # Labels au-dessus
     for i, v in enumerate(values):
         ax.text(
             i,
             v + max(values) * 0.02,
-            f"{v:,.0f}".replace(",", " "),
+            f"{int(round(v)):,}".replace(",", "."),
             ha="center",
             va="bottom",
-            fontproperties=epilogue_font,
-            fontsize=18,
+            fontsize=16,
             color=COLORS["white"],
-            fontweight=900,
+            fontproperties=epilogue_semibold,
         )
 
-    # Axe X
     ax.set_xticks([0.5])
-    ax.set_xticklabels([label] if label else [])
+    ax.set_xticklabels(
+        [label], color=COLORS["white"], fontsize=11, fontproperties=epilogue_regular
+    )
 
-    # Axe Y
-    ax.tick_params(axis="y", colors=COLORS["white"], labelsize=14)
-    ax.tick_params(axis="y", length=0)
+    ax.tick_params(axis="y", colors=COLORS["white"], labelsize=11, length=0)
     ax.yaxis.set_major_formatter(
-        ticker.FuncFormatter(lambda x, p: f"{int(x):,}".replace(",", " "))
+        ticker.FuncFormatter(lambda y, p: f"{int(y):,}".replace(",", "."))
     )
     ax.set_ylim(0, max(values) * 1.2)
 
-    # Grille
     ax.grid(axis="y", linestyle="-", alpha=0.15, color=COLORS["white"], zorder=0)
+    for s in ax.spines.values():
+        s.set_visible(False)
 
-    # Supprimer bordures
-    for spine in ax.spines.values():
-        spine.set_visible(False)
-
-    # Légende
     legend_handles = [
         plt.Line2D(
             [0],
@@ -388,9 +418,7 @@ def make_fatturato_fig(d, label=""):
             marker="o",
             color="none",
             markerfacecolor=COLORS["graph1"],
-            markeredgecolor="none",
-            markeredgewidth=0,
-            markersize=12,
+            markersize=10,
             label=f"Fatturato {d['year_n']} €",
         ),
         plt.Line2D(
@@ -399,20 +427,17 @@ def make_fatturato_fig(d, label=""):
             marker="o",
             color="none",
             markerfacecolor=COLORS["graph2"],
-            markeredgecolor="none",
-            markeredgewidth=0,
-            markersize=12,
+            markersize=10,
             label=f"Fatturato {d['year_n_1']} €",
         ),
     ]
-
     ax.legend(
         handles=legend_handles,
         loc="upper center",
         bbox_to_anchor=(0.5, 1.12),
         ncol=2,
         frameon=False,
-        fontsize=14,
+        fontsize=10,
         labelcolor=COLORS["white"],
     )
 
@@ -420,7 +445,401 @@ def make_fatturato_fig(d, label=""):
     return fig
 
 
-# --- 3. INTERFACE UTILISATEUR ---
+# =========================
+# 9) PDF PAGE 1 (layout)
+# =========================
+def _img_rgba(path: Path):
+    return Image.open(path).convert("RGBA")
+
+
+def _place_img(ax, img: Image.Image, x, y, w, z=5):
+    """Place image with center at (x,y) in ax coords (0..1), width=w in ax coords."""
+    aspect = img.width / img.height
+    h = w / aspect
+    x0, x1 = x - w / 2, x + w / 2
+    y0, y1 = y - h / 2, y + h / 2
+    ax.imshow(img, extent=[x0, x1, y0, y1], zorder=z)
+
+
+def _pill(ax, x, y, w, h, text):
+    patch = FancyBboxPatch(
+        (x, y),
+        w,
+        h,
+        boxstyle="round,pad=0.008,rounding_size=0.02",
+        linewidth=1.2,
+        edgecolor=COLORS["white"],
+        facecolor=(0, 0, 0, 0),
+        alpha=0.9,
+        zorder=10,
+    )
+    ax.add_patch(patch)
+    ax.text(
+        x + w / 2,
+        y + h / 2,
+        text,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=12,
+        fontproperties=epilogue_regular,
+        zorder=11,
+    )
+
+
+def render_page1_fig(d, restaurant_name, analysis_text):
+    dpi = 100
+    fig = plt.figure(figsize=(1200 / dpi, 1500 / dpi), dpi=dpi, facecolor=COLORS["bg"])
+    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
+
+    # Images
+    logo = _img_rgba(LOGO_PATH)
+    arrow_up = _img_rgba(ARROW_UP_PATH)
+    arrow_down = _img_rgba(ARROW_DOWN_PATH)
+    arrow_round = _img_rgba(ARROW_ROUND_PATH)
+
+    # Header
+    _place_img(ax, logo, x=0.50, y=0.93, w=0.18, z=10)
+    _pill(ax, x=0.76, y=0.90, w=0.18, h=0.045, text=f"{d['month_name']} {d['year_n']}")
+
+    ax.text(
+        0.5,
+        0.84,
+        "Report Mensile",
+        ha="center",
+        va="center",
+        color=COLORS["highlight"],
+        fontsize=54,
+        fontproperties=ivy_title,
+        style="italic",
+    )
+
+    ax.text(
+        0.5,
+        0.79,
+        restaurant_name.upper(),
+        ha="center",
+        va="center",
+        color=COLORS["accent"],
+        fontsize=16,
+        fontproperties=epilogue_semibold,
+    )
+
+    ax.plot([0.10, 0.90], [0.76, 0.76], color=COLORS["white"], alpha=0.65, lw=1)
+
+    # Section title
+    ax.text(
+        0.5,
+        0.715,
+        "Fatturato",
+        ha="center",
+        va="center",
+        color=COLORS["accent"],
+        fontsize=26,
+        fontproperties=epilogue_semibold,
+    )
+
+    # Left block title
+    ax.text(
+        0.26,
+        0.665,
+        f"Venduto {restaurant_name} {d['month_name']}",
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=15,
+        fontproperties=epilogue_semibold,
+    )
+    ax.text(
+        0.26,
+        0.642,
+        f"{d['year_n']} vs {d['year_n_1']}",
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=12,
+        fontproperties=epilogue_regular,
+    )
+
+    # Bar chart
+    ax_bar = fig.add_axes([0.13, 0.36, 0.36, 0.25], facecolor=COLORS["bg"])
+    vals = [d["fatturato_n"], d["fatturato_n_1"]]
+    ax_bar.bar(
+        [0, 1], vals, color=[COLORS["graph1"], COLORS["graph2"]], width=0.90, zorder=3
+    )
+
+    for i, v in enumerate(vals):
+        ax_bar.text(
+            i,
+            v + max(vals) * 0.02,
+            f"{int(round(v)):,}".replace(",", "."),
+            ha="center",
+            va="bottom",
+            fontsize=10,
+            color=COLORS["white"],
+            fontproperties=epilogue_semibold,
+        )
+
+    ax_bar.set_xticks([0.5])
+    ax_bar.set_xticklabels(
+        [restaurant_name],
+        color=COLORS["white"],
+        fontsize=9,
+        fontproperties=epilogue_regular,
+    )
+    ax_bar.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
+    ax_bar.yaxis.set_major_formatter(
+        ticker.FuncFormatter(lambda y, p: f"{int(y):,}".replace(",", "."))
+    )
+    ax_bar.set_ylim(0, max(vals) * 1.25)
+    ax_bar.grid(
+        axis="y",
+        color=COLORS["white"],
+        linestyle="-",
+        linewidth=0.6,
+        alpha=0.18,
+        zorder=0,
+    )
+    for s in ax_bar.spines.values():
+        s.set_visible(False)
+
+    legend_handles = [
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="none",
+            markerfacecolor=COLORS["graph1"],
+            markersize=8,
+            label=f"Fatturato {d['year_n']} €",
+        ),
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="none",
+            markerfacecolor=COLORS["graph2"],
+            markersize=8,
+            label=f"Fatturato {d['year_n_1']} €",
+        ),
+    ]
+    ax_bar.legend(
+        handles=legend_handles,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.10),
+        ncol=2,
+        frameon=False,
+        fontsize=8,
+        labelcolor=COLORS["white"],
+    )
+
+    # Right KPI block
+    ax.text(
+        0.62,
+        0.64,
+        f"Fatturato {d['month_name']} {d['year_n']} €",
+        ha="left",
+        va="center",
+        color=COLORS["white"],
+        fontsize=11,
+        fontproperties=epilogue_semibold,
+    )
+
+    ax.text(
+        0.62,
+        0.605,
+        fmt_eur_dot(d["fatturato_n"]),
+        ha="left",
+        va="center",
+        color=COLORS["highlight"],
+        fontsize=26,
+        fontproperties=epilogue_semibold,
+    )
+
+    arrow_img = arrow_up if d["diff_fatturato"] >= 0 else arrow_down
+    _place_img(ax, arrow_img, x=0.60, y=0.605, w=0.035, z=12)
+
+    ax.text(
+        0.62,
+        0.565,
+        f"vs {d['year_n_1']}",
+        ha="left",
+        va="center",
+        color=COLORS["white"],
+        fontsize=11,
+        fontproperties=epilogue_regular,
+    )
+
+    ax.text(
+        0.62,
+        0.535,
+        fmt_pct_1(d["diff_fatturato"]),
+        ha="left",
+        va="center",
+        color=COLORS["accent"],
+        fontsize=20,
+        fontproperties=epilogue_semibold,
+    )
+    _place_img(ax, arrow_img, x=0.60, y=0.535, w=0.035, z=12)
+
+    ax.plot([0.60, 0.90], [0.505, 0.505], color=COLORS["white"], alpha=0.25, lw=1)
+
+    # Analysis text (user)
+    wrapped = wrap_for_box(analysis_text, width=44)
+    ax.text(
+        0.62,
+        0.485,
+        wrapped,
+        ha="left",
+        va="top",
+        color=COLORS["white"],
+        fontsize=12,
+        fontproperties=epilogue_regular,
+        linespacing=1.6,
+    )
+
+    # Bottom separator
+    ax.plot([0.10, 0.90], [0.18, 0.18], color=COLORS["white"], alpha=0.35, lw=1)
+
+    # Bottom titles
+    ax.text(
+        0.26,
+        0.14,
+        "Ricavi - Costi",
+        ha="center",
+        va="center",
+        color=COLORS["accent"],
+        fontsize=16,
+        fontproperties=epilogue_semibold,
+    )
+    ax.text(
+        0.74,
+        0.14,
+        "Margine % su ricavi",
+        ha="center",
+        va="center",
+        color=COLORS["accent"],
+        fontsize=16,
+        fontproperties=epilogue_semibold,
+    )
+
+    # Bottom values (Ricavi - Costi)
+    ax.text(
+        0.16,
+        0.095,
+        f"{d['month_name']} {d['year_n']}",
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=10,
+        fontproperties=epilogue_regular,
+    )
+    ax.text(
+        0.16,
+        0.065,
+        fmt_eur_dot(d["ric_cost_n"]),
+        ha="center",
+        va="center",
+        color=COLORS["highlight"],
+        fontsize=18,
+        fontproperties=epilogue_semibold,
+    )
+
+    ax.text(
+        0.36,
+        0.095,
+        f"vs {d['year_n_1']}",
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=10,
+        fontproperties=epilogue_regular,
+    )
+    ax.text(
+        0.36,
+        0.065,
+        fmt_eur_dot(d["ric_cost_n_1"]),
+        ha="center",
+        va="center",
+        color=COLORS["highlight"],
+        fontsize=18,
+        fontproperties=epilogue_semibold,
+    )
+
+    # Divider
+    ax.plot(
+        [0.50, 0.50],
+        [0.05, 0.11],
+        color=COLORS["white"],
+        alpha=0.45,
+        lw=2,
+        linestyle="--",
+    )
+
+    # Bottom values (Margine) - 1 décimale
+    ax.text(
+        0.66,
+        0.095,
+        f"{d['month_name']} {d['year_n']}",
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=10,
+        fontproperties=epilogue_regular,
+    )
+    ax.text(
+        0.66,
+        0.065,
+        f"{d['marg_n']:.1f}%",
+        ha="center",
+        va="center",
+        color=COLORS["highlight"],
+        fontsize=18,
+        fontproperties=epilogue_semibold,
+    )
+
+    ax.text(
+        0.82,
+        0.095,
+        f"vs {d['year_n_1']}",
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=10,
+        fontproperties=epilogue_regular,
+    )
+    ax.text(
+        0.82,
+        0.065,
+        f"{d['marg_n_1']:.1f}%",
+        ha="center",
+        va="center",
+        color=COLORS["highlight"],
+        fontsize=18,
+        fontproperties=epilogue_semibold,
+    )
+
+    # Round arrow bottom right
+    _place_img(ax, arrow_round, x=0.92, y=0.09, w=0.07, z=20)
+
+    return fig
+
+
+def build_page1_pdf_bytes(d, restaurant_name, analysis_text):
+    fig = render_page1_fig(d, restaurant_name, analysis_text)
+    buf = BytesIO()
+    fig.savefig(buf, format="pdf", facecolor=COLORS["bg"])
+    plt.close(fig)
+    buf.seek(0)
+    return buf.getvalue()
+
+
+# =========================
+# 10) UI
+# =========================
 st.title("Report Fizzy Automatizzazione ⚡️")
 
 restaurant_input = st.sidebar.text_input(
@@ -429,185 +848,38 @@ restaurant_input = st.sidebar.text_input(
 uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
 
 if uploaded and restaurant_input:
+    data = load_data(uploaded)
 
-    data_dict = load_data(uploaded)
-
-    # Colonnes
     col_viz, col_edit = st.columns([1, 1])
 
-    # =========================
-    # 📊 COLONNE GRAPH
-    # =========================
     with col_viz:
+        st.subheader("📊 Fatturato Mensile (preview)")
+        preview_fig = make_fatturato_fig(data, label=restaurant_input)
+        st.pyplot(preview_fig)
 
-        st.subheader("📊 Fatturato Mensile")
-
-        fig = make_fatturato_fig(data_dict, label="")
-        st.pyplot(fig)
-
-    # =========================
-    # ✍️ COLONNE ANALYSE
-    # =========================
     with col_edit:
-
         st.subheader("✍️ Analyse Narrative")
 
-        suggest = build_page1_suggestions(data_dict)
-
-        mode = st.radio("Style", ["long", "short"], horizontal=True, index=0)
-
-        p1_default, p2_default = suggest[mode]
+        p1_default, p2_default = build_page1_suggestions(data)
 
         p1 = st.text_area("Paragrafo 1", value=p1_default, height=160)
         p2 = st.text_area("Paragrafo 2", value=p2_default, height=160)
 
         analysis_text = f"{p1}\n\n{p2}"
 
-    st.divider()
+        st.divider()
 
+        if st.button("📄 Générer PDF — Page 1"):
+            pdf_bytes = build_page1_pdf_bytes(data, restaurant_input, analysis_text)
+            st.session_state["page1_pdf_bytes"] = pdf_bytes
 
-# --- 4. FONCTION DE DESSIN DU RAPPORT (IMAGE FINALE) ---
-def draw_full_report(d, restaurant_name, analysis_text):
-    fig = plt.figure(figsize=(10, 14), facecolor=COLORS["bg"])
-    ax_main = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
-    ax_main.axis("off")
-
-    # Header
-    ax_main.text(
-        0.5,
-        0.94,
-        "We\nare_\nFIZZY",
-        color=COLORS["white"],
-        fontsize=16,
-        fontweight="bold",
-        ha="center",
-        linespacing=0.9,
-    )
-    ax_main.text(
-        0.5,
-        0.89,
-        "Report Mensile",
-        color=COLORS["white"],
-        fontsize=32,
-        ha="center",
-        fontfamily="serif",
-        fontstyle="italic",
-    )
-    ax_main.text(
-        0.5,
-        0.86,
-        f"{restaurant_name.upper()}",
-        color=COLORS["white"],
-        fontsize=16,
-        ha="center",
-    )
-    ax_main.text(
-        0.5,
-        0.84,
-        d["full_date_n"].upper(),
-        color=COLORS["highlight"],
-        fontsize=12,
-        ha="center",
-    )
-
-    # Graphique Fatturato
-    ax_bar = fig.add_axes([0.15, 0.58, 0.35, 0.20], facecolor=COLORS["bg"])
-    vals = [d["fatturato_n"], d["fatturato_n_1"]]
-    rects = ax_bar.bar(
-        [0, 1], vals, color=[COLORS["graph1"], COLORS["graph2"]], width=0.8, zorder=3
-    )
-
-    # Formatage Axe Y
-    ax_bar.yaxis.set_major_formatter(
-        ticker.FuncFormatter(lambda x, p: f"{int(x):,}".replace(",", " "))
-    )
-    ax_bar.grid(
-        axis="y",
-        color=COLORS["white"],
-        linestyle="-",
-        linewidth=0.5,
-        alpha=0.2,
-        zorder=0,
-    )
-    ax_bar.tick_params(axis="y", colors=COLORS["white"], labelsize=9)
-    for s in ax_bar.spines.values():
-        s.set_visible(False)
-    ax_bar.set_xticks([])
-
-    # Chiffres Fatturato
-    val_txt = f"{int(d['fatturato_n']):,}".replace(",", " ") + " €"
-    ax_main.text(
-        0.55, 0.72, val_txt, color=COLORS["white"], fontsize=35, fontweight="bold"
-    )
-    ax_main.text(
-        0.55,
-        0.68,
-        f"{d['diff_fatturato']}% vs {d['year_n_1']}",
-        color=COLORS["accent"],
-        fontsize=18,
-    )
-
-    # Texte d'analyse
-    ax_main.text(
-        0.55,
-        0.64,
-        analysis_text,
-        color=COLORS["white"],
-        fontsize=10,
-        linespacing=1.5,
-        va="top",
-        wrap=True,
-    )
-
-    # Section Ricavi - Costi
-    ax_main.text(
-        0.1,
-        0.48,
-        "RICAVI - COSTI",
-        color=COLORS["accent"],
-        fontsize=14,
-        fontweight="bold",
-    )
-    ax_main.text(
-        0.1,
-        0.42,
-        f"€ {int(d['ric_cost_n']):,}".replace(",", " "),
-        color=COLORS["white"],
-        fontsize=28,
-        fontweight="bold",
-    )
-    ax_main.text(
-        0.40,
-        0.42,
-        f"€ {int(d['ric_cost_n_1']):,}".replace(",", " "),
-        color=COLORS["graph1"],
-        fontsize=28,
-    )
-
-    # Section Margine
-    ax_main.text(
-        0.1,
-        0.28,
-        "MARGINE % SU RICAVI",
-        color=COLORS["accent"],
-        fontsize=14,
-        fontweight="bold",
-    )
-    ax_main.text(
-        0.1,
-        0.18,
-        f"{int(d['marg_n'])}%",
-        color=COLORS["white"],
-        fontsize=55,
-        fontweight="bold",
-    )
-    ax_main.text(
-        0.35,
-        0.18,
-        f"{int(d['marg_n_1'])}%",
-        color=COLORS["graph1"],
-        fontsize=55,
-        alpha=0.7,
-    )
-
-    return fig
+        if "page1_pdf_bytes" in st.session_state:
+            file_name = f"Report_{restaurant_input}_{data['month_name']}_{data['year_n']}_page1.pdf".replace(
+                " ", "_"
+            )
+            st.download_button(
+                "⬇️ Télécharger le PDF (Page 1)",
+                data=st.session_state["page1_pdf_bytes"],
+                file_name=file_name,
+                mime="application/pdf",
+            )
