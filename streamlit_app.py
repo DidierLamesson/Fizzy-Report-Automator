@@ -510,33 +510,41 @@ def render_page1_fig(d, restaurant_name, analysis_text):
     arrow_round = _img_rgba(ARROW_ROUND_PATH)
 
     # Header
-    _place_img(ax, logo, x=0.50, y=0.93, w=0.18, z=10)
-    _pill(ax, x=0.76, y=0.90, w=0.18, h=0.045, text=f"{d['month_name']} {d['year_n']}")
+    _place_img(ax, logo, x=0.50, y=0.955, w=0.22, z=10)
+    _pill(
+        ax,
+        x=0.72,
+        y=0.92,
+        w=0.22,
+        h=0.050,
+        text=f"{d['month_name']} {d['year_n']}",
+        fill=False,
+    )
 
     ax.text(
         0.5,
-        0.84,
+        0.865,
         "Report Mensile",
         ha="center",
         va="center",
         color=COLORS["highlight"],
-        fontsize=54,
+        fontsize=58,
         fontproperties=ivy_title,
         style="italic",
     )
 
     ax.text(
         0.5,
-        0.79,
+        0.815,
         restaurant_name.upper(),
         ha="center",
         va="center",
         color=COLORS["accent"],
-        fontsize=16,
+        fontsize=20,
         fontproperties=epilogue_semibold,
     )
 
-    ax.plot([0.10, 0.90], [0.76, 0.76], color=COLORS["white"], alpha=0.65, lw=1)
+    ax.plot([0.10, 0.90], [0.785, 0.785], color=COLORS["white"], alpha=0.65, lw=1)
 
     # Section title
     ax.text(
