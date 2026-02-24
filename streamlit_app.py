@@ -665,6 +665,22 @@ def build_page1_pdf_bytes_base_a4():
     return buf.getvalue()
 
 
+def build_page1_png_bytes_base_a4(dpi=150):
+    fig = render_page1_fig_base_a4()
+    buf = BytesIO()
+    fig.savefig(
+        buf,
+        format="png",
+        facecolor=COLORS["bg"],
+        dpi=dpi,
+        bbox_inches=None,
+        pad_inches=0,
+    )
+    plt.close(fig)
+    buf.seek(0)
+    return buf.getvalue()
+
+
 # =========================
 # 10) UI
 # =========================
@@ -724,12 +740,7 @@ if uploaded and restaurant_input:
             "📝 Commento Beverage Cost", value="", height=280, key="beverage_comment"
         )
 st.divider()
-st.subheader("📄 Export PDF — Base A4 (logo only)")
+st.subheader("👀 Aperçu — Base A4 (logo only)")
 
-pdf_bytes = build_page1_pdf_bytes_base_a4()
-st.download_button(
-    "⬇️ Télécharger PDF A4 (logo)",
-    data=pdf_bytes,
-    file_name="page1_base_a4_logo.pdf",
-    mime="application/pdf",
-)
+png_bytes = build_page1_png_bytes_base_a4(dpi=150)
+st.image(png_bytes, use_container_width=True)
