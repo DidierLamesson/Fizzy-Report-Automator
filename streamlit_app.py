@@ -461,7 +461,14 @@ def _place_img(ax, img: Image.Image, x, y, w, z=5):
     ax.imshow(img, extent=[x0, x1, y0, y1], zorder=z)
 
 
-def _pill(ax, x, y, w, h, text, fill=True):
+def _pill(
+    ax,
+    x,
+    y,
+    w,
+    h,
+    text,
+):
     patch = FancyBboxPatch(
         (x, y),
         w,
@@ -469,7 +476,7 @@ def _pill(ax, x, y, w, h, text, fill=True):
         boxstyle="round,pad=0.008,rounding_size=0.02",
         linewidth=1.2,
         edgecolor=COLORS["white"],
-        facecolor=(0, 0, 0, 0) if not fill else (0, 0, 0, 0.65),
+        facecolor=(0, 0, 0, 0),
         alpha=0.9,
         zorder=10,
     )
