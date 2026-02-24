@@ -897,7 +897,7 @@ BODY1_CFG = {
     "kicker_enabled": True,
     "kicker_font_px": 18,
     "kicker_gap_after_px": 10,
-    "kicker_line_enabled": True,
+    "kicker_line_enabled": False,
     "kicker_line_width_px": 2,
     "kicker_line_gap_after_px": 18,
     # --- Titre section (fixe) ---
