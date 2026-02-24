@@ -523,7 +523,7 @@ def make_food_cost_fig(d, label):
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
     ax.set_ylim(0, max(25, (max(y) if y else 0) + 5))
 
-    ax.grid(axis="y", color=COLORS["white"], alpha=0.12, linewidth=1)
+    ax.grid(False)
     for s in ax.spines.values():
         s.set_visible(False)
 
