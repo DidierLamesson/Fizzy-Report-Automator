@@ -735,7 +735,7 @@ def _draw_header1(ax, W_PX, H_PX, month_label: str, restaurant_name: str, dpi: i
     # ======================
     # 3) Titre (centre)
     # ======================
-    TITLE_TOP_PX = 120
+    TITLE_TOP_PX = 160
     title_fs_px = 160
     ax.text(
         0.5,
