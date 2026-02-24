@@ -490,7 +490,19 @@ def _pill(ax, x, y, w, h, text, fill=False):
 def render_page1_fig(d, restaurant_name, analysis_text):
     dpi = 100
     fig = plt.figure(figsize=(1200 / dpi, 1500 / dpi), dpi=dpi, facecolor=COLORS["bg"])
-    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
+    TOP_CROP = 0.045  # augmente => moins de bande en haut
+    BOTTOM_CROP = 0.045  # augmente => moins de bande en bas
+    Y_SCALE = 1 + TOP_CROP + BOTTOM_CROP
+
+    ax = fig.add_axes([0, -BOTTOM_CROP, 1, Y_SCALE], facecolor=COLORS["bg"])
+
+    # Helpers pour remapper les sous-axes (ceux créés avec fig.add_axes)
+    def _Y(y):  # bottom en coords figure
+        return y * Y_SCALE - BOTTOM_CROP
+
+    def _H(h):  # height en coords figure
+        return h * Y_SCALE
+
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")
@@ -581,7 +593,7 @@ def render_page1_fig(d, restaurant_name, analysis_text):
     )
 
     # Bar chart
-    ax_bar = fig.add_axes([0.13, 0.36, 0.36, 0.25], facecolor=COLORS["bg"])
+    ax_bar = fig.add_axes([0.13, _Y(0.36), 0.36, _H(0.25)], facecolor=COLORS["bg"])
     vals = [d["fatturato_n"], d["fatturato_n_1"]]
     ax_bar.bar(
         [0, 1], vals, color=[COLORS["graph1"], COLORS["graph2"]], width=0.90, zorder=3
