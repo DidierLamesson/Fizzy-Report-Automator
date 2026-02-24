@@ -1190,5 +1190,5 @@ st.subheader("👀 Aperçu — Base A4 (logo only)")
 
 png_bytes = build_page1_png_bytes(
     data, restaurant_input, analysis_text, dpi=150
-)  # ou ta build_page1_png_bytes(...)
+)  # ou ta build_page1_png_bytes
 st.image(png_bytes, width=800)  # width fixe = moins de “letterboxing”
