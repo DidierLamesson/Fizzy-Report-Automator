@@ -626,14 +626,107 @@ def _trim_transparent(img: Image.Image) -> Image.Image:
     return img.crop(bbox) if bbox else img
 
 
-def _draw_header1(ax, W_PX, H_PX, month_label: str, restaurant_name: str, dpi: int):
-    # --- repère page ---
+from matplotlib.patches import Rectangle, FancyBboxPatch
+from PIL import Image
+
+# =========================
+# HEADER 1 — MODULAIRE (px-accurate, imshow-safe)
+# =========================
+# Dépendances attendues (déjà chez toi) :
+# - COLORS, LOGO_PATH
+# - epilogue_regular, epilogue_semibold (ou epilogue_regular), ivy_title
+# - _px_to_pt(px, dpi), _img_rgba(path), _trim_transparent(img)
+
+HEADER1_CFG = {
+    # --- Bordure page ---
+    "draw_border": True,
+    "border_width_px": 2,
+    # --- Ligne du haut (logo + pill) ---
+    "logo_enabled": True,
+    "logo_w_px": 120,  # largeur logo
+    "logo_top_px": 20,  # distance depuis le haut
+    "pill_enabled": True,
+    "pill_top_px": 80,  # distance depuis le haut
+    "pill_right_margin_px": 80,  # marge droite
+    "pill_font_px": 44,
+    "pill_pad_x_px": 34,
+    "pill_pad_y_px": 18,
+    "pill_border_width_px": 3,
+    # --- Espacements verticaux (le layout “suit” automatiquement) ---
+    "gap_after_toprow_px": 40,  # espace après la ligne logo/pill avant le titre
+    "gap_title_to_restaurant_px": 24,  # espace titre -> restaurant
+    "gap_restaurant_to_line_px": 28,  # espace restaurant -> ligne
+    # --- Titre ---
+    "title_text": "Report Mensile",
+    "title_font_px": 160,
+    "title_color": "highlight",  # clé dans COLORS
+    "title_fontprops": "ivy_title",
+    "title_fontstyle": "italic",
+    # --- Restaurant ---
+    "restaurant_font_px": 64,
+    "restaurant_color": "accent",  # clé dans COLORS
+    "restaurant_fontprops": "epilogue_regular",  # ou "epilogue_semibold"
+    # --- Ligne ---
+    "line_side_margin_px": 180,  # marge gauche/droite
+    "line_width_px": 3,
+    "line_color": "highlight",  # clé dans COLORS
+}
+
+
+def _measure_text_px(ax, s, font_px, fontprops, dpi, fontstyle=None):
+    """Mesure (w_px, h_px) réels du texte rendu, en pixels (ne modifie pas le layout)."""
+    t = ax.text(
+        0,
+        0,
+        s,
+        transform=ax.transAxes,
+        fontsize=_px_to_pt(font_px, dpi),
+        fontproperties=fontprops,
+        fontstyle=fontstyle,
+        alpha=0.0,
+    )
+    ax.figure.canvas.draw()
+    r = ax.figure.canvas.get_renderer()
+    bb = t.get_window_extent(renderer=r)
+    t.remove()
+    return bb.width, bb.height
+
+
+def _draw_text_top_px(
+    ax, y_from_top, top_px, s, font_px, fontprops, dpi, color, z=10, fontstyle=None
+):
+    """Dessine un texte aligné sur le haut (top_px depuis le haut). Retourne la hauteur px du texte."""
+    t = ax.text(
+        0.5,
+        y_from_top(top_px),
+        s,
+        ha="center",
+        va="top",
+        transform=ax.transAxes,
+        fontsize=_px_to_pt(font_px, dpi),
+        fontproperties=fontprops,
+        fontstyle=fontstyle,
+        color=color,
+        zorder=z,
+    )
+    ax.figure.canvas.draw()
+    r = ax.figure.canvas.get_renderer()
+    bb = t.get_window_extent(renderer=r)
+    return bb.height
+
+
+def _draw_header1(
+    ax, W_PX, H_PX, month_label: str, restaurant_name: str, dpi: int, cfg=None
+):
+    cfg = {**HEADER1_CFG, **(cfg or {})}
+
+    # ✅ imshow-safe : on verrouille le repère “page” et on empêche le letterboxing
     ax.set_axis_off()
     ax.set_aspect("auto")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
 
-    # helpers px -> axes
+    # px -> axes
     def x(px):
         return px / W_PX
 
@@ -644,30 +737,30 @@ def _draw_header1(ax, W_PX, H_PX, month_label: str, restaurant_name: str, dpi: i
         x0 = x(left_px)
         y1 = y_from_top(top_px)
         y0 = y_from_top(top_px + h_px)
-        return x0, y0, w_px / W_PX, h_px / H_PX, y1  # y1 utile pour align "top"
+        return x0, y0, (w_px / W_PX), (h_px / H_PX)
 
-    # --- bordure full page ---
-    ax.add_patch(
-        Rectangle(
-            (0, 0),
-            1,
-            1,
-            transform=ax.transAxes,
-            facecolor="none",
-            edgecolor=COLORS["white"],
-            linewidth=_px_to_pt(2, dpi),
-            zorder=999,
+    # 0) Bordure full page
+    if cfg["draw_border"]:
+        ax.add_patch(
+            Rectangle(
+                (0, 0),
+                1,
+                1,
+                transform=ax.transAxes,
+                facecolor="none",
+                edgecolor=COLORS["white"],
+                linewidth=_px_to_pt(cfg["border_width_px"], dpi),
+                zorder=999,
+            )
         )
-    )
 
-    # ======================
-    # 1) Logo Fizzy (haut centre)
-    # ======================
-    if LOGO_PATH.exists():
+    # 1) Logo (haut centre) — pixel perfect
+    logo_bottom_px = 0
+    if cfg["logo_enabled"] and LOGO_PATH.exists():
         logo = _trim_transparent(_img_rgba(LOGO_PATH))
 
-        LOGO_W_PX = 120  # <-- augmente pour grossir
-        LOGO_TOP_PX = 20  # <-- diminue pour remonter
+        LOGO_W_PX = cfg["logo_w_px"]
+        LOGO_TOP_PX = cfg["logo_top_px"]
 
         aspect = logo.width / logo.height
         logo_h_px = LOGO_W_PX / aspect
@@ -681,103 +774,115 @@ def _draw_header1(ax, W_PX, H_PX, month_label: str, restaurant_name: str, dpi: i
             logo,
             extent=[x(x0_px), x(x1_px), (y0_px / H_PX), (y1_px / H_PX)],
             zorder=1000,
-            aspect="auto",
+            aspect="auto",  # ✅ crucial : ne pas laisser imshow imposer un aspect
         )
 
-    # ======================
-    # 2) Pill date (droite)
-    # ======================
-    pill_text = month_label  # ex: "Dicembre 2025"
+        logo_bottom_px = LOGO_TOP_PX + logo_h_px
 
-    PILL_TOP_PX = 80
-    PILL_RIGHT_MARGIN_PX = 80
+    # 2) Pill (date à droite) — largeur/hauteur mesurées (modulaire)
+    pill_bottom_px = 0
+    if cfg["pill_enabled"]:
+        pill_text = month_label
 
-    pill_font_px = 44
-    pad_x_px = 34
-    pad_y_px = 18
+        PILL_TOP_PX = cfg["pill_top_px"]
+        PILL_RIGHT_MARGIN_PX = cfg["pill_right_margin_px"]
+        pill_font_px = cfg["pill_font_px"]
+        pad_x_px = cfg["pill_pad_x_px"]
+        pad_y_px = cfg["pill_pad_y_px"]
 
-    # largeur approx basée sur nb de caractères (simple & stable)
-    approx_text_w_px = len(pill_text) * (pill_font_px * 0.55)
-    PILL_W_PX = int(approx_text_w_px + 2 * pad_x_px)
-    PILL_H_PX = int(pill_font_px + 2 * pad_y_px)
+        text_w_px, text_h_px = _measure_text_px(
+            ax, pill_text, pill_font_px, epilogue_regular, dpi
+        )
+        PILL_W_PX = int(text_w_px + 2 * pad_x_px)
+        PILL_H_PX = int(text_h_px + 2 * pad_y_px)
 
-    pill_left_px = W_PX - PILL_RIGHT_MARGIN_PX - PILL_W_PX
-    x0, y0, w_ax, h_ax, y1 = rect_from_top(
-        pill_left_px, PILL_TOP_PX, PILL_W_PX, PILL_H_PX
-    )
+        pill_left_px = W_PX - PILL_RIGHT_MARGIN_PX - PILL_W_PX
+        x0, y0, w_ax, h_ax = rect_from_top(
+            pill_left_px, PILL_TOP_PX, PILL_W_PX, PILL_H_PX
+        )
 
-    ax.add_patch(
-        FancyBboxPatch(
-            (x0, y0),
-            w_ax,
-            h_ax,
-            boxstyle=f"round,pad=0.0,rounding_size={h_ax/2}",  # ✅ pill bien arrondie
+        ax.add_patch(
+            FancyBboxPatch(
+                (x0, y0),
+                w_ax,
+                h_ax,
+                boxstyle=f"round,pad=0.0,rounding_size={min(h_ax/2, w_ax/2)}",
+                transform=ax.transAxes,
+                facecolor=COLORS["bg"],
+                edgecolor=COLORS["highlight"],
+                linewidth=_px_to_pt(cfg["pill_border_width_px"], dpi),
+                zorder=900,
+            )
+        )
+        ax.text(
+            x0 + w_ax / 2,
+            y0 + h_ax / 2,
+            pill_text,
             transform=ax.transAxes,
-            facecolor=COLORS["bg"],
-            edgecolor=COLORS["highlight"],
-            linewidth=_px_to_pt(3, dpi),
-            zorder=900,
+            ha="center",
+            va="center",
+            color=COLORS["white"],
+            fontsize=_px_to_pt(pill_font_px, dpi),
+            fontproperties=epilogue_regular,
+            zorder=901,
         )
-    )
-    ax.text(
-        x0 + w_ax / 2,
-        y0 + h_ax / 2,
-        pill_text,
-        transform=ax.transAxes,
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=_px_to_pt(pill_font_px, dpi),
-        fontproperties=epilogue_regular,
-        zorder=901,
-    )
 
-    # ======================
-    # 3) Titre (centre)
-    # ======================
-    TITLE_TOP_PX = 180
-    title_fs_px = 160
-    ax.text(
-        0.5,
-        y_from_top(TITLE_TOP_PX),
-        "Report Mensile",
-        ha="center",
-        va="top",
-        color=COLORS["highlight"],
-        fontsize=_px_to_pt(title_fs_px, dpi),
-        fontproperties=ivy_title,
-        fontstyle="italic",
-        zorder=850,
-    )
+        pill_bottom_px = PILL_TOP_PX + PILL_H_PX
 
-    # ======================
-    # 4) Restaurant (centre, dessous)
-    # ======================
-    RESTO_TOP_PX = 360
-    resto_fs_px = 64
-    ax.text(
-        0.5,
-        y_from_top(RESTO_TOP_PX),
-        (restaurant_name or "").upper(),
-        ha="center",
-        va="top",
-        color=COLORS["accent"],
-        fontsize=_px_to_pt(resto_fs_px, dpi),
-        fontproperties=epilogue_regular,
-        zorder=850,
-    )
+    # 3) Curseur vertical : démarre sous la “top row” (logo/pill) de façon modulaire
+    toprow_bottom_px = max(logo_bottom_px, pill_bottom_px)
+    y_cursor_px = toprow_bottom_px + cfg["gap_after_toprow_px"]
 
-    # ======================
-    # 5) Ligne en bas du header
-    # ======================
-    LINE_TOP_PX = 450
-    SIDE_MARGIN_PX = 180
+    # 4) Titre (centre) — hauteur mesurée -> y_cursor avance tout seul
+    title_text = cfg["title_text"]
+    title_font_px = cfg["title_font_px"]
+    title_color = COLORS[cfg["title_color"]]
+    title_fontprops = globals()[cfg["title_fontprops"]]  # ivy_title
+    title_fontstyle = cfg["title_fontstyle"]
+
+    h_title_px = _draw_text_top_px(
+        ax,
+        y_from_top,
+        y_cursor_px,
+        title_text,
+        title_font_px,
+        title_fontprops,
+        dpi,
+        title_color,
+        z=850,
+        fontstyle=title_fontstyle,
+    )
+    y_cursor_px += h_title_px + cfg["gap_title_to_restaurant_px"]
+
+    # 5) Restaurant (centre) — hauteur mesurée -> y_cursor avance tout seul
+    resto_text = (restaurant_name or "").upper()
+    resto_font_px = cfg["restaurant_font_px"]
+    resto_color = COLORS[cfg["restaurant_color"]]
+    resto_fontprops = globals()[
+        cfg["restaurant_fontprops"]
+    ]  # epilogue_regular/semibold
+
+    h_resto_px = _draw_text_top_px(
+        ax,
+        y_from_top,
+        y_cursor_px,
+        resto_text,
+        resto_font_px,
+        resto_fontprops,
+        dpi,
+        resto_color,
+        z=850,
+    )
+    y_cursor_px += h_resto_px + cfg["gap_restaurant_to_line_px"]
+
+    # 6) Ligne (sous le restaurant)
+    SIDE_MARGIN_PX = cfg["line_side_margin_px"]
     ax.hlines(
-        y=y_from_top(LINE_TOP_PX),
+        y=y_from_top(y_cursor_px),
         xmin=x(SIDE_MARGIN_PX),
         xmax=x(W_PX - SIDE_MARGIN_PX),
-        colors=COLORS["highlight"],
-        linewidth=_px_to_pt(3, dpi),
+        colors=COLORS[cfg["line_color"]],
+        linewidth=_px_to_pt(cfg["line_width_px"], dpi),
         zorder=800,
     )
 
