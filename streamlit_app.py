@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
+import re
 
 # --- 1. CONFIGURATION & DESIGN ---
 st.set_page_config(page_title="FIZZY Automator", layout="wide")
@@ -28,28 +29,59 @@ COLORS = {
     "highlight": "#c8bcab",
     "graph1": "#918d84",
     "graph2": "#ece8e1",
-    "white": "#ffffff"
+    "white": "#ffffff",
 }
+
 
 # --- 2. FONCTIONS DE TRAITEMENT ---
 def clean_val(val):
-    if pd.isna(val) or isinstance(val, str):
+    """Robuste: gère NaN, float/int, et strings '507 767' / '507.767' / '507,767'."""
+    if pd.isna(val):
         return 0.0
-    return float(val)
+    if isinstance(val, (int, float)):
+        return float(val)
+    if isinstance(val, str):
+        s = val.strip()
+        # garde chiffres + séparateurs
+        s = re.sub(r"[^\d,.\-]", "", s)
+        if not s:
+            return 0.0
+        # heuristique: si virgule et point, on suppose virgule décimale
+        if "," in s and "." in s:
+            s = s.replace(".", "").replace(",", ".")
+        else:
+            # si seulement virgule -> décimale
+            if "," in s:
+                s = s.replace(",", ".")
+        try:
+            return float(s)
+        except ValueError:
+            return 0.0
+    return 0.0
+
 
 def load_data(file):
-    df = pd.read_excel(file, sheet_name='Dati report', header=None)
+    df = pd.read_excel(file, sheet_name="Dati report", header=None)
 
     # Dictionnaire de traduction des mois
     months_it = {
-        1: "Gennaio", 2: "Febbraio", 3: "Marzo", 4: "Aprile",
-        5: "Maggio", 6: "Giugno", 7: "Luglio", 8: "Agosto",
-        9: "Settembre", 10: "Ottobre", 11: "Novembre", 12: "Dicembre"
+        1: "Gennaio",
+        2: "Febbraio",
+        3: "Marzo",
+        4: "Aprile",
+        5: "Maggio",
+        6: "Giugno",
+        7: "Luglio",
+        8: "Agosto",
+        9: "Settembre",
+        10: "Ottobre",
+        11: "Novembre",
+        12: "Dicembre",
     }
 
     # --- 1. Extraction de la date ---
     raw_date = df.iloc[4, 2]  # Supposons que la date est en C5
-    if hasattr(raw_date, 'month'):
+    if hasattr(raw_date, "month"):
         mes_it = months_it[raw_date.month]
         anno_n = raw_date.year
     else:
@@ -57,15 +89,21 @@ def load_data(file):
         anno_n = 2026  # Valeur par défaut
 
     # --- 2. Extraction des données "Fatturato" ---
-    fatturato_n = clean_val(df.iloc[8, 2])      # Fatturato N (ligne 9, colonne C)
-    fatturato_n_1 = clean_val(df.iloc[9, 2])    # Fatturato N-1 (ligne 10, colonne C)
-    diff_fatturato = round(clean_val(df.iloc[8, 3]) * 100, 1)  # % variation (ligne 9, colonne D)
+    fatturato_n = clean_val(df.iloc[8, 2])  # Fatturato N (ligne 9, colonne C)
+    fatturato_n_1 = clean_val(df.iloc[9, 2])  # Fatturato N-1 (ligne 10, colonne C)
+    diff_fatturato = round(
+        clean_val(df.iloc[8, 3]) * 100, 1
+    )  # % variation (ligne 9, colonne D)
 
     # Ricavi - Costi et Margine
-    ric_cost_n = clean_val(df.iloc[11, 2])      # Ricavi - Costi N (ligne 12, colonne C)
-    ric_cost_n_1 = clean_val(df.iloc[12, 2])    # Ricavi - Costi N-1 (ligne 13, colonne C)
-    marg_n = round(clean_val(df.iloc[14, 2]) * 100, 1)  # Margine N (ligne 15, colonne C)
-    marg_n_1 = round(clean_val(df.iloc[15, 2]) * 100, 1)  # Margine N-1 (ligne 16, colonne C)
+    ric_cost_n = clean_val(df.iloc[11, 2])  # Ricavi - Costi N (ligne 12, colonne C)
+    ric_cost_n_1 = clean_val(df.iloc[12, 2])  # Ricavi - Costi N-1 (ligne 13, colonne C)
+    marg_n = round(
+        clean_val(df.iloc[14, 2]) * 100, 1
+    )  # Margine N (ligne 15, colonne C)
+    marg_n_1 = round(
+        clean_val(df.iloc[15, 2]) * 100, 1
+    )  # Margine N-1 (ligne 16, colonne C)
 
     # --- 3. Extraction des dates pour les 6 mois glissants (mêmes pour Food, Beverage & Labour) ---
 
@@ -73,21 +111,35 @@ def load_data(file):
     graph_cost_dates_n_1 = [df.iloc[i, 7] for i in range(24, 30)]  # Dates en colonne H
 
     # --- 3. Extraction des dates et données "Food Cost" ---
-    
-    fatturato_mensile_n = [clean_val(df.iloc[i, 2]) for i in range(24, 30)]  # Fatturato mensuel N en colonne C
-    fatturato_mensile_n_1 = [clean_val(df.iloc[i, 8]) for i in range(24, 30)]  # Fatturato mensuel N-1 en colonne I
+
+    fatturato_mensile_n = [
+        clean_val(df.iloc[i, 2]) for i in range(24, 30)
+    ]  # Fatturato mensuel N en colonne C
+    fatturato_mensile_n_1 = [
+        clean_val(df.iloc[i, 8]) for i in range(24, 30)
+    ]  # Fatturato mensuel N-1 en colonne I
 
     # Food Cost mensuel (N et N-1)
-    food_cost_monthly_n = [clean_val(df.iloc[i, 3]) for i in range(24, 30)]  # Colonne D (N)
-    food_cost_monthly_n_1 = [clean_val(df.iloc[i, 9]) for i in range(24, 30)]  # Colonne J (N-1)
+    food_cost_monthly_n = [
+        clean_val(df.iloc[i, 3]) for i in range(24, 30)
+    ]  # Colonne D (N)
+    food_cost_monthly_n_1 = [
+        clean_val(df.iloc[i, 9]) for i in range(24, 30)
+    ]  # Colonne J (N-1)
 
     # --- 4. Extraction des données "Beverage Cost" ---
-    beverage_cost_monthly_n = [clean_val(df.iloc[i, 3]) for i in range(36, 42)]  # Colonne D (N)
-    beverage_cost_monthly_n_1 = [clean_val(df.iloc[i, 9]) for i in range(36, 42)]  # Colonne J (N-1)
+    beverage_cost_monthly_n = [
+        clean_val(df.iloc[i, 3]) for i in range(36, 42)
+    ]  # Colonne D (N)
+    beverage_cost_monthly_n_1 = [
+        clean_val(df.iloc[i, 9]) for i in range(36, 42)
+    ]  # Colonne J (N-1)
 
     # --- 5. Extraction des données "Incidenza Staff" ---
     staff_monthly_n = [clean_val(df.iloc[i, 3]) for i in range(50, 55)]  # Colonne D (N)
-    staff_monthly_n_1 = [clean_val(df.iloc[i, 9]) for i in range(50, 55)]  # Colonne J (N-1)
+    staff_monthly_n_1 = [
+        clean_val(df.iloc[i, 9]) for i in range(50, 55)
+    ]  # Colonne J (N-1)
 
     # --- 6. Calcul des pourcentages de Food Cost ---
     food_cost_pctg_n = []
@@ -159,7 +211,9 @@ def load_data(file):
     food_cost_avg_n = sum(food_cost_monthly_n) / len(food_cost_monthly_n)
     food_cost_avg_n_1 = sum(food_cost_monthly_n_1) / len(food_cost_monthly_n_1)
     beverage_cost_avg_n = sum(beverage_cost_monthly_n) / len(beverage_cost_monthly_n)
-    beverage_cost_avg_n_1 = sum(beverage_cost_monthly_n_1) / len(beverage_cost_monthly_n_1)
+    beverage_cost_avg_n_1 = sum(beverage_cost_monthly_n_1) / len(
+        beverage_cost_monthly_n_1
+    )
     staff_cost_avg_n = sum(staff_monthly_n) / len(staff_monthly_n)
     staff_cost_avg_n_1 = sum(staff_monthly_n_1) / len(staff_monthly_n_1)
 
@@ -178,15 +232,12 @@ def load_data(file):
         "ric_cost_n_1": ric_cost_n_1,
         "marg_n": marg_n,
         "marg_n_1": marg_n_1,
-
         # Dates
         "graph_cost_dates": graph_cost_dates,
         "graph_cost_dates_n_1": graph_cost_dates_n_1,
-
         # Fatturato Mensile
         "fatturato_mensile_n": fatturato_mensile_n,
         "fatturato_mensile_n_1": fatturato_mensile_n_1,
-
         # Food Cost
         "food_cost_monthly_n": food_cost_monthly_n,
         "food_cost_monthly_n_1": food_cost_monthly_n_1,
@@ -194,7 +245,6 @@ def load_data(file):
         "food_cost_pctg_n_1": food_cost_pctg_n_1,
         "food_cost_avg_n": food_cost_avg_n,
         "food_cost_avg_n_1": food_cost_avg_n_1,
-
         # Beverage Cost
         "beverage_cost_monthly_n": beverage_cost_monthly_n,
         "beverage_cost_monthly_n_1": beverage_cost_monthly_n_1,
@@ -202,7 +252,6 @@ def load_data(file):
         "beverage_cost_pctg_n_1": beverage_cost_pctg_n_1,
         "beverage_cost_avg_n": beverage_cost_avg_n,
         "beverage_cost_avg_n_1": beverage_cost_avg_n_1,
-
         # Incidenza Staff
         "staff_monthly_n": staff_monthly_n,
         "staff_monthly_n_1": staff_monthly_n_1,
@@ -213,17 +262,145 @@ def load_data(file):
     }
 
 
+def fmt_eur_it(x, decimals=0):
+    # 507767 -> "507.767 €"
+    if decimals == 0:
+        s = f"{int(round(x)):,}".replace(",", ".")
+    else:
+        s = f"{x:,.{decimals}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"{s} €"
+
+
+def fmt_pct(x, decimals=1, signed=True):
+    sign = "+" if (signed and x >= 0) else ""
+    return f"{sign}{x:.{decimals}f}%"
+
+
+def build_page1_suggestions(d):
+    fatt_n = d["fatturato_n"]
+    fatt_p = d["fatturato_n_1"]
+    delta = fatt_n - fatt_p
+    pct = (delta / fatt_p * 100) if fatt_p else 0.0
+
+    ric_n = d["ric_cost_n"]
+    ric_p = d["ric_cost_n_1"]
+    ric_delta = ric_n - ric_p
+
+    marg_n = d["marg_n"]
+    marg_p = d["marg_n_1"]
+    marg_delta = marg_n - marg_p  # points %
+
+    trend_word = "incremento" if pct >= 0 else "calo"
+    ric_word = "miglioramento" if ric_delta >= 0 else "peggioramento"
+    marg_word = "miglioramento" if marg_delta >= 0 else "contrazione"
+
+    p1 = (
+        f"Dal confronto con lo stesso periodo dell’anno precedente emerge che, a "
+        f"{d['month_name']} {d['year_n']}, il fatturato registra un {trend_word} "
+        f"del {abs(pct):.1f}% rispetto a {d['month_name']} {d['year_n_1']} "
+        f"({fmt_eur_it(fatt_n)} vs {fmt_eur_it(fatt_p)})."
+    )
+
+    p2 = (
+        f"Oltre alla dinamica dei ricavi, si evidenzia un {ric_word} del risultato economico: "
+        f"Ricavi - Costi pari a {fmt_eur_it(ric_n)} "
+        f"(vs {fmt_eur_it(ric_p)}), con un {marg_word} dei margini "
+        f"({marg_n:.0f}% vs {marg_p:.0f}%)."
+    )
+
+    # Variantes plus “courte”
+    p1_short = (
+        f"A {d['month_name']} {d['year_n']} il fatturato è {fmt_eur_it(fatt_n)}, "
+        f"{fmt_pct(pct, 1, True)} vs {d['year_n_1']}."
+    )
+    p2_short = (
+        f"Ricavi - Costi: {fmt_eur_it(ric_n)} ({fmt_eur_it(ric_p)} nel {d['year_n_1']}); "
+        f"Margine: {marg_n:.0f}% (vs {marg_p:.0f}%)."
+    )
+
+    return {
+        "long": (p1, p2),
+        "short": (p1_short, p2_short),
+    }
+
+
+def make_fatturato_fig(d, label="Terrazza"):
+    fig, ax = plt.subplots(figsize=(6, 6))
+    fig.patch.set_facecolor(COLORS["bg"])
+    ax.set_facecolor(COLORS["bg"])
+
+    values = [d["fatturato_n"], d["fatturato_n_1"]]
+    x = [0, 1]
+
+    ax.bar(x, values, width=0.95, color=[COLORS["graph1"], COLORS["graph2"]], zorder=3)
+    ax.set_xlim(-0.525, 1.525)
+
+    for i, v in enumerate(values):
+        ax.text(
+            i,
+            v + max(values) * 0.02,
+            f"{int(round(v)):,}".replace(",", "."),
+            ha="center",
+            va="bottom",
+            fontsize=16,
+            color=COLORS["white"],
+            fontweight=900,
+        )
+
+    ax.set_xticks([0.5])
+    ax.set_xticklabels([label], color=COLORS["white"], fontsize=12)
+
+    ax.tick_params(axis="y", colors=COLORS["white"], labelsize=12, length=0)
+    ax.yaxis.set_major_formatter(
+        ticker.FuncFormatter(lambda x, p: f"{int(x):,}".replace(",", "."))
+    )
+    ax.set_ylim(0, max(values) * 1.2)
+
+    ax.grid(axis="y", linestyle="-", alpha=0.15, color=COLORS["white"], zorder=0)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+
+    legend_handles = [
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="none",
+            markerfacecolor=COLORS["graph1"],
+            markersize=10,
+            label=f"Fatturato {d['year_n']} €",
+        ),
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="none",
+            markerfacecolor=COLORS["graph2"],
+            markersize=10,
+            label=f"Fatturato {d['year_n_1']} €",
+        ),
+    ]
+    ax.legend(
+        handles=legend_handles,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.12),
+        ncol=2,
+        frameon=False,
+        fontsize=12,
+        labelcolor=COLORS["white"],
+    )
+
+    plt.tight_layout()
+    return fig
+
+
 # --- 3. INTERFACE UTILISATEUR ---
 st.title("Report Fizzy Automatizzazione ⚡️")
 
 restaurant_input = st.sidebar.text_input(
-    "Nome clienti *",
-    value="A'RICCIONE - TERRAZZA"
+    "Nome clienti *", value="A'RICCIONE - TERRAZZA"
 )
-uploaded = st.sidebar.file_uploader(
-    "Charger le fichier Excel",
-    type="xlsx"
-)
+uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
 
 if uploaded and restaurant_input:
 
@@ -246,10 +423,7 @@ if uploaded and restaurant_input:
         ax.set_facecolor(COLORS["bg"])
 
         # Données
-        values = [
-            data_dict["fatturato_n"],
-            data_dict["fatturato_n_1"]
-        ]
+        values = [data_dict["fatturato_n"], data_dict["fatturato_n_1"]]
         x = [0, 1]
 
         bars = ax.bar(
@@ -258,7 +432,7 @@ if uploaded and restaurant_input:
             width=0.95,
             color=[COLORS["graph1"], COLORS["graph2"]],
             alpha=1.0,
-            zorder=3   # ← au-dessus de la grid
+            zorder=3,  # ← au-dessus de la grid
         )
         ax.set_xlim(-0.475 - 0.05, 1.475)
 
@@ -273,7 +447,7 @@ if uploaded and restaurant_input:
                 fontproperties=epilogue_font,
                 fontsize=18,
                 color=COLORS["white"],
-                fontweight=900
+                fontweight=900,
             )
 
         # Axe X
@@ -281,24 +455,16 @@ if uploaded and restaurant_input:
         ax.set_xticklabels([])
 
         # Axe Y
-        ax.tick_params(axis='y', colors=COLORS["white"], labelsize=14)
-        ax.tick_params(axis='y', length=0) 
+        ax.tick_params(axis="y", colors=COLORS["white"], labelsize=14)
+        ax.tick_params(axis="y", length=0)
         ax.yaxis.set_major_formatter(
-            ticker.FuncFormatter(
-                lambda x, p: f"{int(x):,}".replace(",", " ")
-            )
+            ticker.FuncFormatter(lambda x, p: f"{int(x):,}".replace(",", " "))
         )
 
         ax.set_ylim(0, max(values) * 1.2)
 
         # Grille
-        ax.grid(
-            axis='y',
-            linestyle='-',
-            alpha=0.15,
-            color=COLORS["white"],
-            zorder = 0 
-        )
+        ax.grid(axis="y", linestyle="-", alpha=0.15, color=COLORS["white"], zorder=0)
 
         # Supprimer bordures
         for spine in ax.spines.values():
@@ -307,25 +473,27 @@ if uploaded and restaurant_input:
         # Légende
         legend_handles = [
             plt.Line2D(
-                [0], [0],
-                marker='o',
-                color='none',
+                [0],
+                [0],
+                marker="o",
+                color="none",
                 markerfacecolor=COLORS["graph1"],
-                markeredgecolor='none',   # supprime contour noir
+                markeredgecolor="none",  # supprime contour noir
                 markeredgewidth=0,
                 markersize=12,
-                label=f"Fatturato {data_dict['year_n']} €"
+                label=f"Fatturato {data_dict['year_n']} €",
             ),
             plt.Line2D(
-                [0], [0],
-                marker='o',
-                color='none',
+                [0],
+                [0],
+                marker="o",
+                color="none",
                 markerfacecolor=COLORS["graph2"],
-                markeredgecolor='none',   # supprime contour noir
+                markeredgecolor="none",  # supprime contour noir
                 markeredgewidth=0,
                 markersize=12,
-                label=f"Fatturato {data_dict['year_n_1']} €"
-            )
+                label=f"Fatturato {data_dict['year_n_1']} €",
+            ),
         ]
 
         ax.legend(
@@ -335,7 +503,7 @@ if uploaded and restaurant_input:
             ncol=2,
             frameon=False,
             fontsize=14,
-            labelcolor=COLORS["white"]
+            labelcolor=COLORS["white"],
         )
 
         plt.tight_layout()
@@ -358,59 +526,154 @@ if uploaded and restaurant_input:
         )
 
         user_text = st.text_area(
-            "Personnalisez votre analyse ici :",
-            value=auto_text,
-            height=300
+            "Personnalisez votre analyse ici :", value=auto_text, height=300
         )
 
     st.divider()
-
-
 
 
 # --- 4. FONCTION DE DESSIN DU RAPPORT (IMAGE FINALE) ---
 def draw_full_report(d, restaurant_name, analysis_text):
     fig = plt.figure(figsize=(10, 14), facecolor=COLORS["bg"])
     ax_main = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
-    ax_main.axis('off')
+    ax_main.axis("off")
 
     # Header
-    ax_main.text(0.5, 0.94, "We\nare_\nFIZZY", color=COLORS["white"], fontsize=16, fontweight='bold', ha='center', linespacing=0.9)
-    ax_main.text(0.5, 0.89, "Report Mensile", color=COLORS["white"], fontsize=32, ha='center', fontfamily='serif', fontstyle='italic')
-    ax_main.text(0.5, 0.86, f"{restaurant_name.upper()}", color=COLORS["white"], fontsize=16, ha='center')
-    ax_main.text(0.5, 0.84, d["full_date_n"].upper(), color=COLORS["highlight"], fontsize=12, ha='center')
+    ax_main.text(
+        0.5,
+        0.94,
+        "We\nare_\nFIZZY",
+        color=COLORS["white"],
+        fontsize=16,
+        fontweight="bold",
+        ha="center",
+        linespacing=0.9,
+    )
+    ax_main.text(
+        0.5,
+        0.89,
+        "Report Mensile",
+        color=COLORS["white"],
+        fontsize=32,
+        ha="center",
+        fontfamily="serif",
+        fontstyle="italic",
+    )
+    ax_main.text(
+        0.5,
+        0.86,
+        f"{restaurant_name.upper()}",
+        color=COLORS["white"],
+        fontsize=16,
+        ha="center",
+    )
+    ax_main.text(
+        0.5,
+        0.84,
+        d["full_date_n"].upper(),
+        color=COLORS["highlight"],
+        fontsize=12,
+        ha="center",
+    )
 
     # Graphique Fatturato
     ax_bar = fig.add_axes([0.15, 0.58, 0.35, 0.20], facecolor=COLORS["bg"])
     vals = [d["fatturato_n"], d["fatturato_n_1"]]
-    rects = ax_bar.bar([0, 1], vals, color=[COLORS["graph1"], COLORS["graph2"]], width=0.8, zorder=3)
+    rects = ax_bar.bar(
+        [0, 1], vals, color=[COLORS["graph1"], COLORS["graph2"]], width=0.8, zorder=3
+    )
 
     # Formatage Axe Y
-    ax_bar.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: f'{int(x):,}'.replace(',', ' ')))
-    ax_bar.grid(axis='y', color=COLORS["white"], linestyle='-', linewidth=0.5, alpha=0.2, zorder=0)
-    ax_bar.tick_params(axis='y', colors=COLORS["white"], labelsize=9)
+    ax_bar.yaxis.set_major_formatter(
+        ticker.FuncFormatter(lambda x, p: f"{int(x):,}".replace(",", " "))
+    )
+    ax_bar.grid(
+        axis="y",
+        color=COLORS["white"],
+        linestyle="-",
+        linewidth=0.5,
+        alpha=0.2,
+        zorder=0,
+    )
+    ax_bar.tick_params(axis="y", colors=COLORS["white"], labelsize=9)
     for s in ax_bar.spines.values():
         s.set_visible(False)
     ax_bar.set_xticks([])
 
     # Chiffres Fatturato
-    val_txt = f"{int(d['fatturato_n']):,}".replace(',', ' ') + " €"
-    ax_main.text(0.55, 0.72, val_txt, color=COLORS["white"], fontsize=35, fontweight='bold')
-    ax_main.text(0.55, 0.68, f"{d['diff_fatturato']}% vs {d['year_n_1']}", color=COLORS["accent"], fontsize=18)
+    val_txt = f"{int(d['fatturato_n']):,}".replace(",", " ") + " €"
+    ax_main.text(
+        0.55, 0.72, val_txt, color=COLORS["white"], fontsize=35, fontweight="bold"
+    )
+    ax_main.text(
+        0.55,
+        0.68,
+        f"{d['diff_fatturato']}% vs {d['year_n_1']}",
+        color=COLORS["accent"],
+        fontsize=18,
+    )
 
     # Texte d'analyse
-    ax_main.text(0.55, 0.64, analysis_text, color=COLORS["white"], fontsize=10, linespacing=1.5, va='top', wrap=True)
+    ax_main.text(
+        0.55,
+        0.64,
+        analysis_text,
+        color=COLORS["white"],
+        fontsize=10,
+        linespacing=1.5,
+        va="top",
+        wrap=True,
+    )
 
     # Section Ricavi - Costi
-    ax_main.text(0.1, 0.48, "RICAVI - COSTI", color=COLORS["accent"], fontsize=14, fontweight='bold')
-    ax_main.text(0.1, 0.42, f"€ {int(d['ric_cost_n']):,}".replace(',', ' '), color=COLORS["white"], fontsize=28, fontweight='bold')
-    ax_main.text(0.40, 0.42, f"€ {int(d['ric_cost_n_1']):,}".replace(',', ' '), color=COLORS["graph1"], fontsize=28)
+    ax_main.text(
+        0.1,
+        0.48,
+        "RICAVI - COSTI",
+        color=COLORS["accent"],
+        fontsize=14,
+        fontweight="bold",
+    )
+    ax_main.text(
+        0.1,
+        0.42,
+        f"€ {int(d['ric_cost_n']):,}".replace(",", " "),
+        color=COLORS["white"],
+        fontsize=28,
+        fontweight="bold",
+    )
+    ax_main.text(
+        0.40,
+        0.42,
+        f"€ {int(d['ric_cost_n_1']):,}".replace(",", " "),
+        color=COLORS["graph1"],
+        fontsize=28,
+    )
 
     # Section Margine
-    ax_main.text(0.1, 0.28, "MARGINE % SU RICAVI", color=COLORS["accent"], fontsize=14, fontweight='bold')
-    ax_main.text(0.1, 0.18, f"{int(d['marg_n'])}%", color=COLORS["white"], fontsize=55, fontweight='bold')
-    ax_main.text(0.35, 0.18, f"{int(d['marg_n_1'])}%", color=COLORS["graph1"], fontsize=55, alpha=0.7)
+    ax_main.text(
+        0.1,
+        0.28,
+        "MARGINE % SU RICAVI",
+        color=COLORS["accent"],
+        fontsize=14,
+        fontweight="bold",
+    )
+    ax_main.text(
+        0.1,
+        0.18,
+        f"{int(d['marg_n'])}%",
+        color=COLORS["white"],
+        fontsize=55,
+        fontweight="bold",
+    )
+    ax_main.text(
+        0.35,
+        0.18,
+        f"{int(d['marg_n_1'])}%",
+        color=COLORS["graph1"],
+        fontsize=55,
+        alpha=0.7,
+    )
 
     return fig
-
-
