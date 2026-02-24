@@ -629,17 +629,13 @@ def render_blank_a4_fig():
     dpi = 150
 
     # Crée une figure Matplotlib de taille A4 avec un fond blanc
-    fig = plt.figure(figsize=(A4_W_IN, A4_H_IN), dpi=dpi, facecolor=COLORS["bg"])
-
-    # Ajoute un axe qui occupe 100% de la page (coordonnées 0..1)
+    fig = plt.figure(figsize=(A4_W_IN, A4_H_IN), dpi=dpi, facecolor="none")
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
-
     # Définit un repère simple : (0,0) en bas-gauche et (1,1) en haut-droite
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
-
-    # Cache les axes (pas de graduations, pas de bordures)
     ax.axis("off")
+
     from matplotlib.patches import Rectangle
 
     ax.add_patch(
@@ -669,12 +665,8 @@ def build_blank_a4_pdf_bytes():
     buf = BytesIO()
 
     # Exporte la figure en PDF
-    fig.savefig(
-        buf,
-        format="pdf",
-        bbox_inches=None,
-        pad_inches=0,
-    )
+    fig.savefig(buf, format="png", transparent=True, bbox_inches=None, pad_inches=0)
+    fig.savefig(buf, format="pdf", transparent=True, bbox_inches=None, pad_inches=0)
 
     # Ferme la figure pour éviter l'accumulation en mémoire
     plt.close(fig)
