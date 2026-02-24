@@ -907,17 +907,14 @@ if uploaded and restaurant_input:
         )
 # --- UI : Download PDF A4 blanc ---
 st.divider()
-png_bytes = build_a4_png_preview_bytes(dpi=150)
-st.image(png_bytes, caption="Aperçu (PNG)", use_container_width=True)
+png_bytes = build_a4_png_preview_bytes(d, restaurant_name, dpi=150)
+st.image(png_bytes, use_container_width=True)
 
-st.subheader("📄 Export PDF")
-
-# build_blank_a4_pdf_bytes() doit retourner des bytes (PDF), pas une figure.
-pdf_bytes = build_a4_pdf_bytes(dpi=150)
-
+pdf_bytes = build_a4_pdf_bytes(d, restaurant_name, dpi=300)
 st.download_button(
-    label="⬇️ Scarica PDF",
-    data=pdf_bytes,  # bytes PDF
-    file_name=f"Report_{restaurant_input}.pdf",
+    "⬇️ Télécharger le PDF",
+    data=pdf_bytes,
+    file_name="report.pdf",
     mime="application/pdf",
+)
 )
