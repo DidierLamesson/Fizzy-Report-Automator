@@ -26,7 +26,7 @@ ASSETS_DIR = BASE_DIR / "assets"
 FONTS_DIR = ASSETS_DIR / "fonts"
 IMG_DIR = ASSETS_DIR / "img"
 
-# Fonts (d'après ton screenshot repo)
+# Fonts
 FONT_EPILOGUE_REG = FONTS_DIR / "Epilogue-Regular.otf"
 FONT_EPILOGUE_ITALIC = FONTS_DIR / "Epilogue-Italic.otf"
 FONT_EPILOGUE_SEMIBOLD = FONTS_DIR / "Epilogue-SemiBold.otf"
@@ -41,7 +41,7 @@ ARROW_ROUND_PATH = IMG_DIR / "Arrow_round.png"
 
 
 # =========================
-# 3) COULEURS (ta palette)
+# 3) COULEURS
 # =========================
 COLORS = {
     "bg": "#172e4d",
@@ -79,10 +79,9 @@ plt.rcParams["ps.fonttype"] = 42
 
 
 # =========================
-# 5) HELPERS (format + wrap)
+# 5) HELPERS
 # =========================
 def clean_val(val):
-    """Robuste: gère NaN, float/int, et strings '507 767' / '507.767' / '507,767'."""
     if pd.isna(val):
         return 0.0
     if isinstance(val, (int, float)):
@@ -105,7 +104,6 @@ def clean_val(val):
 
 
 def fmt_eur_dot(x, decimals=0):
-    # 507767 -> "507.767 €"
     if decimals == 0:
         s = f"{int(round(x)):,}".replace(",", ".")
     else:
@@ -131,12 +129,11 @@ def wrap_for_box(text, width=44):
 
 
 # =========================
-# 6) LOAD DATA (TON ANCIEN COMPLET)
+# 6) LOAD DATA (complet)
 # =========================
 def load_data(file):
     df = pd.read_excel(file, sheet_name="Dati report", header=None)
 
-    # Dictionnaire de traduction des mois
     months_it = {
         1: "Gennaio",
         2: "Febbraio",
@@ -152,130 +149,80 @@ def load_data(file):
         12: "Dicembre",
     }
 
-    # --- 1. Extraction de la date ---
-    raw_date = df.iloc[4, 2]  # Supposons que la date est en C5
+    raw_date = df.iloc[4, 2]
     if hasattr(raw_date, "month"):
         mes_it = months_it[raw_date.month]
         anno_n = raw_date.year
     else:
         mes_it = "Mese"
-        anno_n = 2026  # Valeur par défaut
+        anno_n = 2026
 
-    # --- 2. Extraction des données "Fatturato" ---
-    fatturato_n = clean_val(df.iloc[8, 2])  # Fatturato N (ligne 9, colonne C)
-    fatturato_n_1 = clean_val(df.iloc[9, 2])  # Fatturato N-1 (ligne 10, colonne C)
-    diff_fatturato = round(
-        clean_val(df.iloc[8, 3]) * 100, 1
-    )  # % variation (ligne 9, colonne D)
+    fatturato_n = clean_val(df.iloc[8, 2])
+    fatturato_n_1 = clean_val(df.iloc[9, 2])
+    diff_fatturato = round(clean_val(df.iloc[8, 3]) * 100, 1)
 
-    # Ricavi - Costi et Margine
-    ric_cost_n = clean_val(df.iloc[11, 2])  # Ricavi - Costi N (ligne 12, colonne C)
-    ric_cost_n_1 = clean_val(df.iloc[12, 2])  # Ricavi - Costi N-1 (ligne 13, colonne C)
-    marg_n = round(
-        clean_val(df.iloc[14, 2]) * 100, 1
-    )  # Margine N (ligne 15, colonne C)
-    marg_n_1 = round(
-        clean_val(df.iloc[15, 2]) * 100, 1
-    )  # Margine N-1 (ligne 16, colonne C)
+    ric_cost_n = clean_val(df.iloc[11, 2])
+    ric_cost_n_1 = clean_val(df.iloc[12, 2])
+    marg_n = round(clean_val(df.iloc[14, 2]) * 100, 1)
+    marg_n_1 = round(clean_val(df.iloc[15, 2]) * 100, 1)
 
-    # --- 3. Extraction des dates pour les 6 mois glissants (mêmes pour Food, Beverage & Labour) ---
-    graph_cost_dates = [df.iloc[i, 1] for i in range(24, 30)]  # Dates en colonne B
-    graph_cost_dates_n_1 = [df.iloc[i, 7] for i in range(24, 30)]  # Dates en colonne H
+    graph_cost_dates = [df.iloc[i, 1] for i in range(24, 30)]
+    graph_cost_dates_n_1 = [df.iloc[i, 7] for i in range(24, 30)]
 
-    # --- 3. Extraction des dates et données "Food Cost" ---
-    fatturato_mensile_n = [
-        clean_val(df.iloc[i, 2]) for i in range(24, 30)
-    ]  # Fatturato mensuel N en colonne C
-    fatturato_mensile_n_1 = [
-        clean_val(df.iloc[i, 8]) for i in range(24, 30)
-    ]  # Fatturato mensuel N-1 en colonne I
+    fatturato_mensile_n = [clean_val(df.iloc[i, 2]) for i in range(24, 30)]
+    fatturato_mensile_n_1 = [clean_val(df.iloc[i, 8]) for i in range(24, 30)]
 
-    # Food Cost mensuel (N et N-1)
-    food_cost_monthly_n = [
-        clean_val(df.iloc[i, 3]) for i in range(24, 30)
-    ]  # Colonne D (N)
-    food_cost_monthly_n_1 = [
-        clean_val(df.iloc[i, 9]) for i in range(24, 30)
-    ]  # Colonne J (N-1)
+    food_cost_monthly_n = [clean_val(df.iloc[i, 3]) for i in range(24, 30)]
+    food_cost_monthly_n_1 = [clean_val(df.iloc[i, 9]) for i in range(24, 30)]
 
-    # --- 4. Extraction des données "Beverage Cost" ---
-    beverage_cost_monthly_n = [
-        clean_val(df.iloc[i, 3]) for i in range(36, 42)
-    ]  # Colonne D (N)
-    beverage_cost_monthly_n_1 = [
-        clean_val(df.iloc[i, 9]) for i in range(36, 42)
-    ]  # Colonne J (N-1)
+    beverage_cost_monthly_n = [clean_val(df.iloc[i, 3]) for i in range(36, 42)]
+    beverage_cost_monthly_n_1 = [clean_val(df.iloc[i, 9]) for i in range(36, 42)]
 
-    # --- 5. Extraction des données "Incidenza Staff" ---
-    staff_monthly_n = [clean_val(df.iloc[i, 3]) for i in range(50, 55)]  # Colonne D (N)
-    staff_monthly_n_1 = [
-        clean_val(df.iloc[i, 9]) for i in range(50, 55)
-    ]  # Colonne J (N-1)
+    staff_monthly_n = [clean_val(df.iloc[i, 3]) for i in range(50, 55)]
+    staff_monthly_n_1 = [clean_val(df.iloc[i, 9]) for i in range(50, 55)]
 
-    # --- 6. Calcul des pourcentages de Food Cost ---
     food_cost_pctg_n = []
     for i in range(len(food_cost_monthly_n)):
         fatturato = fatturato_mensile_n[i]
         food_cost = food_cost_monthly_n[i]
-        if fatturato > 0:
-            pctg = (food_cost / fatturato) * 100
-        else:
-            pctg = 0.0
+        pctg = (food_cost / fatturato) * 100 if fatturato > 0 else 0.0
         food_cost_pctg_n.append(round(pctg, 2))
 
     food_cost_pctg_n_1 = []
     for i in range(len(food_cost_monthly_n_1)):
         fatturato = fatturato_mensile_n_1[i]
         food_cost = food_cost_monthly_n_1[i]
-        if fatturato > 0:
-            pctg = (food_cost / fatturato) * 100
-        else:
-            pctg = 0.0
+        pctg = (food_cost / fatturato) * 100 if fatturato > 0 else 0.0
         food_cost_pctg_n_1.append(round(pctg, 2))
 
-    # --- 7. Calcul des pourcentages de Beverage Cost ---
     beverage_cost_pctg_n = []
     for i in range(len(beverage_cost_monthly_n)):
         fatturato = clean_val(df.iloc[36 + i, 2])
         beverage_cost = beverage_cost_monthly_n[i]
-        if fatturato > 0:
-            pctg = (beverage_cost / fatturato) * 100
-        else:
-            pctg = 0.0
+        pctg = (beverage_cost / fatturato) * 100 if fatturato > 0 else 0.0
         beverage_cost_pctg_n.append(round(pctg, 2))
 
     beverage_cost_pctg_n_1 = []
     for i in range(len(beverage_cost_monthly_n_1)):
         fatturato = clean_val(df.iloc[36 + i, 8])
         beverage_cost = beverage_cost_monthly_n_1[i]
-        if fatturato > 0:
-            pctg = (beverage_cost / fatturato) * 100
-        else:
-            pctg = 0.0
+        pctg = (beverage_cost / fatturato) * 100 if fatturato > 0 else 0.0
         beverage_cost_pctg_n_1.append(round(pctg, 2))
 
-    # --- 8. Calcul des pourcentages de Staff Cost ---
     staff_cost_pctg_n = []
     for i in range(len(staff_monthly_n)):
         fatturato = clean_val(df.iloc[50 + i, 2])
         staff_cost = staff_monthly_n[i]
-        if fatturato > 0:
-            pctg = (staff_cost / fatturato) * 100
-        else:
-            pctg = 0.0
+        pctg = (staff_cost / fatturato) * 100 if fatturato > 0 else 0.0
         staff_cost_pctg_n.append(round(pctg, 2))
 
     staff_cost_pctg_n_1 = []
     for i in range(len(staff_monthly_n_1)):
         fatturato = clean_val(df.iloc[50 + i, 8])
         staff_cost = staff_monthly_n_1[i]
-        if fatturato > 0:
-            pctg = (staff_cost / fatturato) * 100
-        else:
-            pctg = 0.0
+        pctg = (staff_cost / fatturato) * 100 if fatturato > 0 else 0.0
         staff_cost_pctg_n_1.append(round(pctg, 2))
 
-    # --- 9. Calcul des moyennes ---
     food_cost_avg_n = sum(food_cost_monthly_n) / len(food_cost_monthly_n)
     food_cost_avg_n_1 = sum(food_cost_monthly_n_1) / len(food_cost_monthly_n_1)
     beverage_cost_avg_n = sum(beverage_cost_monthly_n) / len(beverage_cost_monthly_n)
@@ -285,9 +232,7 @@ def load_data(file):
     staff_cost_avg_n = sum(staff_monthly_n) / len(staff_monthly_n)
     staff_cost_avg_n_1 = sum(staff_monthly_n_1) / len(staff_monthly_n_1)
 
-    # --- 10. Retour des données ---
     return {
-        # Fatturato
         "month_name": mes_it,
         "year_n": anno_n,
         "year_n_1": anno_n - 1,
@@ -300,27 +245,22 @@ def load_data(file):
         "ric_cost_n_1": ric_cost_n_1,
         "marg_n": marg_n,
         "marg_n_1": marg_n_1,
-        # Dates
         "graph_cost_dates": graph_cost_dates,
         "graph_cost_dates_n_1": graph_cost_dates_n_1,
-        # Fatturato Mensile
         "fatturato_mensile_n": fatturato_mensile_n,
         "fatturato_mensile_n_1": fatturato_mensile_n_1,
-        # Food Cost
         "food_cost_monthly_n": food_cost_monthly_n,
         "food_cost_monthly_n_1": food_cost_monthly_n_1,
         "food_cost_pctg_n": food_cost_pctg_n,
         "food_cost_pctg_n_1": food_cost_pctg_n_1,
         "food_cost_avg_n": food_cost_avg_n,
         "food_cost_avg_n_1": food_cost_avg_n_1,
-        # Beverage Cost
         "beverage_cost_monthly_n": beverage_cost_monthly_n,
         "beverage_cost_monthly_n_1": beverage_cost_monthly_n_1,
         "beverage_cost_pctg_n": beverage_cost_pctg_n,
         "beverage_cost_pctg_n_1": beverage_cost_pctg_n_1,
         "beverage_cost_avg_n": beverage_cost_avg_n,
         "beverage_cost_avg_n_1": beverage_cost_avg_n_1,
-        # Incidenza Staff
         "staff_monthly_n": staff_monthly_n,
         "staff_monthly_n_1": staff_monthly_n_1,
         "staff_cost_pctg_n": staff_cost_pctg_n,
@@ -331,7 +271,7 @@ def load_data(file):
 
 
 # =========================
-# 7) SUGGESTIONS TEXT (page 1)
+# 7) SUGGESTIONS TEXT
 # =========================
 def build_page1_suggestions(d):
     fatt_n = d["fatturato_n"]
@@ -379,9 +319,9 @@ def make_fatturato_fig(d, label):
     ax.set_facecolor(COLORS["bg"])
 
     values = [d["fatturato_n"], d["fatturato_n_1"]]
-    x = [0, 1]
-
-    ax.bar(x, values, width=0.95, color=[COLORS["graph1"], COLORS["graph2"]], zorder=3)
+    ax.bar(
+        [0, 1], values, width=0.95, color=[COLORS["graph1"], COLORS["graph2"]], zorder=3
+    )
     ax.set_xlim(-0.55, 1.55)
 
     for i, v in enumerate(values):
@@ -446,14 +386,13 @@ def make_fatturato_fig(d, label):
 
 
 # =========================
-# 9) PDF PAGE 1 (layout)
+# 9) PDF PAGE 1 (A4 layout)
 # =========================
 def _img_rgba(path: Path):
     return Image.open(path).convert("RGBA")
 
 
 def _place_img(ax, img: Image.Image, x, y, w, z=5):
-    """Place image with center at (x,y) in ax coords (0..1), width=w in ax coords."""
     aspect = img.width / img.height
     h = w / aspect
     x0, x1 = x - w / 2, x + w / 2
@@ -488,27 +427,36 @@ def _pill(ax, x, y, w, h, text, fill=False):
 
 
 def render_page1_fig(d, restaurant_name, analysis_text):
-    dpi = 100
-    fig = plt.figure(figsize=(1200 / dpi, 1500 / dpi), dpi=dpi, facecolor=COLORS["bg"])
-    TOP_CROP = 0.2  # augmente => moins de bande en haut
-    BOTTOM_CROP = 0.045  # augmente => moins de bande en bas
-    Y_SCALE = 1 + TOP_CROP + BOTTOM_CROP
+    # --- A4 portrait ---
+    A4_W_IN = 8.27
+    A4_H_IN = 11.69
 
-    ax = fig.add_axes([0, -BOTTOM_CROP, 1, Y_SCALE], facecolor=COLORS["bg"])
+    # On génère une figure A4 avec un DPI "preview-friendly" (PNG net)
+    dpi = 150
+    fig = plt.figure(figsize=(A4_W_IN, A4_H_IN), dpi=dpi, facecolor=COLORS["bg"])
 
-    # Helpers pour remapper les sous-axes (ceux créés avec fig.add_axes)
-    def _Y(y):  # bottom en coords figure
-        return y * Y_SCALE - BOTTOM_CROP
+    # --- On place ton layout (ratio 0.8) dans une zone centrée ---
+    # Ton layout a été pensé pour 1200x1500 => ratio = 0.8 ; hauteur relative = 1/0.8 = 1.25
+    # A4 en "ratio hauteur/largeur" = 11.69/8.27 ≈ 1.414
+    # Donc si on fit la largeur (1.0), la hauteur de contenu = 1.25 / 1.414 ≈ 0.884
+    content_h = 0.884
+    content_y0 = (1.0 - content_h) / 2  # centré verticalement
 
-    def _H(h):  # height en coords figure
-        return h * Y_SCALE
-
+    # Axe principal (tous tes coords 0..1 restent valides)
+    ax = fig.add_axes([0, content_y0, 1, content_h], facecolor=COLORS["bg"])
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")
 
-    # --- DEBUG GRID (mettre True pour caler la mise en page) ---
-    DEBUG_GRID = True
+    # Helpers pour les sous-axes (bar chart) : remap vers coords figure
+    def _FY(y):  # bottom
+        return content_y0 + y * content_h
+
+    def _FH(h):
+        return h * content_h
+
+    # DEBUG GRID
+    DEBUG_GRID = False
     if DEBUG_GRID:
         for gx in [i / 10 for i in range(1, 10)]:
             ax.plot([gx, gx], [0, 1], color="white", alpha=0.08, lw=1, zorder=1)
@@ -592,8 +540,8 @@ def render_page1_fig(d, restaurant_name, analysis_text):
         fontproperties=epilogue_regular,
     )
 
-    # Bar chart
-    ax_bar = fig.add_axes([0.13, _Y(0.36), 0.36, _H(0.25)], facecolor=COLORS["bg"])
+    # Bar chart (remappé en coords figure)
+    ax_bar = fig.add_axes([0.13, _FY(0.36), 0.36, _FH(0.25)], facecolor=COLORS["bg"])
     vals = [d["fatturato_n"], d["fatturato_n_1"]]
     ax_bar.bar(
         [0, 1], vals, color=[COLORS["graph1"], COLORS["graph2"]], width=0.90, zorder=3
@@ -715,7 +663,7 @@ def render_page1_fig(d, restaurant_name, analysis_text):
 
     ax.plot([0.60, 0.90], [0.505, 0.505], color=COLORS["white"], alpha=0.25, lw=1)
 
-    # Analysis text (user)
+    # Analysis text
     wrapped = wrap_for_box(analysis_text, width=44)
     ax.text(
         0.62,
@@ -807,7 +755,7 @@ def render_page1_fig(d, restaurant_name, analysis_text):
         linestyle="--",
     )
 
-    # Bottom values (Margine) - 1 décimale
+    # Bottom values (Margine)
     ax.text(
         0.66,
         0.095,
@@ -868,7 +816,7 @@ def build_page1_pdf_bytes(d, restaurant_name, analysis_text):
 def build_page1_png_bytes(d, restaurant_name, analysis_text):
     fig = render_page1_fig(d, restaurant_name, analysis_text)
     buf = BytesIO()
-    fig.savefig(buf, format="png", facecolor=COLORS["bg"], dpi=100)
+    fig.savefig(buf, format="png", facecolor=COLORS["bg"])
     plt.close(fig)
     buf.seek(0)
     return buf.getvalue()
@@ -905,20 +853,18 @@ if uploaded and restaurant_input:
         analysis_text = f"{p1}\n\n{p2}"
 
         st.divider()
-
         st.subheader("👀 Aperçu Page 1 (live)")
 
         png_bytes = build_page1_png_bytes(data, restaurant_input, analysis_text)
-        st.image(png_bytes, width=1200)  # aperçu en 1200px exact
+        st.image(png_bytes, width=900)
 
-        # Optionnel : garder un download PDF (sans bouton, calculé à la volée)
         pdf_bytes = build_page1_pdf_bytes(data, restaurant_input, analysis_text)
-        file_name = f"Report_{restaurant_input}_{data['month_name']}_{data['year_n']}_page1.pdf".replace(
+        file_name = f"Report_{restaurant_input}_{data['month_name']}_{data['year_n']}_page1_A4.pdf".replace(
             " ", "_"
         )
 
         st.download_button(
-            "⬇️ Télécharger le PDF (Page 1)",
+            "⬇️ Télécharger le PDF (Page 1 — A4)",
             data=pdf_bytes,
             file_name=file_name,
             mime="application/pdf",
