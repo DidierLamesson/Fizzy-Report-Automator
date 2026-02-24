@@ -677,7 +677,7 @@ def build_page1_pdf_bytes_base_a4():
     fig.savefig(
         buf,
         format="pdf",
-        facecolor=COLORS["bg"],
+        facecolor=COLORS["highlight"],
         bbox_inches=None,
         pad_inches=0,
     )
@@ -692,7 +692,7 @@ def build_page1_png_bytes_base_a4(dpi=150):
     fig.savefig(
         buf,
         format="png",
-        facecolor=COLORS["bg"],
+        facecolor=COLORS["highlight"],
         dpi=dpi,
         bbox_inches=None,
         pad_inches=0,
