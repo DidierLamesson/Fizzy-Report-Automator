@@ -887,7 +887,7 @@ import matplotlib.ticker as ticker
 
 BODY1_CFG = {
     # --- Marges / colonnes ---
-    "side_margin_px": 80,  # marge gauche/droite globale
+    "side_margin_px": 40,  # marge gauche/droite globale
     "col_gap_px": 40,  # espace entre colonne gauche et droite
     "left_col_ratio": 0.56,  # % de largeur pour la colonne gauche (graph)
     # --- Zone de départ du body (depuis le haut de la page) ---
