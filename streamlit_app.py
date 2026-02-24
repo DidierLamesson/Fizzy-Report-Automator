@@ -1079,10 +1079,6 @@ if uploaded and restaurant_input:
 
         analysis_text = f"{p1}\n\n{p2}"
 
-        st.divider()
-
-        st.subheader("📄 Export PDF")
-
 st.divider()
 st.subheader("📄 Export PDF")
 
