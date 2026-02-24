@@ -768,6 +768,6 @@ pdf_bytes = build_a4(lambda fig, ax: None, dpi=300)
 st.download_button(
     label="⬇️ Télécharger le PDF",
     data=pdf_bytes,  # bytes PDF
-    file_name=f"Report_{restaurant_input}_{mes_it} {anno_n}.pdf",
+    file_name=f"Report_{restaurant_input}_{mes_it}.pdf",
     mime="application/pdf",
 )
