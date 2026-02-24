@@ -620,46 +620,41 @@ def _place_img_top(ax, img: Image.Image, x, y_top, w, z=5):
     ax.imshow(img, extent=[x0, x1, y0, y1], zorder=z)
 
 
-def render_blank_a4_fig():
-    # Dimensions A4 en pouces (inches)
-    A4_W_IN = 8.27
-    A4_H_IN = 11.69
+# A4 = 210×297 mm = 8.2677165×11.6929134 inches
+A4_INCH = (210 / 25.4, 297 / 25.4)
 
-    # Résolution (dpi) : n'affecte pas la taille du PDF, seulement la netteté des images raster
-    dpi = 150
 
-    # Crée une figure Matplotlib de taille A4 avec un fond blanc
-    fig = plt.figure(figsize=(A4_W_IN, A4_H_IN), dpi=dpi, facecolor="none")
-    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
-    # Définit un repère simple : (0,0) en bas-gauche et (1,1) en haut-droite
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
-    ax.axis("off")
+def generate_pdf_a4_pixel_perfect(draw_fn, dpi=300):
+    """
+    Génère un PDF A4 *verrouillé* (pas de recadrage, pas de padding),
+    avec une surface de dessin 100% page.
+    draw_fn(fig, ax) -> doit dessiner dans ax (axes [0,0,1,1]).
+    """
+    fig = plt.figure(figsize=A4_INCH, dpi=dpi, facecolor="white")
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
 
-    from matplotlib.patches import Rectangle
+    ax = fig.add_axes([0, 0, 1, 1], facecolor="white")
+    ax.set_axis_off()
 
-    ax.add_patch(
-        Rectangle(
-            (0, 0),
-            1,
-            1,
-            transform=ax.transAxes,
-            facecolor=COLORS["bg"],
-            edgecolor="white",
-            zorder=0,
-        )
+    draw_fn(fig, ax)
+
+    buf = io.BytesIO()
+    fig.savefig(
+        buf,
+        format="pdf",
+        bbox_inches=None,  # CRUCIAL : garde EXACTEMENT le A4
+        pad_inches=0,  # CRUCIAL : aucun padding ajouté
+        facecolor=fig.get_facecolor(),
+        edgecolor="none",
     )
-
-    # Logo centré en haut
-    logo = _img_rgba(LOGO_PATH)
-    _place_img_top(ax, logo, x=0.5, y_top=0.98, w=0.22, z=10)
-
-    return fig
+    plt.close(fig)
+    buf.seek(0)
+    return buf
 
 
 def build_blank_a4_pdf_bytes():
     # Construit la figure
-    fig = render_blank_a4_fig()
+    fig = generate_pdf_a4_pixel_perfect(lambda fig, ax: None)
 
     # Buffer mémoire (pas besoin d'écrire un fichier sur disque)
     buf = BytesIO()
