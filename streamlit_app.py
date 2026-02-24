@@ -606,6 +606,7 @@ def make_beverage_cost_fig(d, label):
 
 from io import BytesIO
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 
 A4_INCH = (210 / 25.4, 297 / 25.4)
 
