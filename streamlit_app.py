@@ -782,46 +782,14 @@ def _draw_header1(ax, W_PX, H_PX, month_label: str, restaurant_name: str, dpi: i
     )
 
 
-def _draw_a4_page(ax, W_PX, H_PX):
-    # repère "page"
+def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
+    # repère "page" (UNE SEULE FOIS)
     ax.set_axis_off()
     ax.set_aspect("auto")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
 
-    # bordure
-    ax.add_patch(
-        Rectangle(
-            (0, 0),
-            1,
-            1,
-            transform=ax.transAxes,
-            facecolor="none",
-            edgecolor="white",
-            linewidth=2,
-            zorder=999,
-        )
-    )
-
-    # logo pixel-perfect
-    if LOGO_PATH.exists():
-        logo = _img_rgba(LOGO_PATH)
-        logo = _trim_transparent(logo)
-        width_px = 320
-        top_px = 24
-        aspect = logo.width / logo.height
-        height_px = width_px / aspect
-
-        left_px = (W_PX - width_px) / 2
-        x0_px, x1_px = left_px, left_px + width_px
-        y1_px = H_PX - top_px
-        y0_px = y1_px - height_px
-
-        x0, x1 = x0_px / W_PX, x1_px / W_PX
-        y0, y1 = y0_px / H_PX, y1_px / H_PX
-
-        ax.imshow(logo, extent=[x0, x1, y0, y1], zorder=1000, aspect="auto")
-
+    # Header 1 (contient bordure + logo + pill + titres + ligne)
     _draw_header1(
         ax,
         W_PX=W_PX,
@@ -832,14 +800,15 @@ def _draw_a4_page(ax, W_PX, H_PX):
     )
 
 
-def build_a4_pdf_bytes(dpi=300) -> bytes:
+def build_a4_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
     fig = plt.figure(figsize=A4_INCH, dpi=dpi, facecolor=COLORS["bg"])
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
 
     W_PX = int(round(fig.get_figwidth() * fig.dpi))
     H_PX = int(round(fig.get_figheight() * fig.dpi))
-    _draw_a4_page(ax, W_PX, H_PX)
+
+    _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name)
 
     buf = BytesIO()
     fig.savefig(
@@ -855,14 +824,14 @@ def build_a4_pdf_bytes(dpi=300) -> bytes:
     return buf.getvalue()
 
 
-def build_a4_png_preview_bytes(dpi=150) -> bytes:
+def build_a4_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes:
     fig = plt.figure(figsize=A4_INCH, dpi=dpi, facecolor=COLORS["bg"])
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
 
     W_PX = int(round(fig.get_figwidth() * fig.dpi))
     H_PX = int(round(fig.get_figheight() * fig.dpi))
-    _draw_a4_page(ax, W_PX, H_PX)
+    _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name)
 
     buf = BytesIO()
     fig.savefig(
