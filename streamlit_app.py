@@ -641,7 +641,7 @@ def _draw_a4_page(ax, W_PX, H_PX):
     if LOGO_PATH.exists():
         logo = _img_rgba(LOGO_PATH)
         width_px = 520
-        top_px = 12
+        top_px = 2
         aspect = logo.width / logo.height
         height_px = width_px / aspect
 
