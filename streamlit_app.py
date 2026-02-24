@@ -870,6 +870,7 @@ def _draw_header1(
         linewidth=_px_to_pt(cfg["line_width_px"], dpi),
         zorder=800,
     )
+    return y_cursor_px  # ✅ position de la ligne en px depuis le haut
 
 
 # =========================
@@ -891,8 +892,7 @@ BODY1_CFG = {
     "col_gap_px": 40,  # espace entre colonne gauche et droite
     "left_col_ratio": 0.56,  # % de largeur pour la colonne gauche (graph)
     # --- Zone de départ du body (depuis le haut de la page) ---
-    # Mets ça sous ta ligne du header (ex: 240/260 selon ton header)
-    "top_px": 220,
+    "gap_after_header_px": 20,  # espace entre la ligne du header et le début du body
     # --- Kicker (nom resto en haut du body) + ligne ---
     "kicker_enabled": True,
     "kicker_font_px": 18,
@@ -1131,7 +1131,12 @@ def _draw_body1_fatturato(
     right_x0 = side + left_w + gap
     right_x1 = W_PX - side
 
-    y = cfg["top_px"]
+    # top automatique : sous la ligne du header
+    header_line_y_px = cfg.get("header_line_y_px")
+    if header_line_y_px is None:
+        raise ValueError("BODY: il faut fournir cfg['header_line_y_px'] (ou top_px).")
+
+        y = int(header_line_y_px + cfg.get("gap_after_header_px", 0))
 
     # --- Kicker + ligne ---
     if cfg["kicker_enabled"]:
@@ -1376,7 +1381,17 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
     analysis_text = f"{p1}\n\n{p2}"
 
     # Body 1 : section Fatturato (titres + chart + stats + paragraphe)
-    _draw_body1_fatturato(ax, W_PX, H_PX, d, restaurant_name, analysis_text, dpi)
+    _draw_body1_fatturato(
+        ax,
+        W_PX,
+        H_PX,
+        d,
+        restaurant_name,
+        analysis_text,
+        dpi,
+        int(ax.figure.dpi),
+        cfg={"header_line_y_px": header_line_y_px},  # <-- clé auto
+    )
 
 
 # ✅ Taille cible en pixels (ton nouveau "format")
