@@ -416,25 +416,10 @@ if uploaded and restaurant_input:
 
         st.subheader("📊 Fatturato Mensile")
 
-        fig, ax = plt.subplots(figsize=(6, 6))
-
-        # Background
-        fig.patch.set_facecolor(COLORS["bg"])
-        ax.set_facecolor(COLORS["bg"])
-
-        # Données
-        values = [data_dict["fatturato_n"], data_dict["fatturato_n_1"]]
-        x = [0, 1]
-
-        bars = ax.bar(
-            x,
-            values,
-            width=0.95,
-            color=[COLORS["graph1"], COLORS["graph2"]],
-            alpha=1.0,
-            zorder=3,  # ← au-dessus de la grid
-        )
-        ax.set_xlim(-0.475 - 0.05, 1.475)
+        fig = make_fatturato_fig(
+            data_dict, label=restaurant_input
+        )  # ou label=restaurant_input
+        st.pyplot(fig)
 
         # Labels au-dessus
         for i, v in enumerate(values):
