@@ -905,15 +905,19 @@ if uploaded and restaurant_input:
         st.text_area(
             "📝 Commento Beverage Cost", value="", height=280, key="beverage_comment"
         )
-# --- UI : Download PDF A4 blanc ---
-st.divider()
-png_bytes = build_a4_png_preview_bytes(d, restaurant_input, dpi=150)
-st.image(png_bytes, use_container_width=True)
+    # --- UI : Download PDF ---
+    st.divider()
 
-pdf_bytes = build_a4_pdf_bytes(d, restaurant_input, dpi=300)
-st.download_button(
-    "⬇️ Télécharger le PDF",
-    data=pdf_bytes,
-    file_name="report.pdf",
-    mime="application/pdf",
-)
+    png_bytes = build_a4_png_preview_bytes(data, restaurant_input, dpi=150)
+    st.image(png_bytes, caption="Aperçu (PNG)", use_container_width=True)
+
+    st.subheader("📄 Export PDF")
+
+    pdf_bytes = build_a4_pdf_bytes(data, restaurant_input, dpi=300)
+
+    st.download_button(
+        label="⬇️ Scarica PDF",
+        data=pdf_bytes,
+        file_name=f"Report_{restaurant_input}.pdf",
+        mime="application/pdf",
+    )
