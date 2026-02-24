@@ -628,17 +628,6 @@ def render_page1_fig_base_a4():
     """
     from matplotlib.patches import Rectangle
 
-    ax.add_patch(
-        Rectangle(
-            (0, 0),
-            1,
-            1,
-            transform=ax.transAxes,
-            facecolor=COLORS["bg"],
-            edgecolor="none",
-            zorder=0,
-        )
-    )
     # A4 en inches
     A4_W_IN = 8.27
     A4_H_IN = 11.69
@@ -651,6 +640,18 @@ def render_page1_fig_base_a4():
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")
+
+    ax.add_patch(
+        Rectangle(
+            (0, 0),
+            1,
+            1,
+            transform=ax.transAxes,
+            facecolor=COLORS["bg"],
+            edgecolor="none",
+            zorder=0,
+        )
+    )
 
     # Logo
     logo = _img_rgba(LOGO_PATH)
