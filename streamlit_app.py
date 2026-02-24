@@ -518,6 +518,7 @@ def make_food_cost_fig(d, label):
         fontsize=9,
         fontproperties=epilogue_regular,
     )
+    ax.tick_params(axis="x", colors=COLORS["white"], labelsize=9, length=0)
 
     ax.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
@@ -582,12 +583,13 @@ def make_beverage_cost_fig(d, label):
         fontsize=9,
         fontproperties=epilogue_regular,
     )
+    ax.tick_params(axis="x", colors=COLORS["white"], labelsize=9, length=0)
 
     ax.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
     ax.set_ylim(0, max(12, (max(y) if y else 0) + 2))
 
-    ax.grid(axis="y", color=COLORS["white"], alpha=0.12, linewidth=1)
+    ax.grid(False)
     for s in ax.spines.values():
         s.set_visible(False)
 
