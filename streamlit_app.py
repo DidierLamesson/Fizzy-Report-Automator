@@ -21,7 +21,30 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+st.markdown(
+    f"""
+    <style>
+      /* enlève les marges/paddings Streamlit */
+      .block-container {{
+        padding-top: 0.2rem;
+        padding-bottom: 0.2rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }}
 
+      /* met le fond de l'app comme ton bleu */
+      .stApp {{
+        background: {COLORS["bg"]};
+      }}
+
+      /* réduit l’espace entre éléments */
+      div[data-testid="stVerticalBlock"] > div {{
+        gap: 0.5rem;
+      }}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # =========================
 # 2) PATHS ASSETS (ton repo)
@@ -628,6 +651,19 @@ def render_page1_fig_base_a4():
     """
     Page A4 portrait, fond bleu, logo centré en haut.
     """
+    from matplotlib.patches import Rectangle
+
+    ax.add_patch(
+        Rectangle(
+            (0, 0),
+            1,
+            1,
+            transform=ax.transAxes,
+            facecolor=COLORS["bg"],
+            edgecolor="none",
+            zorder=0,
+        )
+    )
     # A4 en inches
     A4_W_IN = 8.27
     A4_H_IN = 11.69
@@ -742,5 +778,5 @@ if uploaded and restaurant_input:
 st.divider()
 st.subheader("👀 Aperçu — Base A4 (logo only)")
 
-png_bytes = build_page1_png_bytes_base_a4(dpi=150)
-st.image(png_bytes, use_container_width=True)
+png_bytes = build_page1_png_bytes_base_a4(dpi=150)  # ou ta build_page1_png_bytes(...)
+st.image(png_bytes, width=800)  # width fixe = moins de “letterboxing”
