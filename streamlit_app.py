@@ -653,7 +653,7 @@ HEADER1_CFG = {
     "pill_pad_y_px": 14,
     "pill_border_width_px": 2,
     # --- Espacements verticaux (le layout “suit” automatiquement) ---
-    "gap_after_toprow_px": 40,  # espace après la ligne logo/pill avant le titre
+    "gap_after_toprow_px": 20,  # espace après la ligne logo/pill avant le titre
     "gap_title_to_restaurant_px": 20,  # espace titre -> restaurant
     "gap_restaurant_to_line_px": 20,  # espace restaurant -> ligne
     # --- Titre ---
