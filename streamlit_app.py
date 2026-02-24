@@ -619,7 +619,7 @@ def render_blank_a4_fig():
     fig = plt.figure(figsize=(A4_W_IN, A4_H_IN), dpi=dpi, facecolor=COLORS["bg"])
 
     # Ajoute un axe qui occupe 100% de la page (coordonnées 0..1)
-    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
+    ax = fig.add_axes([0, 0, 1, 1], facecolor="white")
 
     # Définit un repère simple : (0,0) en bas-gauche et (1,1) en haut-droite
     ax.set_xlim(0, 1)
