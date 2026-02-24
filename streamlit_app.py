@@ -495,14 +495,13 @@ def render_page1_fig(d, restaurant_name, analysis_text):
     ax.set_ylim(0, 1)
     ax.axis("off")
 
-
-# --- DEBUG GRID (mettre True pour caler la mise en page) ---
-DEBUG_GRID = True
-if DEBUG_GRID:
-    for gx in [i / 10 for i in range(1, 10)]:
-        ax.plot([gx, gx], [0, 1], color="white", alpha=0.08, lw=1, zorder=1)
-    for gy in [i / 10 for i in range(1, 10)]:
-        ax.plot([0, 1], [gy, gy], color="white", alpha=0.08, lw=1, zorder=1)
+    # --- DEBUG GRID (mettre True pour caler la mise en page) ---
+    DEBUG_GRID = True
+    if DEBUG_GRID:
+        for gx in [i / 10 for i in range(1, 10)]:
+            ax.plot([gx, gx], [0, 1], color="white", alpha=0.08, lw=1, zorder=1)
+        for gy in [i / 10 for i in range(1, 10)]:
+            ax.plot([0, 1], [gy, gy], color="white", alpha=0.08, lw=1, zorder=1)
 
     # Images
     logo = _img_rgba(LOGO_PATH)
