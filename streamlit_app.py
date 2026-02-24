@@ -910,7 +910,7 @@ BODY1_CFG = {
     "left_titles_gap_px": 8,
     "left_titles_to_chart_gap_px": 18,
     # --- Chart (barres) ---
-    "chart_h_px": 420,  # hauteur chart dans la page
+    "chart_h_px": 250,  # hauteur chart dans la page
     "chart_value_font_px": 14,  # valeurs au dessus des barres
     "chart_tick_font_px": 12,
     "chart_label_font_px": 12,
