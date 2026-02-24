@@ -897,7 +897,7 @@ if uploaded and restaurant_input:
         st.subheader("👀 Aperçu Page 1 (live)")
 
         png_bytes = build_page1_png_bytes(data, restaurant_input, analysis_text)
-        st.image(png_bytes, use_container_width=True)
+        st.image(png_bytes, use_container_width=False)
 
         # Optionnel : garder un download PDF (sans bouton, calculé à la volée)
         pdf_bytes = build_page1_pdf_bytes(data, restaurant_input, analysis_text)
