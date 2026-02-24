@@ -647,7 +647,7 @@ def render_page1_fig(d, restaurant_name, analysis_text):
     # A4 stable (portrait)
     # =========================
     A4_W_IN = 8.27
-    A4_H_IN = 9.5
+    A4_H_IN = 9
     dpi = 150  # qualité (affichage + export)
 
     fig = plt.figure(figsize=(A4_W_IN, A4_H_IN), dpi=dpi, facecolor=COLORS["bg"])
