@@ -689,8 +689,8 @@ def _draw_header1(ax, W_PX, H_PX, month_label: str, restaurant_name: str, dpi: i
     # ======================
     pill_text = month_label  # ex: "Dicembre 2025"
 
-    PILL_TOP_PX = 240
-    PILL_RIGHT_MARGIN_PX = 260
+    PILL_TOP_PX = 80
+    PILL_RIGHT_MARGIN_PX = 80
 
     pill_font_px = 44
     pad_x_px = 34
