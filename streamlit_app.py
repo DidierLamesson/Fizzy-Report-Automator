@@ -616,53 +616,14 @@ def _img_rgba(path):
     return Image.open(path).convert("RGBA")
 
 
-def build_a4(draw_fn=None, dpi=300) -> bytes:
-    fig = plt.figure(figsize=A4_INCH, dpi=dpi, facecolor=COLORS["bg"])
-    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-
-    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
+def _draw_a4_page(ax, W_PX, H_PX):
+    # repère "page"
     ax.set_axis_off()
-
-    # ✅ PATCH: verrouille le repère "page" (0..1) et empêche imshow de modifier l'axe
     ax.set_aspect("auto")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
 
-    # --- Dimensions en pixels de la page (pixel-perfect) ---
-    W_PX = int(round(fig.get_figwidth() * fig.dpi))
-    H_PX = int(round(fig.get_figheight() * fig.dpi))
-
-    def px_to_axes(x_px, y_px):
-        """Convertit (x,y) en pixels (origine en bas-gauche) -> coords axes (0..1)."""
-        return x_px / W_PX, y_px / H_PX
-
-    def place_img_px_top_left(img, left_px, top_px, width_px, z=1000):
-        """
-        Place une image au pixel près.
-        - left_px, top_px: position en pixels depuis le coin HAUT-GAUCHE de la page
-        - width_px: largeur en pixels (hauteur auto pour conserver le ratio)
-        """
-        aspect = img.width / img.height
-        height_px = width_px / aspect
-
-        # convertir top-left (origine haut-gauche) -> coords axes (origine bas-gauche)
-        x0_px = left_px
-        x1_px = left_px + width_px
-        y1_px = H_PX - top_px
-        y0_px = y1_px - height_px
-
-        x0, y0 = px_to_axes(x0_px, y0_px)
-        x1, y1 = px_to_axes(x1_px, y1_px)
-
-        # ✅ PATCH: aspect="auto" pour ne pas déclencher le "letterboxing" de l'axe
-        ax.imshow(img, extent=[x0, x1, y0, y1], zorder=z, aspect="auto")
-
-    def place_img_px_top_center(img, center_x_px, top_px, width_px, z=1000):
-        """Variante centrée horizontalement (pixel-perfect)."""
-        left_px = center_x_px - width_px / 2
-        place_img_px_top_left(img, left_px, top_px, width_px, z=z)
-
-    # --- Bordure pleine page (coords axes, couvre 100%) ---
+    # bordure
     ax.add_patch(
         Rectangle(
             (0, 0),
@@ -676,22 +637,63 @@ def build_a4(draw_fn=None, dpi=300) -> bytes:
         )
     )
 
-    # --- Logo Fizzy positionné AU PIXEL PRÈS ---
+    # logo pixel-perfect
     if LOGO_PATH.exists():
         logo = _img_rgba(LOGO_PATH)
-        place_img_px_top_center(
-            logo, center_x_px=W_PX / 2, top_px=24, width_px=320, z=1000
-        )
+        width_px = 320
+        top_px = 24
+        aspect = logo.width / logo.height
+        height_px = width_px / aspect
 
-    if draw_fn is not None:
-        draw_fn(fig, ax)
+        left_px = (W_PX - width_px) / 2
+        x0_px, x1_px = left_px, left_px + width_px
+        y1_px = H_PX - top_px
+        y0_px = y1_px - height_px
+
+        x0, x1 = x0_px / W_PX, x1_px / W_PX
+        y0, y1 = y0_px / H_PX, y1_px / H_PX
+
+        ax.imshow(logo, extent=[x0, x1, y0, y1], zorder=1000, aspect="auto")
+
+
+def build_a4_pdf_bytes(dpi=300) -> bytes:
+    fig = plt.figure(figsize=A4_INCH, dpi=dpi, facecolor=COLORS["bg"])
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
+
+    W_PX = int(round(fig.get_figwidth() * fig.dpi))
+    H_PX = int(round(fig.get_figheight() * fig.dpi))
+    _draw_a4_page(ax, W_PX, H_PX)
 
     buf = BytesIO()
     fig.savefig(
         buf,
         format="pdf",
-        bbox_inches=None,  # A4 strict
-        pad_inches=0,  # aucun padding
+        bbox_inches=None,
+        pad_inches=0,
+        facecolor=fig.get_facecolor(),
+        edgecolor="none",
+    )
+    plt.close(fig)
+    buf.seek(0)
+    return buf.getvalue()
+
+
+def build_a4_png_preview_bytes(dpi=150) -> bytes:
+    fig = plt.figure(figsize=A4_INCH, dpi=dpi, facecolor=COLORS["bg"])
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
+
+    W_PX = int(round(fig.get_figwidth() * fig.dpi))
+    H_PX = int(round(fig.get_figheight() * fig.dpi))
+    _draw_a4_page(ax, W_PX, H_PX)
+
+    buf = BytesIO()
+    fig.savefig(
+        buf,
+        format="png",
+        bbox_inches=None,
+        pad_inches=0,
         facecolor=fig.get_facecolor(),
         edgecolor="none",
     )
@@ -760,6 +762,9 @@ if uploaded and restaurant_input:
         )
 # --- UI : Download PDF A4 blanc ---
 st.divider()
+png_bytes = build_a4_png_preview_bytes(dpi=150)
+st.image(png_bytes, caption="Aperçu (PNG)", use_container_width=True)
+
 st.subheader("📄 Export PDF")
 
 # build_blank_a4_pdf_bytes() doit retourner des bytes (PDF), pas une figure.
