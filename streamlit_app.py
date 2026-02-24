@@ -636,6 +636,23 @@ def build_a4_pdf_bytes(draw_fn=None, dpi=300) -> bytes:
         )
     )
 
+
+def _place_img_top(ax, img, x, y_top, w, z=5):
+    """Image centrée sur x, bord haut à y_top (coords 0..1), largeur w (coords 0..1)."""
+    aspect = img.width / img.height
+    h = w / aspect
+    x0, x1 = x - w / 2, x + w / 2
+    y0, y1 = y_top - h, y_top
+    ax.imshow(img, extent=[x0, x1, y0, y1], zorder=z)
+
+
+def _img_rgba(path):
+    return Image.open(path).convert("RGBA")
+
+    if LOGO_PATH.exists():
+        logo = _img_rgba(LOGO_PATH)
+        _place_img_top(ax, logo, x=0.5, y_top=0.97, w=0.18, z=1000)
+
     if draw_fn is not None:
         draw_fn(fig, ax)
 
