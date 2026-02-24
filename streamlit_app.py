@@ -607,22 +607,56 @@ def make_beverage_cost_fig(d, label):
 from io import BytesIO
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+from PIL import Image
 
 A4_INCH = (210 / 25.4, 297 / 25.4)
 
 
+def _img_rgba(path):
+    return Image.open(path).convert("RGBA")
+
+
 def build_a4_pdf_bytes(draw_fn=None, dpi=300) -> bytes:
-    """
-    Génère un PDF A4 verrouillé et retourne ses bytes.
-    draw_fn(fig, ax) optionnel pour dessiner dans la page.
-    """
     fig = plt.figure(figsize=A4_INCH, dpi=dpi, facecolor=COLORS["bg"])
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
 
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
     ax.set_axis_off()
 
-    # Rectangle plein axe (0..1) avec bordure blanche
+    # --- Dimensions en pixels de la page (pixel-perfect) ---
+    W_PX = int(round(fig.get_figwidth() * fig.dpi))
+    H_PX = int(round(fig.get_figheight() * fig.dpi))
+
+    def px_to_axes(x_px, y_px):
+        """Convertit (x,y) en pixels (origine en bas-gauche) -> coords axes (0..1)."""
+        return x_px / W_PX, y_px / H_PX
+
+    def place_img_px_top_left(img, left_px, top_px, width_px, z=1000):
+        """
+        Place une image au pixel près.
+        - left_px, top_px: position en pixels depuis le coin HAUT-GAUCHE de la page
+        - width_px: largeur en pixels (hauteur auto pour conserver le ratio)
+        """
+        aspect = img.width / img.height
+        height_px = width_px / aspect
+
+        # convertir top-left (origine haut-gauche) -> coords axes (origine bas-gauche)
+        x0_px = left_px
+        x1_px = left_px + width_px
+        y1_px = H_PX - top_px
+        y0_px = y1_px - height_px
+
+        x0, y0 = px_to_axes(x0_px, y0_px)
+        x1, y1 = px_to_axes(x1_px, y1_px)
+
+        ax.imshow(img, extent=[x0, x1, y0, y1], zorder=z)
+
+    def place_img_px_top_center(img, center_x_px, top_px, width_px, z=1000):
+        """Variante centrée horizontalement (pixel-perfect)."""
+        left_px = center_x_px - width_px / 2
+        place_img_px_top_left(img, left_px, top_px, width_px, z=z)
+
+    # --- Bordure pleine page (toujours en coords axes, couvre 100%) ---
     ax.add_patch(
         Rectangle(
             (0, 0),
@@ -636,22 +670,16 @@ def build_a4_pdf_bytes(draw_fn=None, dpi=300) -> bytes:
         )
     )
 
-
-def _place_img_top(ax, img, x, y_top, w, z=5):
-    """Image centrée sur x, bord haut à y_top (coords 0..1), largeur w (coords 0..1)."""
-    aspect = img.width / img.height
-    h = w / aspect
-    x0, x1 = x - w / 2, x + w / 2
-    y0, y1 = y_top - h, y_top
-    ax.imshow(img, extent=[x0, x1, y0, y1], zorder=z)
-
-
-def _img_rgba(path):
-    return Image.open(path).convert("RGBA")
-
+    # --- Logo Fizzy positionné AU PIXEL PRÈS ---
+    # Exemples de valeurs (à ajuster):
+    # - 24 px depuis le haut
+    # - centré horizontalement
+    # - 320 px de large
     if LOGO_PATH.exists():
         logo = _img_rgba(LOGO_PATH)
-        _place_img_top(ax, logo, x=0.5, y_top=0.97, w=0.18, z=1000)
+        place_img_px_top_center(
+            logo, center_x_px=W_PX / 2, top_px=24, width_px=320, z=1000
+        )
 
     if draw_fn is not None:
         draw_fn(fig, ax)
@@ -660,9 +688,9 @@ def _img_rgba(path):
     fig.savefig(
         buf,
         format="pdf",
-        bbox_inches=None,  # conserve EXACTEMENT le A4
+        bbox_inches=None,  # A4 strict
         pad_inches=0,  # aucun padding
-        facecolor=None,
+        facecolor=fig.get_facecolor(),
         edgecolor="none",
     )
     plt.close(fig)
