@@ -666,8 +666,8 @@ def _draw_header1(ax, W_PX, H_PX, month_label: str, restaurant_name: str, dpi: i
     if LOGO_PATH.exists():
         logo = _trim_transparent(_img_rgba(LOGO_PATH))
 
-        LOGO_W_PX = 360  # <-- augmente pour grossir
-        LOGO_TOP_PX = 70  # <-- diminue pour remonter
+        LOGO_W_PX = 240  # <-- augmente pour grossir
+        LOGO_TOP_PX = 20  # <-- diminue pour remonter
 
         aspect = logo.width / logo.height
         logo_h_px = LOGO_W_PX / aspect
