@@ -606,70 +606,28 @@ def make_beverage_cost_fig(d, label):
 from io import BytesIO
 import matplotlib.pyplot as plt
 
-
-def _img_rgba(path: Path):
-    return Image.open(path).convert("RGBA")
-
-
-def _place_img_top(ax, img: Image.Image, x, y_top, w, z=5):
-    """Image centrée sur x, bord haut à y_top (coords 0..1), largeur w (coords 0..1)."""
-    aspect = img.width / img.height
-    h = w / aspect
-    x0, x1 = x - w / 2, x + w / 2
-    y0, y1 = y_top - h, y_top
-    ax.imshow(img, extent=[x0, x1, y0, y1], zorder=z)
-
-
-# A4 = 210×297 mm = 8.2677165×11.6929134 inches
 A4_INCH = (210 / 25.4, 297 / 25.4)
 
 
 def generate_pdf_a4_pixel_perfect(draw_fn, dpi=300):
-    """
-    Génère un PDF A4 *verrouillé* (pas de recadrage, pas de padding),
-    avec une surface de dessin 100% page.
-    draw_fn(fig, ax) -> doit dessiner dans ax (axes [0,0,1,1]).
-    """
     fig = plt.figure(figsize=A4_INCH, dpi=dpi, facecolor="white")
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-
     ax = fig.add_axes([0, 0, 1, 1], facecolor="white")
     ax.set_axis_off()
 
     draw_fn(fig, ax)
 
-    buf = io.BytesIO()
+    buf = BytesIO()
     fig.savefig(
         buf,
         format="pdf",
-        bbox_inches=None,  # CRUCIAL : garde EXACTEMENT le A4
-        pad_inches=0,  # CRUCIAL : aucun padding ajouté
+        bbox_inches=None,
+        pad_inches=0,
         facecolor=fig.get_facecolor(),
         edgecolor="none",
     )
     plt.close(fig)
     buf.seek(0)
-    return buf
-
-
-def build_blank_a4_pdf_bytes():
-    # Construit la figure
-    fig = generate_pdf_a4_pixel_perfect(lambda fig, ax: None)
-
-    # Buffer mémoire (pas besoin d'écrire un fichier sur disque)
-    buf = BytesIO()
-
-    # Exporte la figure en PDF
-    fig.savefig(buf, format="png", transparent=True, bbox_inches=None, pad_inches=0)
-    fig.savefig(buf, format="pdf", transparent=True, bbox_inches=None, pad_inches=0)
-
-    # Ferme la figure pour éviter l'accumulation en mémoire
-    plt.close(fig)
-
-    # Reviens au début du buffer
-    buf.seek(0)
-
-    # Retourne les bytes du PDF
     return buf.getvalue()
 
 
@@ -735,10 +693,12 @@ if uploaded and restaurant_input:
 st.divider()
 st.subheader("📄 Export PDF (A4 blanc)")
 
-pdf_bytes = build_blank_a4_pdf_bytes()
+# build_blank_a4_pdf_bytes() doit retourner des bytes (PDF), pas une figure.
+pdf_bytes = build_blank_a4_pdf_bytes(dpi=300)
+
 st.download_button(
     label="⬇️ Télécharger le PDF A4 blanc",
-    data=pdf_bytes,
+    data=pdf_bytes,  # bytes PDF
     file_name="blank_a4.pdf",
     mime="application/pdf",
 )
