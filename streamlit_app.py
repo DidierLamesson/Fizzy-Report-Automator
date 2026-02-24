@@ -636,6 +636,13 @@ def build_a4_pdf_bytes(draw_fn=None, dpi=300) -> bytes:
         )
     )
 
+    logo_path = ASSETS_DIR / "fizzy_logo.png"
+    if logo_path.exists():
+        logo = _img_rgba(logo_path)
+        _place_img_top(
+            ax, logo, x=0.5, y_top=0.97, w=0.18, z=1000
+        )  # ajuste w/y_top si besoin
+
     if draw_fn is not None:
         draw_fn(fig, ax)
 
