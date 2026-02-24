@@ -645,24 +645,48 @@ def _pill(ax, x, y, w, h, text, fill=False):
 
 
 def render_page1_fig(d, restaurant_name, analysis_text):
-    dpi = 100
-    fig = plt.figure(figsize=(1200 / dpi, 1500 / dpi), dpi=dpi, facecolor=COLORS["bg"])
-    TOP_CROP = 0.2  # augmente => moins de bande en haut
-    BOTTOM_CROP = 0.045  # augmente => moins de bande en bas
-    Y_SCALE = 1 + TOP_CROP + BOTTOM_CROP
+    # =========================
+    # A4 stable (portrait)
+    # =========================
+    A4_W_IN = 8.27
+    A4_H_IN = 11.69
+    dpi = 150  # qualité (affichage + export)
 
-    ax = fig.add_axes([0, -BOTTOM_CROP, 1, Y_SCALE], facecolor=COLORS["bg"])
+    fig = plt.figure(figsize=(A4_W_IN, A4_H_IN), dpi=dpi, facecolor=COLORS["bg"])
 
-    # Helpers pour remapper les sous-axes (ceux créés avec fig.add_axes)
-    def _Y(y):  # bottom en coords figure
-        return y * Y_SCALE - BOTTOM_CROP
-
-    def _H(h):  # height en coords figure
-        return h * Y_SCALE
-
+    # Axe plein page (stable, pas de crop)
+    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")
+
+    # =========================
+    # Zone de contenu (modifiable A à Z)
+    # =========================
+    # Ton layout actuel est pensé en 1200x1500 => ratio = 0.8
+    DESIGN_RATIO = 1200 / 1500  # 0.8
+    PAGE_RATIO = A4_W_IN / A4_H_IN
+
+    # On "fit" le design dans la page (par défaut : fit largeur)
+    content_w = 0.92  # <- change ça pour plus/moins de marge latérale
+    content_h = content_w * (PAGE_RATIO / DESIGN_RATIO)
+
+    # Centrage (modifiable)
+    content_x0 = (1 - content_w) / 2
+    content_y0 = (1 - content_h) / 2
+
+    # Helpers de placement : convertit tes coords design (0..1) vers la page A4
+    def X(x):
+        return content_x0 + x * content_w
+
+    def Y(y):
+        return content_y0 + y * content_h
+
+    def W(w):
+        return w * content_w
+
+    def H(h):
+        return h * content_h
 
     # --- DEBUG GRID (mettre True pour caler la mise en page) ---
     DEBUG_GRID = True
