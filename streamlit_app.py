@@ -607,13 +607,22 @@ def make_beverage_cost_fig(d, label):
 from io import BytesIO
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
-from PIL import Image
+from PIL import Image, ImageChops
 
 A4_INCH = (210 / 25.4, 297 / 25.4)
 
 
 def _img_rgba(path):
     return Image.open(path).convert("RGBA")
+
+
+def _trim_transparent(img: Image.Image) -> Image.Image:
+    """Supprime les marges transparentes autour d'un PNG RGBA."""
+    if img.mode != "RGBA":
+        img = img.convert("RGBA")
+    alpha = img.split()[-1]
+    bbox = alpha.getbbox()  # bounding box des pixels non transparents
+    return img.crop(bbox) if bbox else img
 
 
 def _draw_a4_page(ax, W_PX, H_PX):
@@ -640,6 +649,7 @@ def _draw_a4_page(ax, W_PX, H_PX):
     # logo pixel-perfect
     if LOGO_PATH.exists():
         logo = _img_rgba(LOGO_PATH)
+        logo = _trim_transparent(logo)
         width_px = 520
         top_px = 2
         aspect = logo.width / logo.height
