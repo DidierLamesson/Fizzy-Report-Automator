@@ -129,6 +129,28 @@ def wrap_for_box(text, width=44):
         lines.append("")
     return "\n".join(lines).strip()
 
+ def month_labels_from_graph_dates(d):
+        months_it = {
+            1: "Gennaio",
+            2: "Febbraio",
+            3: "Marzo",
+            4: "Aprile",
+            5: "Maggio",
+            6: "Giugno",
+            7: "Luglio",
+            8: "Agosto",
+            9: "Settembre",
+            10: "Ottobre",
+            11: "Novembre",
+            12: "Dicembre",
+        }
+        labels = []
+        for dt in d["graph_cost_dates"]:
+            if hasattr(dt, "month"):
+                labels.append(months_it.get(dt.month, str(dt)))
+            else:
+                labels.append(str(dt))
+        return labels
 
 # =========================
 # 6) LOAD DATA (TON ANCIEN COMPLET)
@@ -161,28 +183,7 @@ def load_data(file):
         mes_it = "Mese"
         anno_n = 2026  # Valeur par défaut
 
-    def month_labels_from_graph_dates(d):
-        months_it = {
-            1: "Gennaio",
-            2: "Febbraio",
-            3: "Marzo",
-            4: "Aprile",
-            5: "Maggio",
-            6: "Giugno",
-            7: "Luglio",
-            8: "Agosto",
-            9: "Settembre",
-            10: "Ottobre",
-            11: "Novembre",
-            12: "Dicembre",
-        }
-        labels = []
-        for dt in d["graph_cost_dates"]:
-            if hasattr(dt, "month"):
-                labels.append(months_it.get(dt.month, str(dt)))
-            else:
-                labels.append(str(dt))
-        return labels
+   
 
     # --- 2. Extraction des données "Fatturato" ---
     fatturato_n = clean_val(df.iloc[8, 2])  # Fatturato N (ligne 9, colonne C)
