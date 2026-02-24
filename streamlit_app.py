@@ -890,18 +890,29 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
     )
 
 
-# ✅ AJOUTE cette constante AU NIVEAU GLOBAL, juste avant build_a4_pdf_bytes / build_a4_png_preview_bytes
-A4_INCH = (210 / 25.4, 297 / 25.4)
+# ✅ Taille cible en pixels (ton nouveau "format")
+PAGE_W_PX = 800
+PAGE_H_PX = 1000
+
+# ✅ DPI de référence : fixe la taille physique du PDF
+BASE_DPI = 100
+
+# ✅ Taille “physique” (inches) qui correspond à 800x1000 px à BASE_DPI
+PAGE_SIZE_INCH = (PAGE_W_PX / BASE_DPI, PAGE_H_PX / BASE_DPI)
 
 
 def build_a4_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
-    fig = plt.figure(figsize=A4_INCH, dpi=dpi, facecolor=COLORS["bg"])
+    """
+    PDF: on verrouille le format à 800x1000 via PAGE_SIZE_INCH + BASE_DPI.
+    Le param `dpi` n'est plus utilisé ici pour éviter de changer la taille physique.
+    (garde la signature pour ne rien casser ailleurs)
+    """
+    fig = plt.figure(figsize=PAGE_SIZE_INCH, dpi=BASE_DPI, facecolor=COLORS["bg"])
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
 
-    W_PX = int(round(fig.get_figwidth() * fig.dpi))
-    H_PX = int(round(fig.get_figheight() * fig.dpi))
-
+    # ✅ layout basé sur la "grille" 800x1000
+    W_PX, H_PX = PAGE_W_PX, PAGE_H_PX
     _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name)
 
     buf = BytesIO()
@@ -919,12 +930,16 @@ def build_a4_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
 
 
 def build_a4_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes:
-    fig = plt.figure(figsize=A4_INCH, dpi=dpi, facecolor=COLORS["bg"])
+    """
+    PNG: on peut utiliser `dpi` uniquement pour la netteté de l'aperçu,
+    MAIS le layout reste basé sur 800x1000.
+    """
+    fig = plt.figure(figsize=PAGE_SIZE_INCH, dpi=dpi, facecolor=COLORS["bg"])
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
 
-    W_PX = int(round(fig.get_figwidth() * fig.dpi))
-    H_PX = int(round(fig.get_figheight() * fig.dpi))
+    # ✅ layout basé sur la "grille" 800x1000 (indépendant du dpi de rendu)
+    W_PX, H_PX = PAGE_W_PX, PAGE_H_PX
     _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name)
 
     buf = BytesIO()
