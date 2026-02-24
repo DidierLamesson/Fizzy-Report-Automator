@@ -488,8 +488,16 @@ def _pill(ax, x, y, w, h, text, fill=False):
 
 
 def render_page1_fig(d, restaurant_name, analysis_text):
-    dpi = 100
-    fig = plt.figure(figsize=(1200 / dpi, 1500 / dpi), dpi=dpi, facecolor=COLORS["bg"])
+    # --- PAGE SIZE (comme Canva) ---
+    PAGE_W_PT = 600  # points
+    PAGE_H_PT = 750  # points
+    DPI = 144  # 600pt*144/72 = 1200px ; 750pt*144/72 = 1500px
+
+    fig = plt.figure(
+        figsize=(PAGE_W_PT / 72, PAGE_H_PT / 72),  # inches
+        dpi=DPI,
+        facecolor=COLORS["bg"],
+    )
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
@@ -847,7 +855,7 @@ def render_page1_fig(d, restaurant_name, analysis_text):
 def build_page1_pdf_bytes(d, restaurant_name, analysis_text):
     fig = render_page1_fig(d, restaurant_name, analysis_text)
     buf = BytesIO()
-    fig.savefig(buf, format="pdf", facecolor=COLORS["bg"])
+    fig.savefig(buf, format="pdf", facecolor=COLORS["bg"], dpi=144)
     plt.close(fig)
     buf.seek(0)
     return buf.getvalue()
@@ -856,7 +864,9 @@ def build_page1_pdf_bytes(d, restaurant_name, analysis_text):
 def build_page1_png_bytes(d, restaurant_name, analysis_text):
     fig = render_page1_fig(d, restaurant_name, analysis_text)
     buf = BytesIO()
-    fig.savefig(buf, format="png", facecolor=COLORS["bg"], dpi=100)
+    fig.savefig(
+        buf, format="png", facecolor=COLORS["bg"]
+    )  # utilise le DPI de la figure (144) => 1200x1500
     plt.close(fig)
     buf.seek(0)
     return buf.getvalue()
