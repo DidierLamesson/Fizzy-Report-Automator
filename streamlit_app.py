@@ -640,6 +640,19 @@ def render_blank_a4_fig():
 
     # Cache les axes (pas de graduations, pas de bordures)
     ax.axis("off")
+    from matplotlib.patches import Rectangle
+
+    ax.add_patch(
+        Rectangle(
+            (0, 0),
+            1,
+            1,
+            transform=ax.transAxes,
+            facecolor=COLORS["bg"],
+            edgecolor="none",
+            zorder=0,
+        )
+    )
 
     # Logo centré en haut
     logo = _img_rgba(LOGO_PATH)
