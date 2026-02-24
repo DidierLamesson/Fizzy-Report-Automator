@@ -649,7 +649,7 @@ def render_blank_a4_fig():
             1,
             transform=ax.transAxes,
             facecolor=COLORS["bg"],
-            edgecolor="none",
+            edgecolor="white",
             zorder=0,
         )
     )
