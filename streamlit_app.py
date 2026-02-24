@@ -1098,7 +1098,7 @@ def render_page1_fig(d, restaurant_name, analysis_text):
     return fig
 
 
-def build_page1_pdf_bytes(d, restaurant_name, analysis_text):
+def build_page1_pdf_bytes(d, restaurant_name, analysis_text, dpi=150):
     fig = render_page1_fig(d, restaurant_name, analysis_text)
     buf = BytesIO()
     fig.savefig(
