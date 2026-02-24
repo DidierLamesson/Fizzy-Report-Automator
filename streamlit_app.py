@@ -611,18 +611,25 @@ import matplotlib.pyplot as plt
 A4_INCH = (210 / 25.4, 297 / 25.4)
 
 
-def build_blank_a4_pdf_bytes(dpi=300) -> bytes:
+def build_a4_pdf_bytes(draw_fn=None, dpi=300) -> bytes:
+    """
+    Génère un PDF A4 verrouillé et retourne ses bytes.
+    draw_fn(fig, ax) optionnel pour dessiner dans la page.
+    """
     fig = plt.figure(figsize=A4_INCH, dpi=dpi, facecolor="white")
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
 
     ax = fig.add_axes([0, 0, 1, 1], facecolor="white")
     ax.set_axis_off()
 
+    if draw_fn is not None:
+        draw_fn(fig, ax)
+
     buf = BytesIO()
     fig.savefig(
         buf,
         format="pdf",
-        bbox_inches=None,  # conserve EXACTEMENT A4
+        bbox_inches=None,  # conserve EXACTEMENT le A4
         pad_inches=0,  # aucun padding
         facecolor=fig.get_facecolor(),
         edgecolor="none",
@@ -695,7 +702,7 @@ st.divider()
 st.subheader("📄 Export PDF (A4 blanc)")
 
 # build_blank_a4_pdf_bytes() doit retourner des bytes (PDF), pas une figure.
-pdf_bytes = generate_pdf_a4_pixel_perfect(lambda fig, ax: None, dpi=300)
+pdf_bytes = build_a4_pdf_bytes(lambda fig, ax: None, dpi=300)
 
 st.download_button(
     label="⬇️ Télécharger le PDF A4 blanc",
