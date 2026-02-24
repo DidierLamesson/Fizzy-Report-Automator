@@ -649,8 +649,8 @@ HEADER1_CFG = {
     "pill_top_px": 80,  # distance depuis le haut
     "pill_right_margin_px": 100,  # marge droite
     "pill_font_px": 14,
-    "pill_pad_x_px": 28,
-    "pill_pad_y_px": 14,
+    "pill_pad_x_px": 4,
+    "pill_pad_y_px": 4,
     "pill_border_width_px": 2,
     # --- Espacements verticaux (le layout “suit” automatiquement) ---
     "gap_after_toprow_px": 20,  # espace après la ligne logo/pill avant le titre
