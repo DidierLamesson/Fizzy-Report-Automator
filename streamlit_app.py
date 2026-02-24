@@ -654,7 +654,7 @@ HEADER1_CFG = {
     "pill_border_width_px": 2,
     # --- Espacements verticaux (le layout “suit” automatiquement) ---
     "gap_after_toprow_px": 20,  # espace après la ligne logo/pill avant le titre
-    "gap_title_to_restaurant_px": 5,  # espace titre -> restaurant
+    "gap_title_to_restaurant_px": 0,  # espace titre -> restaurant
     "gap_restaurant_to_line_px": 10,  # espace restaurant -> ligne
     # --- Titre ---
     "title_text": "Report Mensile",
