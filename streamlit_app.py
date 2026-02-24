@@ -853,6 +853,15 @@ def build_page1_pdf_bytes(d, restaurant_name, analysis_text):
     return buf.getvalue()
 
 
+def build_page1_png_bytes(d, restaurant_name, analysis_text):
+    fig = render_page1_fig(d, restaurant_name, analysis_text)
+    buf = BytesIO()
+    fig.savefig(buf, format="png", facecolor=COLORS["bg"], dpi=100)
+    plt.close(fig)
+    buf.seek(0)
+    return buf.getvalue()
+
+
 # =========================
 # 10) UI
 # =========================
@@ -885,17 +894,20 @@ if uploaded and restaurant_input:
 
         st.divider()
 
-        if st.button("📄 Générer PDF — Page 1"):
-            pdf_bytes = build_page1_pdf_bytes(data, restaurant_input, analysis_text)
-            st.session_state["page1_pdf_bytes"] = pdf_bytes
+        st.subheader("👀 Aperçu Page 1 (live)")
 
-        if "page1_pdf_bytes" in st.session_state:
-            file_name = f"Report_{restaurant_input}_{data['month_name']}_{data['year_n']}_page1.pdf".replace(
-                " ", "_"
-            )
-            st.download_button(
-                "⬇️ Télécharger le PDF (Page 1)",
-                data=st.session_state["page1_pdf_bytes"],
-                file_name=file_name,
-                mime="application/pdf",
-            )
+        png_bytes = build_page1_png_bytes(data, restaurant_input, analysis_text)
+        st.image(png_bytes, use_container_width=True)
+
+        # Optionnel : garder un download PDF (sans bouton, calculé à la volée)
+        pdf_bytes = build_page1_pdf_bytes(data, restaurant_input, analysis_text)
+        file_name = f"Report_{restaurant_input}_{data['month_name']}_{data['year_n']}_page1.pdf".replace(
+            " ", "_"
+        )
+
+        st.download_button(
+            "⬇️ Télécharger le PDF (Page 1)",
+            data=pdf_bytes,
+            file_name=file_name,
+            mime="application/pdf",
+        )
