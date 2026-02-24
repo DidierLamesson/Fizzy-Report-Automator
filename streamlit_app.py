@@ -799,7 +799,9 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
         dpi=int(ax.figure.dpi),
     )
 
-    A4_INCH = (210 / 25.4, 297 / 25.4)
+
+# ✅ AJOUTE cette constante AU NIVEAU GLOBAL, juste avant build_a4_pdf_bytes / build_a4_png_preview_bytes
+A4_INCH = (210 / 25.4, 297 / 25.4)
 
 
 def build_a4_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
