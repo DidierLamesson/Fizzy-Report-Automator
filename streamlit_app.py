@@ -643,11 +643,11 @@ HEADER1_CFG = {
     "border_width_px": 2,
     # --- Ligne du haut (logo + pill) ---
     "logo_enabled": True,
-    "logo_w_px": 120,  # largeur logo
-    "logo_top_px": 30,  # distance depuis le haut
+    "logo_w_px": 100,  # largeur logo
+    "logo_top_px": 10,  # distance depuis le haut
     "pill_enabled": True,
-    "pill_top_px": 50,  # distance depuis le haut
-    "pill_right_margin_px": 40,  # marge droite
+    "pill_top_px": 80,  # distance depuis le haut
+    "pill_right_margin_px": 100,  # marge droite
     "pill_font_px": 30,
     "pill_pad_x_px": 28,
     "pill_pad_y_px": 14,
