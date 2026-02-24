@@ -629,7 +629,7 @@ def render_blank_a4_fig():
     dpi = 150
 
     # Crée une figure Matplotlib de taille A4 avec un fond blanc
-    fig = plt.figure(figsize=(1920, 1080), dpi=dpi, facecolor="none")
+    fig = plt.figure(figsize=(A4_W_IN, A4_H_IN), dpi=dpi, facecolor="none")
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
     # Définit un repère simple : (0,0) en bas-gauche et (1,1) en haut-droite
     ax.set_xlim(0, 1)
