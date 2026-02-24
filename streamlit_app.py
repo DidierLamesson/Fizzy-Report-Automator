@@ -616,7 +616,7 @@ def _img_rgba(path):
     return Image.open(path).convert("RGBA")
 
 
-def build_a4_pdf_bytes(draw_fn=None, dpi=300) -> bytes:
+def build_a4(draw_fn=None, dpi=300) -> bytes:
     fig = plt.figure(figsize=A4_INCH, dpi=dpi, facecolor=COLORS["bg"])
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
 
@@ -763,11 +763,11 @@ st.divider()
 st.subheader("📄 Export PDF (A4 blanc)")
 
 # build_blank_a4_pdf_bytes() doit retourner des bytes (PDF), pas une figure.
-pdf_bytes = build_a4_pdf_bytes(lambda fig, ax: None, dpi=300)
+pdf_bytes = build_a4(lambda fig, ax: None, dpi=300)
 
 st.download_button(
-    label="⬇️ Télécharger le PDF A4 blanc",
+    label="⬇️ Télécharger le PDF",
     data=pdf_bytes,  # bytes PDF
-    file_name="blank_a4.pdf",
+    file_name=f"Report_{restaurant_input}_{mes_it} {anno_n}.pdf",
     mime="application/pdf",
 )
