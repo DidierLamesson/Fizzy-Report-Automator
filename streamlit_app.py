@@ -1070,37 +1070,37 @@ if uploaded and restaurant_input:
     # --- Section graphs pleine largeur ---
     st.divider()
 
-# =========================
-# FOOD COST
-# =========================
-st.subheader("📈 Food Cost (mensile)")
-food_col_graph, food_col_text = st.columns([1.2, 1], gap="large")
+    # =========================
+    # FOOD COST
+    # =========================
+    st.subheader("📈 Food Cost (mensile)")
+    food_col_graph, food_col_text = st.columns([1.2, 1], gap="large")
 
-with food_col_graph:
-    food_fig = make_food_cost_fig(data, label=restaurant_input)
-    st.pyplot(food_fig)
+    with food_col_graph:
+        food_fig = make_food_cost_fig(data, label=restaurant_input)
+        st.pyplot(food_fig)
 
-with food_col_text:
-    st.text_area("📝 Commento Food Cost", value="", height=280, key="food_comment")
+    with food_col_text:
+        st.text_area("📝 Commento Food Cost", value="", height=280, key="food_comment")
 
-# =========================
-# BEVERAGE COST
-# =========================
-st.subheader("📈 Beverage Cost (mensile)")
-bev_col_graph, bev_col_text = st.columns([1.2, 1], gap="large")
+    # =========================
+    # BEVERAGE COST
+    # =========================
+    st.subheader("📈 Beverage Cost (mensile)")
+    bev_col_graph, bev_col_text = st.columns([1.2, 1], gap="large")
 
-with bev_col_graph:
-    bev_fig = make_beverage_cost_fig(data, label=restaurant_input)
-    st.pyplot(bev_fig)
+    with bev_col_graph:
+        bev_fig = make_beverage_cost_fig(data, label=restaurant_input)
+        st.pyplot(bev_fig)
 
-with bev_col_text:
-    st.text_area(
-        "📝 Commento Beverage Cost", value="", height=280, key="beverage_comment"
-    )
+    with bev_col_text:
+        st.text_area(
+            "📝 Commento Beverage Cost", value="", height=280, key="beverage_comment"
+        )
 
-    # --- Export PDF en bas ---
-st.divider()
-st.subheader("📄 Export PDF")
+        # --- Export PDF en bas ---
+    st.divider()
+    st.subheader("📄 Export PDF")
 
 if st.button("📄 Scaricare PDF (Pagina 1)"):
     pdf_bytes = build_page1_pdf_bytes(data, restaurant_input, analysis_text)
