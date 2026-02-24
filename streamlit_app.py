@@ -79,30 +79,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-st.markdown(
-    f"""
-    <style>
-      /* enlève les marges/paddings Streamlit */
-      .block-container {{
-        padding-top: 0.2rem;
-        padding-bottom: 0.2rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
-      }}
-
-      /* met le fond de l'app comme ton bleu */
-      .stApp {{
-        background: {COLORS["bg"]};
-      }}
-
-      /* réduit l’espace entre éléments */
-      div[data-testid="stVerticalBlock"] > div {{
-        gap: 0.5rem;
-      }}
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
 
 
 # =========================
