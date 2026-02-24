@@ -11,6 +11,64 @@ import matplotlib.font_manager as fm
 from matplotlib.patches import FancyBboxPatch
 from PIL import Image
 
+# =========================
+# 3) COULEURS (ta palette)
+# =========================
+COLORS = {
+    "bg": "#172e4d",
+    "accent": "#edf86c",
+    "highlight": "#c8bcab",
+    "graph1": "#918d84",
+    "graph2": "#ece8e1",
+    "white": "#ffffff",
+}
+
+# =========================
+# 2) PATHS ASSETS (ton repo)
+# =========================
+BASE_DIR = Path(__file__).resolve().parent
+ASSETS_DIR = BASE_DIR / "assets"
+FONTS_DIR = ASSETS_DIR / "fonts"
+IMG_DIR = ASSETS_DIR / "img"
+
+# Fonts (d'après ton screenshot repo)
+FONT_EPILOGUE_REG = FONTS_DIR / "Epilogue-Regular.otf"
+FONT_EPILOGUE_ITALIC = FONTS_DIR / "Epilogue-Italic.otf"
+FONT_EPILOGUE_SEMIBOLD = FONTS_DIR / "Epilogue-SemiBold.otf"
+FONT_EPILOGUE_SEMIBOLD_ITALIC = FONTS_DIR / "Epilogue-SemiBoldItalic.otf"
+FONT_IVY = FONTS_DIR / "fonnts.com-Ivy-Presto-Display-Light.otf"
+
+# Images
+LOGO_PATH = IMG_DIR / "Logo Fizzy.png"
+ARROW_UP_PATH = IMG_DIR / "Arrow_up.png"
+ARROW_DOWN_PATH = IMG_DIR / "Arrow_down.png"
+ARROW_ROUND_PATH = IMG_DIR / "Arrow_round.png"
+
+
+# =========================
+# 4) FONTS MATPLOTLIB
+# =========================
+def _register_font(path: Path):
+    if path.exists():
+        fm.fontManager.addfont(str(path))
+
+
+_register_font(FONT_EPILOGUE_REG)
+_register_font(FONT_EPILOGUE_ITALIC)
+_register_font(FONT_EPILOGUE_SEMIBOLD)
+_register_font(FONT_EPILOGUE_SEMIBOLD_ITALIC)
+_register_font(FONT_IVY)
+
+epilogue_regular = fm.FontProperties(fname=str(FONT_EPILOGUE_REG))
+epilogue_italic = fm.FontProperties(fname=str(FONT_EPILOGUE_ITALIC))
+epilogue_semibold = fm.FontProperties(fname=str(FONT_EPILOGUE_SEMIBOLD))
+epilogue_semibold_italic = fm.FontProperties(fname=str(FONT_EPILOGUE_SEMIBOLD_ITALIC))
+ivy_title = fm.FontProperties(fname=str(FONT_IVY))
+
+plt.rcParams["font.family"] = epilogue_regular.get_name()
+plt.rcParams["pdf.fonttype"] = 42
+plt.rcParams["ps.fonttype"] = 42
+
 
 # =========================
 # 1) CONFIG STREAMLIT
@@ -45,65 +103,6 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
-# =========================
-# 2) PATHS ASSETS (ton repo)
-# =========================
-BASE_DIR = Path(__file__).resolve().parent
-ASSETS_DIR = BASE_DIR / "assets"
-FONTS_DIR = ASSETS_DIR / "fonts"
-IMG_DIR = ASSETS_DIR / "img"
-
-# Fonts (d'après ton screenshot repo)
-FONT_EPILOGUE_REG = FONTS_DIR / "Epilogue-Regular.otf"
-FONT_EPILOGUE_ITALIC = FONTS_DIR / "Epilogue-Italic.otf"
-FONT_EPILOGUE_SEMIBOLD = FONTS_DIR / "Epilogue-SemiBold.otf"
-FONT_EPILOGUE_SEMIBOLD_ITALIC = FONTS_DIR / "Epilogue-SemiBoldItalic.otf"
-FONT_IVY = FONTS_DIR / "fonnts.com-Ivy-Presto-Display-Light.otf"
-
-# Images
-LOGO_PATH = IMG_DIR / "Logo Fizzy.png"
-ARROW_UP_PATH = IMG_DIR / "Arrow_up.png"
-ARROW_DOWN_PATH = IMG_DIR / "Arrow_down.png"
-ARROW_ROUND_PATH = IMG_DIR / "Arrow_round.png"
-
-
-# =========================
-# 3) COULEURS (ta palette)
-# =========================
-COLORS = {
-    "bg": "#172e4d",
-    "accent": "#edf86c",
-    "highlight": "#c8bcab",
-    "graph1": "#918d84",
-    "graph2": "#ece8e1",
-    "white": "#ffffff",
-}
-
-
-# =========================
-# 4) FONTS MATPLOTLIB
-# =========================
-def _register_font(path: Path):
-    if path.exists():
-        fm.fontManager.addfont(str(path))
-
-
-_register_font(FONT_EPILOGUE_REG)
-_register_font(FONT_EPILOGUE_ITALIC)
-_register_font(FONT_EPILOGUE_SEMIBOLD)
-_register_font(FONT_EPILOGUE_SEMIBOLD_ITALIC)
-_register_font(FONT_IVY)
-
-epilogue_regular = fm.FontProperties(fname=str(FONT_EPILOGUE_REG))
-epilogue_italic = fm.FontProperties(fname=str(FONT_EPILOGUE_ITALIC))
-epilogue_semibold = fm.FontProperties(fname=str(FONT_EPILOGUE_SEMIBOLD))
-epilogue_semibold_italic = fm.FontProperties(fname=str(FONT_EPILOGUE_SEMIBOLD_ITALIC))
-ivy_title = fm.FontProperties(fname=str(FONT_IVY))
-
-plt.rcParams["font.family"] = epilogue_regular.get_name()
-plt.rcParams["pdf.fonttype"] = 42
-plt.rcParams["ps.fonttype"] = 42
 
 
 # =========================
