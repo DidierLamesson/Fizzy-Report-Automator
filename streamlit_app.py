@@ -1188,5 +1188,5 @@ if uploaded and restaurant_input:
 st.divider()
 st.subheader("👀 Aperçu — Base A4 (logo only)")
 
-png_bytes = build_page1_png_bytes_base_a4(dpi=150)  # ou ta build_page1_png_bytes(...)
+png_bytes = build_page1_png_bytes(dpi=150)  # ou ta build_page1_png_bytes(...)
 st.image(png_bytes, width=800)  # width fixe = moins de “letterboxing”
