@@ -544,7 +544,7 @@ def render_page1_fig(d, restaurant_name, analysis_text):
         fontproperties=epilogue_semibold,
     )
 
-        ax.plot([0.10, 0.90], [0.785, 0.785], color=COLORS["white"], alpha=0.65, lw=1)
+    ax.plot([0.10, 0.90], [0.785, 0.785], color=COLORS["white"], alpha=0.65, lw=1)
 
     # Section title
     ax.text(
