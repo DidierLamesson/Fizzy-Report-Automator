@@ -723,3 +723,13 @@ if uploaded and restaurant_input:
         st.text_area(
             "📝 Commento Beverage Cost", value="", height=280, key="beverage_comment"
         )
+st.divider()
+st.subheader("📄 Export PDF — Base A4 (logo only)")
+
+pdf_bytes = build_page1_pdf_bytes_base_a4()
+st.download_button(
+    "⬇️ Télécharger PDF A4 (logo)",
+    data=pdf_bytes,
+    file_name="page1_base_a4_logo.pdf",
+    mime="application/pdf",
+)
