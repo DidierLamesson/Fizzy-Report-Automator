@@ -799,6 +799,8 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
         dpi=int(ax.figure.dpi),
     )
 
+    A4_INCH = (210 / 25.4, 297 / 25.4)
+
 
 def build_a4_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
     fig = plt.figure(figsize=A4_INCH, dpi=dpi, facecolor=COLORS["bg"])
