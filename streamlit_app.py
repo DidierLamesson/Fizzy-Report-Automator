@@ -490,8 +490,8 @@ def _pill(ax, x, y, w, h, text, fill=False):
 def render_page1_fig(d, restaurant_name, analysis_text):
     dpi = 100
     fig = plt.figure(figsize=(1200 / dpi, 1500 / dpi), dpi=dpi, facecolor=COLORS["bg"])
-    TOP_CROP = 0.09  # augmente => moins de bande en haut
-    BOTTOM_CROP = 0.045  # augmente => moins de bande en bas
+    TOP_CROP = 2  # augmente => moins de bande en haut
+    BOTTOM_CROP = 2  # augmente => moins de bande en bas
     Y_SCALE = 1 + TOP_CROP + BOTTOM_CROP
 
     ax = fig.add_axes([0, -BOTTOM_CROP, 1, Y_SCALE], facecolor=COLORS["bg"])
