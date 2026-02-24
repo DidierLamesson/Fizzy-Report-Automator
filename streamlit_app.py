@@ -604,7 +604,6 @@ def make_beverage_cost_fig(d, label):
 # 9) PDF PAGE 1 (layout)
 # =========================
 
-
 from io import BytesIO
 import matplotlib.pyplot as plt
 
@@ -616,10 +615,10 @@ def build_a4_pdf_bytes(draw_fn=None, dpi=300) -> bytes:
     Génère un PDF A4 verrouillé et retourne ses bytes.
     draw_fn(fig, ax) optionnel pour dessiner dans la page.
     """
-    fig = plt.figure(figsize=A4_INCH, dpi=dpi, facecolor="white")
+    fig = plt.figure(figsize=A4_INCH, dpi=dpi, facecolor=COLORS["bg"])
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
 
-    ax = fig.add_axes([0, 0, 1, 1], facecolor="white")
+    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
     ax.set_axis_off()
 
     if draw_fn is not None:
@@ -631,7 +630,7 @@ def build_a4_pdf_bytes(draw_fn=None, dpi=300) -> bytes:
         format="pdf",
         bbox_inches=None,  # conserve EXACTEMENT le A4
         pad_inches=0,  # aucun padding
-        facecolor=fig.get_facecolor(),
+        facecolor=None,
         edgecolor="none",
     )
     plt.close(fig)
