@@ -263,11 +263,12 @@ def load_data(file):
 
 
 def fmt_eur_it(x, decimals=0):
-    # 507767 -> "507.767 €"
+    # 507767 -> "507 767 €"
     if decimals == 0:
-        s = f"{int(round(x)):,}".replace(",", ".")
+        s = f"{int(round(x)):,}".replace(",", " ")
     else:
-        s = f"{x:,.{decimals}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+        # 507767.89 -> "507 767,89"
+        s = f"{x:,.{decimals}f}".replace(",", "X").replace(".", ",").replace("X", " ")
     return f"{s} €"
 
 
@@ -280,7 +281,8 @@ def build_page1_suggestions(d):
     fatt_n = d["fatturato_n"]
     fatt_p = d["fatturato_n_1"]
     delta = fatt_n - fatt_p
-    pct = (delta / fatt_p * 100) if fatt_p else 0.0
+    pct_calc = (delta / fatt_p * 100) if fatt_p else 0.0
+    pct = d.get("diff_fatturato", pct_calc)
 
     ric_n = d["ric_cost_n"]
     ric_p = d["ric_cost_n_1"]
@@ -305,17 +307,17 @@ def build_page1_suggestions(d):
         f"Oltre alla dinamica dei ricavi, si evidenzia un {ric_word} del risultato economico: "
         f"Ricavi - Costi pari a {fmt_eur_it(ric_n)} "
         f"(vs {fmt_eur_it(ric_p)}), con un {marg_word} dei margini "
-        f"({marg_n:.0f}% vs {marg_p:.0f}%)."
+        f"({marg_n:.1f}% vs {marg_p:.1f}%)."
     )
 
-    # Variantes plus “courte”
+    # Varianti più corte
     p1_short = (
         f"A {d['month_name']} {d['year_n']} il fatturato è {fmt_eur_it(fatt_n)}, "
         f"{fmt_pct(pct, 1, True)} vs {d['year_n_1']}."
     )
     p2_short = (
-        f"Ricavi - Costi: {fmt_eur_it(ric_n)} ({fmt_eur_it(ric_p)} nel {d['year_n_1']}); "
-        f"Margine: {marg_n:.0f}% (vs {marg_p:.0f}%)."
+        f"Ricavi - Costi: {fmt_eur_it(ric_n)} (vs {fmt_eur_it(ric_p)}); "
+        f"Margine: {marg_n:.1f}% (vs {marg_p:.1f}%)."
     )
 
     return {
@@ -324,42 +326,61 @@ def build_page1_suggestions(d):
     }
 
 
-def make_fatturato_fig(d, label="Terrazza"):
+def make_fatturato_fig(d, label=""):
     fig, ax = plt.subplots(figsize=(6, 6))
+
+    # Background
     fig.patch.set_facecolor(COLORS["bg"])
     ax.set_facecolor(COLORS["bg"])
 
+    # Données
     values = [d["fatturato_n"], d["fatturato_n_1"]]
     x = [0, 1]
 
-    ax.bar(x, values, width=0.95, color=[COLORS["graph1"], COLORS["graph2"]], zorder=3)
-    ax.set_xlim(-0.525, 1.525)
+    ax.bar(
+        x,
+        values,
+        width=0.95,
+        color=[COLORS["graph1"], COLORS["graph2"]],
+        alpha=1.0,
+        zorder=3,
+    )
+    ax.set_xlim(-0.475 - 0.05, 1.475)
 
+    # Labels au-dessus
     for i, v in enumerate(values):
         ax.text(
             i,
             v + max(values) * 0.02,
-            f"{int(round(v)):,}".replace(",", "."),
+            f"{v:,.0f}".replace(",", " "),
             ha="center",
             va="bottom",
-            fontsize=16,
+            fontproperties=epilogue_font,
+            fontsize=18,
             color=COLORS["white"],
             fontweight=900,
         )
 
+    # Axe X
     ax.set_xticks([0.5])
-    ax.set_xticklabels([label], color=COLORS["white"], fontsize=12)
+    ax.set_xticklabels([label] if label else [])
 
-    ax.tick_params(axis="y", colors=COLORS["white"], labelsize=12, length=0)
+    # Axe Y
+    ax.tick_params(axis="y", colors=COLORS["white"], labelsize=14)
+    ax.tick_params(axis="y", length=0)
     ax.yaxis.set_major_formatter(
-        ticker.FuncFormatter(lambda x, p: f"{int(x):,}".replace(",", "."))
+        ticker.FuncFormatter(lambda x, p: f"{int(x):,}".replace(",", " "))
     )
     ax.set_ylim(0, max(values) * 1.2)
 
+    # Grille
     ax.grid(axis="y", linestyle="-", alpha=0.15, color=COLORS["white"], zorder=0)
+
+    # Supprimer bordures
     for spine in ax.spines.values():
         spine.set_visible(False)
 
+    # Légende
     legend_handles = [
         plt.Line2D(
             [0],
@@ -367,7 +388,9 @@ def make_fatturato_fig(d, label="Terrazza"):
             marker="o",
             color="none",
             markerfacecolor=COLORS["graph1"],
-            markersize=10,
+            markeredgecolor="none",
+            markeredgewidth=0,
+            markersize=12,
             label=f"Fatturato {d['year_n']} €",
         ),
         plt.Line2D(
@@ -376,17 +399,20 @@ def make_fatturato_fig(d, label="Terrazza"):
             marker="o",
             color="none",
             markerfacecolor=COLORS["graph2"],
-            markersize=10,
+            markeredgecolor="none",
+            markeredgewidth=0,
+            markersize=12,
             label=f"Fatturato {d['year_n_1']} €",
         ),
     ]
+
     ax.legend(
         handles=legend_handles,
         loc="upper center",
         bbox_to_anchor=(0.5, 1.12),
         ncol=2,
         frameon=False,
-        fontsize=12,
+        fontsize=14,
         labelcolor=COLORS["white"],
     )
 
@@ -416,82 +442,7 @@ if uploaded and restaurant_input:
 
         st.subheader("📊 Fatturato Mensile")
 
-        fig = make_fatturato_fig(
-            data_dict, label=restaurant_input
-        )  # ou label=restaurant_input
-        st.pyplot(fig)
-
-        # Labels au-dessus
-        for i, v in enumerate(values):
-            ax.text(
-                i,
-                v + max(values) * 0.02,
-                f"{v:,.0f}".replace(",", " "),
-                ha="center",
-                va="bottom",
-                fontproperties=epilogue_font,
-                fontsize=18,
-                color=COLORS["white"],
-                fontweight=900,
-            )
-
-        # Axe X
-        ax.set_xticks([0.5])
-        ax.set_xticklabels([])
-
-        # Axe Y
-        ax.tick_params(axis="y", colors=COLORS["white"], labelsize=14)
-        ax.tick_params(axis="y", length=0)
-        ax.yaxis.set_major_formatter(
-            ticker.FuncFormatter(lambda x, p: f"{int(x):,}".replace(",", " "))
-        )
-
-        ax.set_ylim(0, max(values) * 1.2)
-
-        # Grille
-        ax.grid(axis="y", linestyle="-", alpha=0.15, color=COLORS["white"], zorder=0)
-
-        # Supprimer bordures
-        for spine in ax.spines.values():
-            spine.set_visible(False)
-
-        # Légende
-        legend_handles = [
-            plt.Line2D(
-                [0],
-                [0],
-                marker="o",
-                color="none",
-                markerfacecolor=COLORS["graph1"],
-                markeredgecolor="none",  # supprime contour noir
-                markeredgewidth=0,
-                markersize=12,
-                label=f"Fatturato {data_dict['year_n']} €",
-            ),
-            plt.Line2D(
-                [0],
-                [0],
-                marker="o",
-                color="none",
-                markerfacecolor=COLORS["graph2"],
-                markeredgecolor="none",  # supprime contour noir
-                markeredgewidth=0,
-                markersize=12,
-                label=f"Fatturato {data_dict['year_n_1']} €",
-            ),
-        ]
-
-        ax.legend(
-            handles=legend_handles,
-            loc="upper center",
-            bbox_to_anchor=(0.5, 1.12),
-            ncol=2,
-            frameon=False,
-            fontsize=14,
-            labelcolor=COLORS["white"],
-        )
-
-        plt.tight_layout()
+        fig = make_fatturato_fig(data_dict, label="")
         st.pyplot(fig)
 
     # =========================
@@ -501,18 +452,16 @@ if uploaded and restaurant_input:
 
         st.subheader("✍️ Analyse Narrative")
 
-        auto_text = (
-            f"In {data_dict['month_name']} {data_dict['year_n']} "
-            f"il fatturato è di {data_dict['fatturato_n']:,.2f} €, "
-            f"contre {data_dict['fatturato_n_1']:,.2f} € en "
-            f"{data_dict['year_n_1']}. "
-            f"Cela représente une variation de "
-            f"{(data_dict['fatturato_n'] - data_dict['fatturato_n_1']):,.2f} €."
-        )
+        suggest = build_page1_suggestions(data_dict)
 
-        user_text = st.text_area(
-            "Personnalisez votre analyse ici :", value=auto_text, height=300
-        )
+        mode = st.radio("Style", ["long", "short"], horizontal=True, index=0)
+
+        p1_default, p2_default = suggest[mode]
+
+        p1 = st.text_area("Paragrafo 1", value=p1_default, height=160)
+        p2 = st.text_area("Paragrafo 2", value=p2_default, height=160)
+
+        analysis_text = f"{p1}\n\n{p2}"
 
     st.divider()
 
