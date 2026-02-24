@@ -1045,7 +1045,7 @@ def build_page1_png_bytes(d, restaurant_name, analysis_text):
 st.title("Report Fizzy Automatizzazione ⚡️")
 
 restaurant_input = st.sidebar.text_input("Nome clienti *", value="LEITAO")
-uploaded = st.sidebar.file_uploader("Caricare il Report Excel", type="xlsx")
+uploaded = st.sidebar.file_uploader("Caricare il Report (.xslx))", type="xlsx")
 
 if uploaded and restaurant_input:
     data = load_data(uploaded)
@@ -1058,7 +1058,7 @@ if uploaded and restaurant_input:
         st.pyplot(preview_fig)
 
     with col_edit:
-        st.subheader("✍️ Analyse Narrative")
+        st.subheader("✍️ Analisa scritta (modificabile)")
 
         p1_default, p2_default = build_page1_suggestions(data)
 
@@ -1073,7 +1073,7 @@ if uploaded and restaurant_input:
 # =========================
 # FOOD COST
 # =========================
-st.subheader("📈 Food Cost (anno corrente)")
+st.subheader("📈 Food Cost (mensile)")
 food_col_graph, food_col_text = st.columns([1.2, 1], gap="large")
 
 with food_col_graph:
@@ -1086,7 +1086,7 @@ with food_col_text:
 # =========================
 # BEVERAGE COST
 # =========================
-st.subheader("📈 Beverage Cost (anno corrente)")
+st.subheader("📈 Beverage Cost (mensile)")
 bev_col_graph, bev_col_text = st.columns([1.2, 1], gap="large")
 
 with bev_col_graph:
@@ -1102,7 +1102,7 @@ with bev_col_text:
 st.divider()
 st.subheader("📄 Export PDF")
 
-if st.button("📄 Générer PDF (Page 1)"):
+if st.button("📄 Scaricare PDF (Pagina 1)"):
     pdf_bytes = build_page1_pdf_bytes(data, restaurant_input, analysis_text)
     st.session_state["page1_pdf_bytes"] = pdf_bytes
 
