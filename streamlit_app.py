@@ -1041,8 +1041,9 @@ if uploaded and restaurant_input:
         st.subheader("📊 Fatturato Mensile (preview)")
         preview_fig = make_fatturato_fig(data, label=restaurant_input)
         st.pyplot(preview_fig)
+
         st.subheader("📈 Food Cost (anno corrente)")
-        food_left, food_right = st.columns([1.2, 1])
+        food_left, food_right = st.columns(2)
 
         with food_left:
             food_fig = make_food_cost_fig(data, label=restaurant_input)
@@ -1054,7 +1055,7 @@ if uploaded and restaurant_input:
             )
 
         st.subheader("📈 Beverage Cost (anno corrente)")
-        bev_left, bev_right = st.columns([1.2, 1])
+        bev_left, bev_right = st.columns(2)
 
         with bev_left:
             bev_fig = make_beverage_cost_fig(data, label=restaurant_input)
@@ -1081,6 +1082,9 @@ if uploaded and restaurant_input:
         st.divider()
 
         st.subheader("📄 Export PDF")
+
+st.divider()
+st.subheader("📄 Export PDF")
 
 if st.button("📄 Générer PDF (Page 1)"):
     pdf_bytes = build_page1_pdf_bytes(data, restaurant_input, analysis_text)
