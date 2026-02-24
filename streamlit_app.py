@@ -768,7 +768,7 @@ st.image(png_bytes, caption="Aperçu (PNG)", use_container_width=True)
 st.subheader("📄 Export PDF")
 
 # build_blank_a4_pdf_bytes() doit retourner des bytes (PDF), pas une figure.
-pdf_bytes = build_a4_pdf_bytes(lambda fig, ax: None, dpi=150)
+pdf_bytes = build_a4_pdf_bytes(dpi=150)
 
 st.download_button(
     label="⬇️ Scarica PDF",
