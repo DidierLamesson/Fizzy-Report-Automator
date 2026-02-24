@@ -510,11 +510,11 @@ def render_page1_fig(d, restaurant_name, analysis_text):
     arrow_round = _img_rgba(ARROW_ROUND_PATH)
 
     # Header
-    _place_img(ax, logo, x=0.50, y=0.955, w=0.22, z=10)
+    _place_img(ax, logo, x=0.50, y=0.982, w=0.24, z=10)
     _pill(
         ax,
         x=0.72,
-        y=0.92,
+        y=0.945,
         w=0.22,
         h=0.050,
         text=f"{d['month_name']} {d['year_n']}",
@@ -523,7 +523,7 @@ def render_page1_fig(d, restaurant_name, analysis_text):
 
     ax.text(
         0.5,
-        0.865,
+        0.895,
         "Report Mensile",
         ha="center",
         va="center",
@@ -535,7 +535,7 @@ def render_page1_fig(d, restaurant_name, analysis_text):
 
     ax.text(
         0.5,
-        0.815,
+        0.845,
         restaurant_name.upper(),
         ha="center",
         va="center",
