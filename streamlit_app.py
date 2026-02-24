@@ -692,71 +692,70 @@ def render_page1_fig(d, restaurant_name, analysis_text):
     DEBUG_GRID = True
     DEBUG_GRID = True
 
+    if DEBUG_GRID:
+        # Grille sur toute la page (coords d'axes)
+        for gx in [i / 20 for i in range(1, 20)]:  # verticales (5%)
+            ax.plot(
+                [gx, gx],
+                [0, 1],
+                transform=ax.transAxes,
+                color="white",
+                alpha=0.08,
+                lw=1,
+                zorder=1,
+            )
+        for gy in [i / 20 for i in range(1, 20)]:  # horizontales (5%)
+            ax.plot(
+                [0, 1],
+                [gy, gy],
+                transform=ax.transAxes,
+                color="white",
+                alpha=0.08,
+                lw=1,
+                zorder=1,
+            )
 
-if DEBUG_GRID:
-    # Grille sur toute la page (coords d'axes)
-    for gx in [i / 20 for i in range(1, 20)]:  # verticales (5%)
-        ax.plot(
-            [gx, gx],
-            [0, 1],
-            transform=ax.transAxes,
-            color="white",
-            alpha=0.08,
-            lw=1,
-            zorder=1,
-        )
-    for gy in [i / 20 for i in range(1, 20)]:  # horizontales (5%)
-        ax.plot(
-            [0, 1],
-            [gy, gy],
-            transform=ax.transAxes,
-            color="white",
-            alpha=0.08,
-            lw=1,
-            zorder=1,
-        )
+        # Axes principaux (10%) un peu plus visibles
+        for g in [i / 10 for i in range(1, 10)]:
+            ax.plot(
+                [g, g],
+                [0, 1],
+                transform=ax.transAxes,
+                color="white",
+                alpha=0.14,
+                lw=1.2,
+                zorder=2,
+            )
+            ax.plot(
+                [0, 1],
+                [g, g],
+                transform=ax.transAxes,
+                color="white",
+                alpha=0.14,
+                lw=1.2,
+                zorder=2,
+            )
 
-    # Axes principaux (10%) un peu plus visibles
-    for g in [i / 10 for i in range(1, 10)]:
-        ax.plot(
-            [g, g],
-            [0, 1],
-            transform=ax.transAxes,
-            color="white",
-            alpha=0.14,
-            lw=1.2,
-            zorder=2,
-        )
-        ax.plot(
-            [0, 1],
-            [g, g],
-            transform=ax.transAxes,
-            color="white",
-            alpha=0.14,
-            lw=1.2,
-            zorder=2,
-        )
-
-    # Axes principaux (10%) un peu plus visibles
-    for g in [i / 10 for i in range(1, 10)]:
-        ax.plot(
-            [g, g],
-            [0, 1],
-            transform=ax.transAxes,
-            color="white",
-            alpha=0.14,
-            lw=1.2,
-            zorder=2,
-        )
-        ax.plot(
-            [0, 1],
-            [g, g],
-            transform=ax.transAxes,
-            color="white",
-            alpha=0.14,
-            lw=1.2,
-            zorder=2,
-        )
+        # Axes principaux (10%) un peu plus visibles
+        for g in [i / 10 for i in range(1, 10)]:
+            ax.plot(
+                [g, g],
+                [0, 1],
+                transform=ax.transAxes,
+                color="white",
+                alpha=0.14,
+                lw=1.2,
+                zorder=2,
+            )
+            ax.plot(
+                [0, 1],
+                [g, g],
+                transform=ax.transAxes,
+                color="white",
+                alpha=0.14,
+                lw=1.2,
+                zorder=2,
+            )
 
     # Images
     logo = _img_rgba(LOGO_PATH)
