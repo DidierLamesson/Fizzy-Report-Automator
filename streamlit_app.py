@@ -872,22 +872,511 @@ def _draw_header1(
     )
 
 
-def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
-    # repère "page" (UNE SEULE FOIS)
+# =========================
+# BODY 1 — FATTURATO (px-accurate, "modulaire", imshow-safe)
+# =========================
+# Dépendances attendues (déjà chez toi) :
+# - COLORS, ARROW_UP_PATH, ARROW_DOWN_PATH
+# - epilogue_regular, epilogue_semibold, ivy_title
+# - _px_to_pt(px, dpi), _img_rgba(path), _trim_transparent(img)
+# - fmt_eur_dot(x), (optionnel) fmt_pct_1(x)
+# - matplotlib.ticker as ticker
+
+import textwrap
+import matplotlib.ticker as ticker
+
+BODY1_CFG = {
+    # --- Marges / colonnes ---
+    "side_margin_px": 80,  # marge gauche/droite globale
+    "col_gap_px": 40,  # espace entre colonne gauche et droite
+    "left_col_ratio": 0.56,  # % de largeur pour la colonne gauche (graph)
+    # --- Zone de départ du body (depuis le haut de la page) ---
+    # Mets ça sous ta ligne du header (ex: 240/260 selon ton header)
+    "top_px": 220,
+    # --- Kicker (nom resto en haut du body) + ligne ---
+    "kicker_enabled": True,
+    "kicker_font_px": 18,
+    "kicker_gap_after_px": 10,
+    "kicker_line_enabled": True,
+    "kicker_line_width_px": 2,
+    "kicker_line_gap_after_px": 18,
+    # --- Titre section (fixe) ---
+    "section_title_text": "Fatturato",
+    "section_title_font_px": 36,
+    "section_title_gap_after_px": 16,
+    # --- Sous-titres colonne gauche ---
+    "left_title_font_px": 20,  # "Venduto ..."
+    "left_subtitle_font_px": 16,  # "2025 vs 2024"
+    "left_titles_gap_px": 8,
+    "left_titles_to_chart_gap_px": 18,
+    # --- Chart (barres) ---
+    "chart_h_px": 420,  # hauteur chart dans la page
+    "chart_value_font_px": 14,  # valeurs au dessus des barres
+    "chart_tick_font_px": 12,
+    "chart_label_font_px": 12,
+    "chart_legend_font_px": 12,
+    "chart_top_extra_px": 36,  # espace interne pour loger la légende
+    # --- Bloc stats colonne droite ---
+    "stats_title_font_px": 14,  # "Fatturato Dicembre 2025 €"
+    "stats_value_font_px": 26,  # "565.048 €"
+    "stats_vs_font_px": 14,  # "vs 2024"
+    "stats_pct_font_px": 20,  # "+3.1%"
+    "stats_gap_1_px": 10,
+    "stats_gap_2_px": 18,
+    "stats_gap_3_px": 16,
+    # --- Flèche variation ---
+    "arrow_w_px": 24,  # taille icône flèche
+    "arrow_gap_right_px": 10,  # espace entre flèche et %
+    # --- Ligne sous stats ---
+    "stats_line_enabled": True,
+    "stats_line_width_px": 2,
+    "stats_line_gap_after_px": 18,
+    "stats_line_left_inset_px": 0,  # décale le début de la ligne dans la colonne droite (0 = align à gauche)
+    # La fin de la ligne est alignée à droite avec la même marge que "side_margin_px"
+    # --- Paragraphe (texte) ---
+    "para_font_px": 14,
+    "para_linespacing": 1.6,
+    "para_wrap_factor": 0.55,  # approx largeur caractère = font_px*0.55
+}
+
+
+def _draw_text_top_left_px(
+    ax,
+    x_px,
+    y_from_top,
+    top_px,
+    s,
+    font_px,
+    fontprops,
+    dpi,
+    color,
+    z=10,
+    fontstyle=None,
+):
+    """Texte aligné left/top à une position pixel (x_px, top_px). Retourne hauteur px."""
+    t = ax.text(
+        x_px / ax._W_PX,  # injecté plus bas
+        y_from_top(top_px),
+        s,
+        ha="left",
+        va="top",
+        transform=ax.transAxes,
+        fontsize=_px_to_pt(font_px, dpi),
+        fontproperties=fontprops,
+        fontstyle=fontstyle,
+        color=color,
+        zorder=z,
+    )
+    ax.figure.canvas.draw()
+    r = ax.figure.canvas.get_renderer()
+    bb = t.get_window_extent(renderer=r)
+    return bb.height
+
+
+def _draw_text_top_center_px(
+    ax, y_from_top, top_px, s, font_px, fontprops, dpi, color, z=10, fontstyle=None
+):
+    """Texte aligné center/top. Retourne hauteur px."""
+    t = ax.text(
+        0.5,
+        y_from_top(top_px),
+        s,
+        ha="center",
+        va="top",
+        transform=ax.transAxes,
+        fontsize=_px_to_pt(font_px, dpi),
+        fontproperties=fontprops,
+        fontstyle=fontstyle,
+        color=color,
+        zorder=z,
+    )
+    ax.figure.canvas.draw()
+    r = ax.figure.canvas.get_renderer()
+    bb = t.get_window_extent(renderer=r)
+    return bb.height
+
+
+def _place_img_px(ax, img, W_PX, H_PX, left_px, top_px, width_px, z=1000):
+    """Place une image RGBA au pixel près (top-left)."""
+    aspect = img.width / img.height
+    height_px = width_px / aspect
+
+    x0_px, x1_px = left_px, left_px + width_px
+    y1_px = H_PX - top_px
+    y0_px = y1_px - height_px
+
+    ax.imshow(
+        img,
+        extent=[x0_px / W_PX, x1_px / W_PX, y0_px / H_PX, y1_px / H_PX],
+        zorder=z,
+        aspect="auto",  # ✅ imshow-safe
+    )
+    return height_px
+
+
+def _draw_fatturato_chart_in_page(fig, left, bottom, width, height, d, label, cfg, dpi):
+    """
+    Reproduit ton make_fatturato_fig mais directement dans la page (vector, pas raster).
+    left/bottom/width/height sont en coords figure (0..1).
+    """
+    axc = fig.add_axes([left, bottom, width, height], facecolor=COLORS["bg"])
+    axc.set_facecolor(COLORS["bg"])
+
+    values = [d["fatturato_n"], d["fatturato_n_1"]]
+    x = [0, 1]
+
+    axc.bar(x, values, width=0.95, color=[COLORS["graph1"], COLORS["graph2"]], zorder=3)
+    axc.set_xlim(-0.55, 1.55)
+
+    for i, v in enumerate(values):
+        axc.text(
+            i,
+            v + max(values) * 0.02,
+            f"{int(round(v)):,}".replace(",", "."),
+            ha="center",
+            va="bottom",
+            fontsize=_px_to_pt(cfg["chart_value_font_px"], dpi),
+            color=COLORS["white"],
+            fontproperties=epilogue_semibold,
+        )
+
+    axc.set_xticks([0.5])
+    axc.set_xticklabels(
+        [label],
+        color=COLORS["white"],
+        fontsize=_px_to_pt(cfg["chart_label_font_px"], dpi),
+        fontproperties=epilogue_regular,
+    )
+
+    axc.tick_params(
+        axis="y",
+        colors=COLORS["white"],
+        labelsize=_px_to_pt(cfg["chart_tick_font_px"], dpi),
+        length=0,
+    )
+    axc.yaxis.set_major_formatter(
+        ticker.FuncFormatter(lambda y, p: f"{int(y):,}".replace(",", "."))
+    )
+    axc.set_ylim(0, max(values) * 1.2)
+
+    axc.grid(axis="y", linestyle="-", alpha=0.15, color=COLORS["white"], zorder=0)
+    for s in axc.spines.values():
+        s.set_visible(False)
+
+    # Légende (on la place dans le haut de la zone chart, sans sortir)
+    legend_handles = [
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="none",
+            markerfacecolor=COLORS["graph1"],
+            markersize=8,
+            label=f"Fatturato {d['year_n']} €",
+        ),
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="none",
+            markerfacecolor=COLORS["graph2"],
+            markersize=8,
+            label=f"Fatturato {d['year_n_1']} €",
+        ),
+    ]
+    axc.legend(
+        handles=legend_handles,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.0),  # reste dans le cadre
+        ncol=2,
+        frameon=False,
+        fontsize=_px_to_pt(cfg["chart_legend_font_px"], dpi),
+        labelcolor=COLORS["white"],
+    )
+    return axc
+
+
+def _draw_body1_fatturato(
+    ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str, dpi: int, cfg=None
+):
+    """
+    Corps page 1 "Fatturato" (à appeler après le header).
+    IMPORTANT: ne touche pas l'aspect/limits en dehors => imshow-safe.
+    """
+    cfg = {**BODY1_CFG, **(cfg or {})}
+
+    # ✅ imshow-safe : on verrouille le repère “page”
     ax.set_axis_off()
     ax.set_aspect("auto")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
 
-    # Header 1 (contient bordure + logo + pill + titres + ligne)
+    # petit hack interne pour helper left/top
+    ax._W_PX = W_PX
+
+    def x(px):
+        return px / W_PX
+
+    def y_from_top(top_px):
+        return 1.0 - (top_px / H_PX)
+
+    side = cfg["side_margin_px"]
+    gap = cfg["col_gap_px"]
+
+    usable_w = W_PX - 2 * side - gap
+    left_w = int(usable_w * cfg["left_col_ratio"])
+    right_w = usable_w - left_w
+
+    left_x0 = side
+    right_x0 = side + left_w + gap
+    right_x1 = W_PX - side
+
+    y = cfg["top_px"]
+
+    # --- Kicker + ligne ---
+    if cfg["kicker_enabled"]:
+        h = _draw_text_top_center_px(
+            ax,
+            y_from_top,
+            y,
+            (restaurant_name or "").upper(),
+            cfg["kicker_font_px"],
+            epilogue_semibold,
+            dpi,
+            COLORS["accent"],
+            z=850,
+        )
+        y += h + cfg["kicker_gap_after_px"]
+
+    if cfg["kicker_line_enabled"]:
+        ax.hlines(
+            y=y_from_top(y),
+            xmin=x(side),
+            xmax=x(W_PX - side),
+            colors=COLORS["highlight"],
+            linewidth=_px_to_pt(cfg["kicker_line_width_px"], dpi),
+            zorder=800,
+        )
+        y += cfg["kicker_line_gap_after_px"]
+
+    # --- Section title (fixe) ---
+    h_sec = _draw_text_top_center_px(
+        ax,
+        y_from_top,
+        y,
+        cfg["section_title_text"],
+        cfg["section_title_font_px"],
+        epilogue_semibold,
+        dpi,
+        COLORS["accent"],
+        z=850,
+    )
+    y += h_sec + cfg["section_title_gap_after_px"]
+
+    # --- Colonne gauche : titres (variables) ---
+    left_title = f"Venduto {restaurant_name} {d['month_name']}"
+    left_sub = f"{d['year_n']} vs {d['year_n_1']}"
+
+    h1 = _draw_text_top_left_px(
+        ax,
+        left_x0,
+        y_from_top,
+        y,
+        left_title,
+        cfg["left_title_font_px"],
+        epilogue_semibold,
+        dpi,
+        COLORS["white"],
+        z=850,
+    )
+    y_left = y + h1 + cfg["left_titles_gap_px"]
+
+    h2 = _draw_text_top_left_px(
+        ax,
+        left_x0,
+        y_from_top,
+        y_left,
+        left_sub,
+        cfg["left_subtitle_font_px"],
+        epilogue_regular,
+        dpi,
+        COLORS["white"],
+        z=850,
+    )
+    y_left = y_left + h2 + cfg["left_titles_to_chart_gap_px"]
+
+    # --- Colonne gauche : chart ---
+    chart_top = y_left
+    chart_h = cfg["chart_h_px"]
+    chart_w = left_w
+
+    # coords figure pour add_axes
+    fig = ax.figure
+    chart_left_ax = x(left_x0)
+    chart_bottom_ax = y_from_top(chart_top + chart_h)
+    chart_w_ax = chart_w / W_PX
+    chart_h_ax = chart_h / H_PX
+
+    _draw_fatturato_chart_in_page(
+        fig,
+        left=chart_left_ax,
+        bottom=chart_bottom_ax,
+        width=chart_w_ax,
+        height=chart_h_ax,
+        d=d,
+        label=restaurant_name,
+        cfg=cfg,
+        dpi=dpi,
+    )
+
+    # --- Colonne droite : bloc stats aligné au chart_top ---
+    yR = chart_top
+
+    stats_title = f"Fatturato {d['month_name']} {d['year_n']} €"
+    hst = _draw_text_top_left_px(
+        ax,
+        right_x0,
+        y_from_top,
+        yR,
+        stats_title,
+        cfg["stats_title_font_px"],
+        epilogue_regular,
+        dpi,
+        COLORS["white"],
+        z=850,
+    )
+    yR += hst + cfg["stats_gap_1_px"]
+
+    # valeur
+    value_txt = fmt_eur_dot(d["fatturato_n"])
+    hv = _draw_text_top_left_px(
+        ax,
+        right_x0,
+        y_from_top,
+        yR,
+        value_txt,
+        cfg["stats_value_font_px"],
+        epilogue_semibold,
+        dpi,
+        COLORS["highlight"],
+        z=850,
+    )
+    yR += hv + cfg["stats_gap_2_px"]
+
+    # vs N-1
+    vs_txt = f"vs {d['year_n_1']}"
+    hvs = _draw_text_top_left_px(
+        ax,
+        right_x0,
+        y_from_top,
+        yR,
+        vs_txt,
+        cfg["stats_vs_font_px"],
+        epilogue_regular,
+        dpi,
+        COLORS["white"],
+        z=850,
+    )
+    yR += hvs + cfg["stats_gap_1_px"]
+
+    # flèche + %
+    pct = d.get("diff_fatturato", 0.0)
+    try:
+        pct_txt = fmt_pct_1(pct)
+    except NameError:
+        pct_txt = f"{'+' if pct >= 0 else ''}{pct:.1f}%"
+
+    arrow_path = ARROW_UP_PATH if pct >= 0 else ARROW_DOWN_PATH
+    arrow_w = cfg["arrow_w_px"]
+
+    # place flèche
+    if arrow_path.exists():
+        arrow_img = _trim_transparent(_img_rgba(arrow_path))
+        _place_img_px(
+            ax,
+            arrow_img,
+            W_PX,
+            H_PX,
+            left_px=right_x0,
+            top_px=yR,
+            width_px=arrow_w,
+            z=900,
+        )
+
+    # place % à côté
+    _draw_text_top_left_px(
+        ax,
+        right_x0 + arrow_w + cfg["arrow_gap_right_px"],
+        y_from_top,
+        yR + 2,  # micro-ajustement visuel
+        pct_txt,
+        cfg["stats_pct_font_px"],
+        epilogue_semibold,
+        dpi,
+        COLORS["highlight"],
+        z=850,
+    )
+    yR += (
+        cfg["stats_pct_font_px"] * 2 + cfg["stats_gap_3_px"]
+    )  # avance “assez” (simple & stable)
+
+    # --- ligne sous stats (align droite avec la marge side) ---
+    if cfg["stats_line_enabled"]:
+        ax.hlines(
+            y=y_from_top(yR),
+            xmin=x(right_x0 + cfg["stats_line_left_inset_px"]),
+            xmax=x(right_x1),
+            colors=COLORS["highlight"],
+            linewidth=_px_to_pt(cfg["stats_line_width_px"], dpi),
+            zorder=800,
+        )
+        yR += cfg["stats_line_gap_after_px"]
+
+    # --- paragraphe (à droite) ---
+    col_px = right_x1 - right_x0
+    wrap_chars = max(20, int(col_px / (cfg["para_font_px"] * cfg["para_wrap_factor"])))
+    text_wrapped = textwrap.fill((analysis_text or "").strip(), width=wrap_chars)
+
+    ax.text(
+        x(right_x0),
+        y_from_top(yR),
+        text_wrapped,
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        color=COLORS["white"],
+        fontsize=_px_to_pt(cfg["para_font_px"], dpi),
+        fontproperties=epilogue_regular,
+        linespacing=cfg["para_linespacing"],
+        zorder=850,
+    )
+
+
+def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
+    # Repère "page" 0..1 (aspect auto pour éviter que imshow dérègle l’axe)
+    ax.set_axis_off()
+    ax.set_aspect("auto")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
+    dpi = int(ax.figure.dpi)
+
+    # Header 1 : logo + pill date + titre + restaurant + ligne
     _draw_header1(
         ax,
         W_PX=W_PX,
         H_PX=H_PX,
-        month_label=d["full_date_n"],  # ex "Dicembre 2025"
-        restaurant_name=restaurant_name,  # ex "A'RICCIONE - TERRAZZA"
-        dpi=int(ax.figure.dpi),
+        month_label=d["full_date_n"],
+        restaurant_name=restaurant_name,
+        dpi=dpi,
     )
+
+    # Texte d’analyse (généré automatiquement)
+    p1, p2 = build_page1_suggestions(d)
+    analysis_text = f"{p1}\n\n{p2}"
+
+    # Body 1 : section Fatturato (titres + chart + stats + paragraphe)
+    _draw_body1_fatturato(ax, W_PX, H_PX, d, restaurant_name, analysis_text, dpi)
 
 
 # ✅ Taille cible en pixels (ton nouveau "format")
