@@ -461,7 +461,7 @@ def _place_img(ax, img: Image.Image, x, y, w, z=5):
     ax.imshow(img, extent=[x0, x1, y0, y1], zorder=z)
 
 
-def _pill(ax, x, y, w, h, text):
+def _pill(ax, x, y, w, h, text, fill=True):
     patch = FancyBboxPatch(
         (x, y),
         w,
@@ -469,7 +469,7 @@ def _pill(ax, x, y, w, h, text):
         boxstyle="round,pad=0.008,rounding_size=0.02",
         linewidth=1.2,
         edgecolor=COLORS["white"],
-        facecolor=(0, 0, 0, 0),
+        facecolor=(0, 0, 0, 0) if not fill else (0, 0, 0, 0.65),
         alpha=0.9,
         zorder=10,
     )
@@ -544,7 +544,7 @@ def render_page1_fig(d, restaurant_name, analysis_text):
         fontproperties=epilogue_semibold,
     )
 
-    ax.plot([0.10, 0.90], [0.785, 0.785], color=COLORS["white"], alpha=0.65, lw=1)
+        ax.plot([0.10, 0.90], [0.785, 0.785], color=COLORS["white"], alpha=0.65, lw=1)
 
     # Section title
     ax.text(
