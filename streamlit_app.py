@@ -1191,13 +1191,22 @@ if uploaded and restaurant_input:
         # --- Export PDF en bas ---
 
     st.divider()
-    st.subheader("👀 Aperçu (live) — rendu PDF")
+st.subheader("👀 Aperçu (live) — rendu PDF")
+
+try:
+    st.write("build_page1_png_bytes =", build_page1_png_bytes)
+    st.write("callable =", callable(build_page1_png_bytes))
+
+    import inspect
+
+    st.code(str(inspect.signature(build_page1_png_bytes)), language="python")
 
     png_bytes = build_page1_png_bytes(data, restaurant_input, analysis_text, dpi=150)
     st.image(png_bytes, use_container_width=True)
 
-    st.divider()
-    st.subheader("📄 Export PDF")
+except Exception as e:
+    st.error(f"Erreur preview: {type(e).__name__}: {e}")
+
 
 if st.button("📄 Scaricare PDF (Pagina 1)"):
     pdf_bytes = build_page1_pdf_bytes(data, restaurant_input, analysis_text)
