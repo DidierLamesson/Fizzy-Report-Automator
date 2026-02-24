@@ -1029,10 +1029,8 @@ def build_page1_png_bytes(d, restaurant_name, analysis_text):
 # =========================
 st.title("Report Fizzy Automatizzazione ⚡️")
 
-restaurant_input = st.sidebar.text_input(
-    "Nome clienti *", value="A'RICCIONE - TERRAZZA"
-)
-uploaded = st.sidebar.file_uploader("Charger le fichier Excel", type="xlsx")
+restaurant_input = st.sidebar.text_input("Nome clienti *", value="LEITAO")
+uploaded = st.sidebar.file_uploader("Caricare il Report Excel", type="xlsx")
 
 if uploaded and restaurant_input:
     data = load_data(uploaded)
@@ -1044,12 +1042,31 @@ if uploaded and restaurant_input:
         preview_fig = make_fatturato_fig(data, label=restaurant_input)
         st.pyplot(preview_fig)
         st.subheader("📈 Food Cost (anno corrente)")
-        food_fig = make_food_cost_fig(data, label=restaurant_input)
-        st.pyplot(food_fig)
+        food_left, food_right = st.columns([1.2, 1])
+
+        with food_left:
+            food_fig = make_food_cost_fig(data, label=restaurant_input)
+            st.pyplot(food_fig)
+
+        with food_right:
+            st.text_area(
+                "📝 Commento Food Cost", value="", height=220, key="food_comment"
+            )
 
         st.subheader("📈 Beverage Cost (anno corrente)")
-        bev_fig = make_beverage_cost_fig(data, label=restaurant_input)
-        st.pyplot(bev_fig)
+        bev_left, bev_right = st.columns([1.2, 1])
+
+        with bev_left:
+            bev_fig = make_beverage_cost_fig(data, label=restaurant_input)
+            st.pyplot(bev_fig)
+
+        with bev_right:
+            st.text_area(
+                "📝 Commento Beverage Cost",
+                value="",
+                height=220,
+                key="beverage_comment",
+            )
 
     with col_edit:
         st.subheader("✍️ Analyse Narrative")
@@ -1063,20 +1080,19 @@ if uploaded and restaurant_input:
 
         st.divider()
 
-        st.subheader("👀 Aperçu Page 1 (live)")
+        st.subheader("📄 Export PDF")
 
-        png_bytes = build_page1_png_bytes(data, restaurant_input, analysis_text)
-        st.image(png_bytes, width=1200)  # aperçu en 1200px exact
+if st.button("📄 Générer PDF (Page 1)"):
+    pdf_bytes = build_page1_pdf_bytes(data, restaurant_input, analysis_text)
+    st.session_state["page1_pdf_bytes"] = pdf_bytes
 
-        # Optionnel : garder un download PDF (sans bouton, calculé à la volée)
-        pdf_bytes = build_page1_pdf_bytes(data, restaurant_input, analysis_text)
-        file_name = f"Report_{restaurant_input}_{data['month_name']}_{data['year_n']}_page1.pdf".replace(
-            " ", "_"
-        )
-
-        st.download_button(
-            "⬇️ Télécharger le PDF (Page 1)",
-            data=pdf_bytes,
-            file_name=file_name,
-            mime="application/pdf",
-        )
+if "page1_pdf_bytes" in st.session_state:
+    file_name = f"Report_{restaurant_input}_{data['month_name']}_{data['year_n']}_page1.pdf".replace(
+        " ", "_"
+    )
+    st.download_button(
+        "⬇️ Télécharger le PDF (Page 1)",
+        data=st.session_state["page1_pdf_bytes"],
+        file_name=file_name,
+        mime="application/pdf",
+    )
