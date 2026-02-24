@@ -642,7 +642,6 @@ def build_blank_a4_pdf_bytes():
     fig.savefig(
         buf,
         format="pdf",
-        facecolor=COLORS["bg"],
         bbox_inches=None,
         pad_inches=0,
     )
