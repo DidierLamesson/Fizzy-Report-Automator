@@ -15,7 +15,20 @@ from PIL import Image
 # =========================
 # 1) CONFIG STREAMLIT
 # =========================
-st.set_page_config(page_title="FIZZY Automator", layout="wide", color_theme="#172e4d")
+st.set_page_config(
+    page_title="FIZZY Automator",
+    page_icon="⚡️",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+st.markdown(
+    """
+<style>
+    .stApp { background-color: #0b1220; }
+</style>
+""",
+    unsafe_allow_html=True,
+)
 
 
 # =========================
