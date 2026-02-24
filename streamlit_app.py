@@ -1131,12 +1131,8 @@ def _draw_body1_fatturato(
     right_x0 = side + left_w + gap
     right_x1 = W_PX - side
 
-    # top automatique : sous la ligne du header
-    header_line_y_px = cfg.get("header_line_y_px")
-    if header_line_y_px is None:
-        raise ValueError("BODY: il faut fournir cfg['header_line_y_px'] (ou top_px).")
-
-        y = int(header_line_y_px + cfg.get("gap_after_header_px", 0))
+    header_line_y_px = cfg.get("header_line_y_px", 0)
+    y = int(header_line_y_px + cfg["gap_after_header_px"])
 
     # --- Kicker + ligne ---
     if cfg["kicker_enabled"]:
@@ -1389,8 +1385,7 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
         restaurant_name,
         analysis_text,
         dpi,
-        int(ax.figure.dpi),
-        cfg={"header_line_y_px": header_line_y_px},  # <-- clé auto
+        cfg={"header_line_y_px": header_line_y_px},
     )
 
 
