@@ -1020,7 +1020,7 @@ st.divider()
 # (assure-toi que png_bytes est généré avant)
 png_bytes = build_a4_png_preview_bytes(data, restaurant_input, dpi=150)
 
-c1, c2 = st.columns([1, 1], gap="large")
+c1, c2 = st.columns([1.5, 1], gap="large")
 
 with c1:
     st.image(png_bytes, caption="Aperçu (PNG)", use_container_width=True)
