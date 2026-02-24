@@ -1098,15 +1098,16 @@ def render_page1_fig(d, restaurant_name, analysis_text):
     return fig
 
 
-def build_page1_pdf_bytes(d, restaurant_name, analysis_text, dpi=150):
+def build_page1_png_bytes(d, restaurant_name, analysis_text, dpi=150):
     fig = render_page1_fig(d, restaurant_name, analysis_text)
     buf = BytesIO()
     fig.savefig(
         buf,
-        format="pdf",
+        format="png",
         facecolor=COLORS["bg"],
-        bbox_inches=None,  # ne crop pas
-        pad_inches=0,  # pas de padding ajouté
+        dpi=dpi,
+        bbox_inches=None,
+        pad_inches=0,
     )
     plt.close(fig)
     buf.seek(0)
