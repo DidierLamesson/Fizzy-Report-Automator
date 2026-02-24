@@ -646,12 +646,12 @@ HEADER1_CFG = {
     "logo_w_px": 120,  # largeur logo
     "logo_top_px": 30,  # distance depuis le haut
     "pill_enabled": True,
-    "pill_top_px": 40,  # distance depuis le haut
+    "pill_top_px": 50,  # distance depuis le haut
     "pill_right_margin_px": 20,  # marge droite
-    "pill_font_px": 44,
-    "pill_pad_x_px": 34,
-    "pill_pad_y_px": 18,
-    "pill_border_width_px": 3,
+    "pill_font_px": 30,
+    "pill_pad_x_px": 28,
+    "pill_pad_y_px": 14,
+    "pill_border_width_px": 2,
     # --- Espacements verticaux (le layout “suit” automatiquement) ---
     "gap_after_toprow_px": 40,  # espace après la ligne logo/pill avant le titre
     "gap_title_to_restaurant_px": 24,  # espace titre -> restaurant
@@ -738,21 +738,6 @@ def _draw_header1(
         y1 = y_from_top(top_px)
         y0 = y_from_top(top_px + h_px)
         return x0, y0, (w_px / W_PX), (h_px / H_PX)
-
-    # 0) Bordure full page
-    if cfg["draw_border"]:
-        ax.add_patch(
-            Rectangle(
-                (0, 0),
-                1,
-                1,
-                transform=ax.transAxes,
-                facecolor="none",
-                edgecolor=COLORS["white"],
-                linewidth=_px_to_pt(cfg["border_width_px"], dpi),
-                zorder=999,
-            )
-        )
 
     # 1) Logo (haut centre) — pixel perfect
     logo_bottom_px = 0
