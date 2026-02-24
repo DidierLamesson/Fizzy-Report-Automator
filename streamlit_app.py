@@ -645,7 +645,7 @@ def render_page1_fig_base_a4():
     logo = _img_rgba(LOGO_PATH)
 
     # Centré en haut
-    _place_img(ax, logo, x=0.5, y=0.92, w=0.22, z=10)
+    _place_img(ax, logo, x=0.5, y=1, w=0.22, z=10)
 
     return fig
 
