@@ -630,7 +630,7 @@ def render_page1_fig_base_a4():
 
     # A4 en inches
     A4_W_IN = 8.27
-    A4_H_IN = 11.69
+    A4_H_IN = 10
     dpi = 150  # qualité export/preview
 
     fig = plt.figure(figsize=(A4_W_IN, A4_H_IN), dpi=dpi, facecolor=COLORS["bg"])
