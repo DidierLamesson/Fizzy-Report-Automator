@@ -647,23 +647,23 @@ HEADER1_CFG = {
     "logo_top_px": 30,  # distance depuis le haut
     "pill_enabled": True,
     "pill_top_px": 50,  # distance depuis le haut
-    "pill_right_margin_px": 20,  # marge droite
+    "pill_right_margin_px": 40,  # marge droite
     "pill_font_px": 30,
     "pill_pad_x_px": 28,
     "pill_pad_y_px": 14,
     "pill_border_width_px": 2,
     # --- Espacements verticaux (le layout “suit” automatiquement) ---
     "gap_after_toprow_px": 40,  # espace après la ligne logo/pill avant le titre
-    "gap_title_to_restaurant_px": 24,  # espace titre -> restaurant
-    "gap_restaurant_to_line_px": 28,  # espace restaurant -> ligne
+    "gap_title_to_restaurant_px": 20,  # espace titre -> restaurant
+    "gap_restaurant_to_line_px": 20,  # espace restaurant -> ligne
     # --- Titre ---
     "title_text": "Report Mensile",
-    "title_font_px": 160,
+    "title_font_px": 120,
     "title_color": "highlight",  # clé dans COLORS
     "title_fontprops": "ivy_title",
     "title_fontstyle": "italic",
     # --- Restaurant ---
-    "restaurant_font_px": 64,
+    "restaurant_font_px": 60,
     "restaurant_color": "accent",  # clé dans COLORS
     "restaurant_fontprops": "epilogue_regular",  # ou "epilogue_semibold"
     # --- Ligne ---
