@@ -21,14 +21,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-st.markdown(
-    """
-<style>
-    .stApp { background-color: #ece8e1; }
-</style>
-""",
-    unsafe_allow_html=True,
-)
 
 
 # =========================
