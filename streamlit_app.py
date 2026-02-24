@@ -1016,7 +1016,13 @@ def render_page1_fig(d, restaurant_name, analysis_text):
 def build_page1_pdf_bytes(d, restaurant_name, analysis_text):
     fig = render_page1_fig(d, restaurant_name, analysis_text)
     buf = BytesIO()
-    fig.savefig(buf, format="pdf", facecolor=COLORS["bg"])
+    fig.savefig(
+        buf,
+        format="pdf",
+        facecolor=COLORS["bg"],
+        bbox_inches=None,  # ne crop pas
+        pad_inches=0,  # pas de padding ajouté
+    )
     plt.close(fig)
     buf.seek(0)
     return buf.getvalue()
@@ -1025,7 +1031,13 @@ def build_page1_pdf_bytes(d, restaurant_name, analysis_text):
 def build_page1_png_bytes(d, restaurant_name, analysis_text):
     fig = render_page1_fig(d, restaurant_name, analysis_text)
     buf = BytesIO()
-    fig.savefig(buf, format="png", facecolor=COLORS["bg"], dpi=100)
+    fig.savefig(
+        buf,
+        format="pdf",
+        facecolor=COLORS["bg"],
+        bbox_inches=None,  # ne crop pas
+        pad_inches=0,  # pas de padding ajouté
+    )
     plt.close(fig)
     buf.seek(0)
     return buf.getvalue()
