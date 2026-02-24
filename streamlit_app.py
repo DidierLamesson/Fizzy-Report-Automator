@@ -917,4 +917,3 @@ st.download_button(
     file_name="report.pdf",
     mime="application/pdf",
 )
-)
