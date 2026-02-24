@@ -603,14 +603,20 @@ def make_beverage_cost_fig(d, label):
 
 
 # =========================
-# 9) PDF PAGE 1 (layout)
+# 9) PDF PAGE 1 (layout) — BASE A4
 # =========================
+from io import BytesIO
+
+
 def _img_rgba(path: Path):
     return Image.open(path).convert("RGBA")
 
 
 def _place_img(ax, img: Image.Image, x, y, w, z=5):
-    """Place image with center at (x,y) in ax coords (0..1), width=w in ax coords."""
+    """
+    Place une image centrée en (x,y) en coordonnées d’axes (0..1),
+    avec une largeur w (en coords 0..1).
+    """
     aspect = img.width / img.height
     h = w / aspect
     x0, x1 = x - w / 2, x + w / 2
@@ -618,511 +624,41 @@ def _place_img(ax, img: Image.Image, x, y, w, z=5):
     ax.imshow(img, extent=[x0, x1, y0, y1], zorder=z)
 
 
-def _pill(ax, x, y, w, h, text, fill=False):
-    patch = FancyBboxPatch(
-        (x, y),
-        w,
-        h,
-        boxstyle="round,pad=0.008,rounding_size=0.02",
-        linewidth=1.2,
-        edgecolor=COLORS["white"],
-        facecolor=(0, 0, 0, 0) if not fill else (0, 0, 0, 0.65),
-        alpha=0.9,
-        zorder=10,
-    )
-    ax.add_patch(patch)
-    ax.text(
-        x + w / 2,
-        y + h / 2,
-        text,
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=12,
-        fontproperties=epilogue_regular,
-        zorder=11,
-    )
-
-
-def render_page1_fig(d, restaurant_name, analysis_text):
-    # =========================
-    # A4 stable (portrait)
-    # =========================
+def render_page1_fig_base_a4():
+    """
+    Page A4 portrait, fond bleu, logo centré en haut.
+    """
+    # A4 en inches
     A4_W_IN = 8.27
     A4_H_IN = 11.69
-    dpi = 150  # qualité (affichage + export)
+    dpi = 150  # qualité export/preview
 
     fig = plt.figure(figsize=(A4_W_IN, A4_H_IN), dpi=dpi, facecolor=COLORS["bg"])
 
-    # Axe plein page (stable, pas de crop)
+    # Axe plein page (0..1)
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")
 
-    # =========================
-    # Zone de contenu (modifiable A à Z)
-    # =========================
-    # Ton layout actuel est pensé en 1200x1500 => ratio = 0.8
-    DESIGN_RATIO = 1200 / 1500  # 0.8
-    PAGE_RATIO = A4_W_IN / A4_H_IN
-
-    # On "fit" le design dans la page (par défaut : fit largeur)
-    content_w = 0.92  # <- change ça pour plus/moins de marge latérale
-    content_h = content_w * (PAGE_RATIO / DESIGN_RATIO)
-
-    # Centrage (modifiable)
-    content_x0 = (1 - content_w) / 2
-    content_y0 = (1 - content_h) / 2
-
-    # Helpers de placement : convertit tes coords design (0..1) vers la page A4
-    def X(x):
-        return content_x0 + x * content_w
-
-    def Y(y):
-        return content_y0 + y * content_h
-
-    def W(w):
-        return w * content_w
-
-    def H(h):
-        return h * content_h
-
-    # --- DEBUG GRID (mettre True pour caler la mise en page) ---
-    DEBUG_GRID = True
-    DEBUG_GRID = True
-
-    if DEBUG_GRID:
-        # Grille sur toute la page (coords d'axes)
-        for gx in [i / 20 for i in range(1, 20)]:  # verticales (5%)
-            ax.plot(
-                [gx, gx],
-                [0, 1],
-                transform=ax.transAxes,
-                color="white",
-                alpha=0.08,
-                lw=1,
-                zorder=1,
-            )
-        for gy in [i / 20 for i in range(1, 20)]:  # horizontales (5%)
-            ax.plot(
-                [0, 1],
-                [gy, gy],
-                transform=ax.transAxes,
-                color="white",
-                alpha=0.08,
-                lw=1,
-                zorder=1,
-            )
-
-        # Axes principaux (10%) un peu plus visibles
-        for g in [i / 10 for i in range(1, 10)]:
-            ax.plot(
-                [g, g],
-                [0, 1],
-                transform=ax.transAxes,
-                color="white",
-                alpha=0.14,
-                lw=1.2,
-                zorder=2,
-            )
-            ax.plot(
-                [0, 1],
-                [g, g],
-                transform=ax.transAxes,
-                color="white",
-                alpha=0.14,
-                lw=1.2,
-                zorder=2,
-            )
-
-        # Axes principaux (10%) un peu plus visibles
-        for g in [i / 10 for i in range(1, 10)]:
-            ax.plot(
-                [g, g],
-                [0, 1],
-                transform=ax.transAxes,
-                color="white",
-                alpha=0.14,
-                lw=1.2,
-                zorder=2,
-            )
-            ax.plot(
-                [0, 1],
-                [g, g],
-                transform=ax.transAxes,
-                color="white",
-                alpha=0.14,
-                lw=1.2,
-                zorder=2,
-            )
-
-    # Images
+    # Logo
     logo = _img_rgba(LOGO_PATH)
-    arrow_up = _img_rgba(ARROW_UP_PATH)
-    arrow_down = _img_rgba(ARROW_DOWN_PATH)
-    arrow_round = _img_rgba(ARROW_ROUND_PATH)
 
-    # Header
-    _place_img(ax, logo, x=0.50, y=0.955, w=0.22, z=10)
-    _pill(
-        ax,
-        x=0.72,
-        y=0.92,
-        w=0.22,
-        h=0.050,
-        text=f"{d['month_name']} {d['year_n']}",
-        fill=False,
-    )
-
-    ax.text(
-        0.5,
-        0.865,
-        "Report Mensile",
-        ha="center",
-        va="center",
-        color=COLORS["highlight"],
-        fontsize=58,
-        fontproperties=ivy_title,
-        style="italic",
-    )
-
-    ax.text(
-        0.5,
-        0.815,
-        restaurant_name.upper(),
-        ha="center",
-        va="center",
-        color=COLORS["accent"],
-        fontsize=20,
-        fontproperties=epilogue_semibold,
-    )
-
-    ax.plot([0.10, 0.90], [0.785, 0.785], color=COLORS["white"], alpha=0.65, lw=1)
-
-    # Section title
-    ax.text(
-        0.5,
-        0.715,
-        "Fatturato",
-        ha="center",
-        va="center",
-        color=COLORS["accent"],
-        fontsize=26,
-        fontproperties=epilogue_semibold,
-    )
-
-    # Left block title
-    ax.text(
-        0.26,
-        0.665,
-        f"Venduto {restaurant_name} {d['month_name']}",
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=15,
-        fontproperties=epilogue_semibold,
-    )
-    ax.text(
-        0.26,
-        0.642,
-        f"{d['year_n']} vs {d['year_n_1']}",
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=12,
-        fontproperties=epilogue_regular,
-    )
-
-    # Bar chart
-    ax_bar = fig.add_axes([0.13, _Y(0.36), 0.36, _H(0.25)], facecolor=COLORS["bg"])
-    vals = [d["fatturato_n"], d["fatturato_n_1"]]
-    ax_bar.bar(
-        [0, 1], vals, color=[COLORS["graph1"], COLORS["graph2"]], width=0.90, zorder=3
-    )
-
-    for i, v in enumerate(vals):
-        ax_bar.text(
-            i,
-            v + max(vals) * 0.02,
-            f"{int(round(v)):,}".replace(",", "."),
-            ha="center",
-            va="bottom",
-            fontsize=10,
-            color=COLORS["white"],
-            fontproperties=epilogue_semibold,
-        )
-
-    ax_bar.set_xticks([0.5])
-    ax_bar.set_xticklabels(
-        [restaurant_name],
-        color=COLORS["white"],
-        fontsize=9,
-        fontproperties=epilogue_regular,
-    )
-    ax_bar.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
-    ax_bar.yaxis.set_major_formatter(
-        ticker.FuncFormatter(lambda y, p: f"{int(y):,}".replace(",", "."))
-    )
-    ax_bar.set_ylim(0, max(vals) * 1.25)
-    ax_bar.grid(
-        axis="y",
-        color=COLORS["white"],
-        linestyle="-",
-        linewidth=0.6,
-        alpha=0.18,
-        zorder=0,
-    )
-    for s in ax_bar.spines.values():
-        s.set_visible(False)
-
-    legend_handles = [
-        plt.Line2D(
-            [0],
-            [0],
-            marker="o",
-            color="none",
-            markerfacecolor=COLORS["graph1"],
-            markersize=8,
-            label=f"Fatturato {d['year_n']} €",
-        ),
-        plt.Line2D(
-            [0],
-            [0],
-            marker="o",
-            color="none",
-            markerfacecolor=COLORS["graph2"],
-            markersize=8,
-            label=f"Fatturato {d['year_n_1']} €",
-        ),
-    ]
-    ax_bar.legend(
-        handles=legend_handles,
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.10),
-        ncol=2,
-        frameon=False,
-        fontsize=8,
-        labelcolor=COLORS["white"],
-    )
-
-    # Right KPI block
-    ax.text(
-        0.62,
-        0.64,
-        f"Fatturato {d['month_name']} {d['year_n']} €",
-        ha="left",
-        va="center",
-        color=COLORS["white"],
-        fontsize=11,
-        fontproperties=epilogue_semibold,
-    )
-
-    ax.text(
-        0.62,
-        0.605,
-        fmt_eur_dot(d["fatturato_n"]),
-        ha="left",
-        va="center",
-        color=COLORS["highlight"],
-        fontsize=26,
-        fontproperties=epilogue_semibold,
-    )
-
-    arrow_img = arrow_up if d["diff_fatturato"] >= 0 else arrow_down
-    _place_img(ax, arrow_img, x=0.60, y=0.605, w=0.035, z=12)
-
-    ax.text(
-        0.62,
-        0.565,
-        f"vs {d['year_n_1']}",
-        ha="left",
-        va="center",
-        color=COLORS["white"],
-        fontsize=11,
-        fontproperties=epilogue_regular,
-    )
-
-    ax.text(
-        0.62,
-        0.535,
-        fmt_pct_1(d["diff_fatturato"]),
-        ha="left",
-        va="center",
-        color=COLORS["accent"],
-        fontsize=20,
-        fontproperties=epilogue_semibold,
-    )
-    _place_img(ax, arrow_img, x=0.60, y=0.535, w=0.035, z=12)
-
-    ax.plot([0.60, 0.90], [0.505, 0.505], color=COLORS["white"], alpha=0.25, lw=1)
-
-    # Analysis text (user)
-    wrapped = wrap_for_box(analysis_text, width=44)
-    ax.text(
-        0.62,
-        0.485,
-        wrapped,
-        ha="left",
-        va="top",
-        color=COLORS["white"],
-        fontsize=12,
-        fontproperties=epilogue_regular,
-        linespacing=1.6,
-    )
-
-    # Bottom separator
-    ax.plot([0.10, 0.90], [0.18, 0.18], color=COLORS["white"], alpha=0.35, lw=1)
-
-    # Bottom titles
-    ax.text(
-        0.26,
-        0.14,
-        "Ricavi - Costi",
-        ha="center",
-        va="center",
-        color=COLORS["accent"],
-        fontsize=16,
-        fontproperties=epilogue_semibold,
-    )
-    ax.text(
-        0.74,
-        0.14,
-        "Margine % su ricavi",
-        ha="center",
-        va="center",
-        color=COLORS["accent"],
-        fontsize=16,
-        fontproperties=epilogue_semibold,
-    )
-
-    # Bottom values (Ricavi - Costi)
-    ax.text(
-        0.16,
-        0.095,
-        f"{d['month_name']} {d['year_n']}",
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=10,
-        fontproperties=epilogue_regular,
-    )
-    ax.text(
-        0.16,
-        0.065,
-        fmt_eur_dot(d["ric_cost_n"]),
-        ha="center",
-        va="center",
-        color=COLORS["highlight"],
-        fontsize=18,
-        fontproperties=epilogue_semibold,
-    )
-
-    ax.text(
-        0.36,
-        0.095,
-        f"vs {d['year_n_1']}",
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=10,
-        fontproperties=epilogue_regular,
-    )
-    ax.text(
-        0.36,
-        0.065,
-        fmt_eur_dot(d["ric_cost_n_1"]),
-        ha="center",
-        va="center",
-        color=COLORS["highlight"],
-        fontsize=18,
-        fontproperties=epilogue_semibold,
-    )
-
-    # Divider
-    ax.plot(
-        [0.50, 0.50],
-        [0.05, 0.11],
-        color=COLORS["white"],
-        alpha=0.45,
-        lw=2,
-        linestyle="--",
-    )
-
-    # Bottom values (Margine) - 1 décimale
-    ax.text(
-        0.66,
-        0.095,
-        f"{d['month_name']} {d['year_n']}",
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=10,
-        fontproperties=epilogue_regular,
-    )
-    ax.text(
-        0.66,
-        0.065,
-        f"{d['marg_n']:.1f}%",
-        ha="center",
-        va="center",
-        color=COLORS["highlight"],
-        fontsize=18,
-        fontproperties=epilogue_semibold,
-    )
-
-    ax.text(
-        0.82,
-        0.095,
-        f"vs {d['year_n_1']}",
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=10,
-        fontproperties=epilogue_regular,
-    )
-    ax.text(
-        0.82,
-        0.065,
-        f"{d['marg_n_1']:.1f}%",
-        ha="center",
-        va="center",
-        color=COLORS["highlight"],
-        fontsize=18,
-        fontproperties=epilogue_semibold,
-    )
-
-    # Round arrow bottom right
-    _place_img(ax, arrow_round, x=0.92, y=0.09, w=0.07, z=20)
+    # Centré en haut
+    _place_img(ax, logo, x=0.5, y=0.92, w=0.22, z=10)
 
     return fig
 
 
-def build_page1_png_bytes(d, restaurant_name, analysis_text, dpi=150):
-    fig = render_page1_fig(d, restaurant_name, analysis_text)
-    buf = BytesIO()
-    fig.savefig(
-        buf,
-        format="png",
-        facecolor=COLORS["bg"],
-        dpi=dpi,
-        bbox_inches=None,
-        pad_inches=0,
-    )
-    plt.close(fig)
-    buf.seek(0)
-    return buf.getvalue()
-
-
-def build_page1_png_bytes(d, restaurant_name, analysis_text):
-    fig = render_page1_fig(d, restaurant_name, analysis_text)
+def build_page1_pdf_bytes_base_a4():
+    fig = render_page1_fig_base_a4()
     buf = BytesIO()
     fig.savefig(
         buf,
         format="pdf",
         facecolor=COLORS["bg"],
-        bbox_inches=None,  # ne crop pas
-        pad_inches=0,  # pas de padding ajouté
+        bbox_inches=None,
+        pad_inches=0,
     )
     plt.close(fig)
     buf.seek(0)
@@ -1187,38 +723,3 @@ if uploaded and restaurant_input:
         st.text_area(
             "📝 Commento Beverage Cost", value="", height=280, key="beverage_comment"
         )
-
-        # --- Export PDF en bas ---
-
-    st.divider()
-st.subheader("👀 Aperçu (live) — rendu PDF")
-
-try:
-    st.write("build_page1_png_bytes =", build_page1_png_bytes)
-    st.write("callable =", callable(build_page1_png_bytes))
-
-    import inspect
-
-    st.code(str(inspect.signature(build_page1_png_bytes)), language="python")
-
-    png_bytes = build_page1_png_bytes(data, restaurant_input, analysis_text, dpi=150)
-    st.image(png_bytes, use_container_width=True)
-
-except Exception as e:
-    st.error(f"Erreur preview: {type(e).__name__}: {e}")
-
-
-if st.button("📄 Scaricare PDF (Pagina 1)"):
-    pdf_bytes = build_page1_pdf_bytes(data, restaurant_input, analysis_text)
-    st.session_state["page1_pdf_bytes"] = pdf_bytes
-
-if "page1_pdf_bytes" in st.session_state:
-    file_name = f"Report_{restaurant_input}_{data['month_name']}_{data['year_n']}_page1.pdf".replace(
-        " ", "_"
-    )
-    st.download_button(
-        "⬇️ Télécharger le PDF (Page 1)",
-        data=st.session_state["page1_pdf_bytes"],
-        file_name=file_name,
-        mime="application/pdf",
-    )
