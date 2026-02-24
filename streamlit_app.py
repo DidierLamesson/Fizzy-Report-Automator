@@ -833,7 +833,7 @@ def render_page1_fig(d, restaurant_name, analysis_text):
     )
 
     # Bar chart
-    ax_bar = fig.add_axes([0.13, _Y(0.36), 0.36, _H(0.25)], facecolor=COLORS["bg"])
+    ax_bar = fig.add_axes([0.13, 0.36, 0.36, 0.25], facecolor=COLORS["bg"])
     vals = [d["fatturato_n"], d["fatturato_n_1"]]
     ax_bar.bar(
         [0, 1], vals, color=[COLORS["graph1"], COLORS["graph2"]], width=0.90, zorder=3
