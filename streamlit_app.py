@@ -607,6 +607,19 @@ from io import BytesIO
 import matplotlib.pyplot as plt
 
 
+def _img_rgba(path: Path):
+    return Image.open(path).convert("RGBA")
+
+
+def _place_img_top(ax, img: Image.Image, x, y_top, w, z=5):
+    """Image centrée sur x, bord haut à y_top (coords 0..1), largeur w (coords 0..1)."""
+    aspect = img.width / img.height
+    h = w / aspect
+    x0, x1 = x - w / 2, x + w / 2
+    y0, y1 = y_top - h, y_top
+    ax.imshow(img, extent=[x0, x1, y0, y1], zorder=z)
+
+
 def render_blank_a4_fig():
     # Dimensions A4 en pouces (inches)
     A4_W_IN = 8.27
@@ -619,7 +632,7 @@ def render_blank_a4_fig():
     fig = plt.figure(figsize=(A4_W_IN, A4_H_IN), dpi=dpi, facecolor=COLORS["bg"])
 
     # Ajoute un axe qui occupe 100% de la page (coordonnées 0..1)
-    ax = fig.add_axes([0, 0, 1, 1], facecolor="white")
+    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
 
     # Définit un repère simple : (0,0) en bas-gauche et (1,1) en haut-droite
     ax.set_xlim(0, 1)
@@ -627,6 +640,10 @@ def render_blank_a4_fig():
 
     # Cache les axes (pas de graduations, pas de bordures)
     ax.axis("off")
+
+    # Logo centré en haut
+    logo = _img_rgba(LOGO_PATH)
+    _place_img_top(ax, logo, x=0.5, y_top=0.98, w=0.22, z=10)
 
     return fig
 
