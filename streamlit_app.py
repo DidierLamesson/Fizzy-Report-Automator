@@ -1632,7 +1632,7 @@ if uploaded and restaurant_input:
 # --- UI : Download PDF ---
 st.divider()
 
-png_bytes = build_a4_png_preview_bytes(data, restaurant_input, dpi=150)
+png_bytes = build_a4_png_preview_bytes(data, restaurant_input, dpi=300)
 
 c1, c2 = st.columns([1.5, 1], gap="large")
 
