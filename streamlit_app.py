@@ -1174,6 +1174,8 @@ def _draw_body1_fatturato(
     )
     y += h_sec + cfg["section_title_gap_after_px"]
 
+    titles_top_px = y  # ✅ top commun pour (Venduto...) ET pour le bloc stats à droite
+
     # --- Colonne gauche : titres (variables) ---
     left_title = f"Venduto {restaurant_name} {d['month_name']}"
     left_sub = f"{d['year_n']} vs {d['year_n_1']}"
@@ -1230,8 +1232,8 @@ def _draw_body1_fatturato(
         dpi=dpi,
     )
 
-    # --- Colonne droite : bloc stats aligné au chart_top ---
-    yR = chart_top
+    # --- Colonne droite : bloc stats aligné au titre gauche ("Venduto ...") ---
+    yR = titles_top_px
 
     stats_title = f"Fatturato {d['month_name']} {d['year_n']} €"
     hst = _draw_text_top_left_px(
