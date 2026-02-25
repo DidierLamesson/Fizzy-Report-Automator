@@ -10,6 +10,7 @@ import matplotlib.ticker as ticker
 import matplotlib.font_manager as fm
 from matplotlib.patches import FancyBboxPatch
 from PIL import Image
+import fitz  # pip install pymupdf
 
 # =========================
 # 3) COULEURS (ta palette)
@@ -155,6 +156,16 @@ def month_labels_from_graph_dates(d):
         else:
             labels.append(str(dt))
     return labels
+
+
+def pdf_bytes_to_png_bytes(
+    pdf_bytes: bytes, page_index: int = 0, zoom: float = 2.0
+) -> bytes:
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    page = doc.load_page(page_index)
+    mat = fitz.Matrix(zoom, zoom)
+    pix = page.get_pixmap(matrix=mat, alpha=False)
+    return pix.tobytes("png")
 
 
 # =========================
@@ -1632,20 +1643,19 @@ if uploaded and restaurant_input:
 # --- UI : Download PDF ---
 st.divider()
 
-png_bytes = build_a4_png_preview_bytes(data, restaurant_input, dpi=150)
+pdf_bytes = build_a4_pdf_bytes(data, restaurant_input, dpi=300)
+
+# ✅ aperçu = rendu du PDF (fidèle)
+png_bytes = pdf_bytes_to_png_bytes(pdf_bytes, page_index=0, zoom=2.0)
 
 c1, c2 = st.columns([1.5, 1], gap="large")
-
 with c1:
-    PREVIEW_SCALE = 0.8
-    PREVIEW_W = int(800 * PREVIEW_SCALE)  # 480
-    st.image(png_bytes, caption="Aperçu (PNG)", width=PREVIEW_W)
+    st.image(
+        png_bytes, caption="Aperçu (rendu PDF)", width=520
+    )  # width optionnel, ratio conservé
 
 with c2:
     st.subheader("📄 Export PDF")
-
-    pdf_bytes = build_a4_pdf_bytes(data, restaurant_input, dpi=300)
-
     st.download_button(
         label="⬇️ Scarica PDF",
         data=pdf_bytes,
