@@ -1367,9 +1367,7 @@ def _draw_body1_fatturato(
     chart_top = max(chart_top_left, yR_before_vs)
 
     # ✅ le "vs ..." commence au même niveau que le haut du chart
-    yR = (
-        chart_top - 16
-    )  # micro-ajustement visuel pour compenser le fait que le "vs ..." est un peu plus petit que le chart
+    yR = chart_top
 
     # --- Dessin du chart avec top recalé ---
     fig = ax.figure
