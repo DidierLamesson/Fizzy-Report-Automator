@@ -641,6 +641,16 @@ from matplotlib.patches import Rectangle, FancyBboxPatch
 from PIL import Image
 
 # =========================
+# PAGE TOKENS (layout)
+# =========================
+PAGE_TOKENS = {
+    "pad_top_px": 20,
+    "pad_bottom_px": 20,
+    "gap_min_px": 15,
+    "gap_body_to_footer_min_px": 20,
+}
+
+# =========================
 # HEADER 1 — MODULAIRE (px-accurate, imshow-safe)
 # =========================
 # Dépendances attendues (déjà chez toi) :
@@ -1101,6 +1111,66 @@ def _justify_paragraph_to_px(ax, text, width_px, font_px, fontprops, dpi):
     return "\n".join(out_lines)
 
 
+def _measure_multiline_h_render_px(ax, s, font_px, fontprops, dpi, linespacing):
+    t = ax.text(
+        0,
+        0,
+        s,
+        transform=ax.transAxes,
+        fontsize=_px_to_pt(font_px, dpi),
+        fontproperties=fontprops,
+        linespacing=linespacing,
+        alpha=0.0,
+    )
+    ax.figure.canvas.draw()
+    r = ax.figure.canvas.get_renderer()
+    h = t.get_window_extent(renderer=r).height
+    t.remove()
+    return h
+
+
+def _fit_justified_paragraph_to_height(
+    ax, text, width_px, font_px, fontprops, dpi, linespacing, max_height_render_px
+):
+    raw = (text or "").strip()
+    if not raw:
+        return ""
+
+    # Conserve les paragraphes via un token.
+    token = "<P>"
+    tokens = raw.replace("\n\n", f" {token} ").split()
+
+    def build(i):
+        s = " ".join(tokens[:i]).replace(token, "\n\n").strip()
+        if i < len(tokens):
+            s = (s + " …").strip()
+        return s
+
+    # Si ça passe déjà, on renvoie la version justifiée complète.
+    full = _justify_paragraph_to_px(ax, raw, width_px, font_px, fontprops, dpi)
+    if (
+        _measure_multiline_h_render_px(ax, full, font_px, fontprops, dpi, linespacing)
+        <= max_height_render_px
+    ):
+        return full
+
+    lo, hi = 1, len(tokens)
+    best = _justify_paragraph_to_px(ax, build(1), width_px, font_px, fontprops, dpi)
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        cand_raw = build(mid)
+        cand = _justify_paragraph_to_px(ax, cand_raw, width_px, font_px, fontprops, dpi)
+        h = _measure_multiline_h_render_px(
+            ax, cand, font_px, fontprops, dpi, linespacing
+        )
+        if h <= max_height_render_px:
+            best = cand
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return best
+
+
 def _place_img_px(ax, img, W_PX, H_PX, left_px, top_px, width_px, z=1000):
     """Place une image RGBA au pixel près (top-left)."""
     aspect = img.width / img.height
@@ -1246,8 +1316,11 @@ def _draw_body1_fatturato(
     right_x0 = side + left_w + gap
     right_x1 = W_PX - side
 
-    header_line_y_px = cfg.get("header_line_y_px", 0)
-    y = int(header_line_y_px + cfg["gap_after_header_px"])
+    if cfg.get("top_px") is not None:
+        y = int(cfg["top_px"])
+    else:
+        header_line_y_px = cfg.get("header_line_y_px", 0)
+        y = int(header_line_y_px + cfg["gap_after_header_px"])
 
     # --- Kicker + ligne ---
     if cfg["kicker_enabled"]:
@@ -1458,25 +1531,38 @@ def _draw_body1_fatturato(
         )
         yR += cfg["stats_line_gap_after_px"]
 
-        # --- paragraphe (à droite) : justifié + aligné sur la même largeur que la ligne ---
-        para_right_edge_px = W_PX - cfg.get(
-            "right_edge_margin_px", cfg["side_margin_px"]
-        )  # ✅ 40px du bord
-        col_px_layout = para_right_edge_px - right_x0
+    # --- paragraphe (à droite) : justifié + aligné sur la ligne ---
+    para_right_edge_px = W_PX - cfg.get("right_edge_margin_px", cfg["side_margin_px"])
+    col_px_layout = para_right_edge_px - right_x0
 
-        ax.figure.canvas.draw()
-        r = ax.figure.canvas.get_renderer()
-        ax_w_render = ax.get_window_extent(renderer=r).width
-        col_px_render = ax_w_render * (col_px_layout / W_PX)
+    ax.figure.canvas.draw()
+    r = ax.figure.canvas.get_renderer()
+    ax_w_render = ax.get_window_extent(renderer=r).width
+    col_px_render = ax_w_render * (col_px_layout / W_PX)
 
-    text_wrapped = _justify_paragraph_to_px(
-        ax,
-        (analysis_text or "").strip(),
-        width_px=col_px_render,  # ✅ largeur en pixels de rendu
-        font_px=cfg["para_font_px"],
-        fontprops=epilogue_regular,
-        dpi=dpi,
-    )
+    para_max_bottom_px = cfg.get("para_max_bottom_px")
+    if para_max_bottom_px is not None:
+        scale_y = ax.get_window_extent(renderer=r).height / H_PX
+        max_h_render = max(0.0, (para_max_bottom_px - yR) * scale_y)
+        text_wrapped = _fit_justified_paragraph_to_height(
+            ax,
+            (analysis_text or "").strip(),
+            width_px=col_px_render,
+            font_px=cfg["para_font_px"],
+            fontprops=epilogue_regular,
+            dpi=dpi,
+            linespacing=cfg["para_linespacing"],
+            max_height_render_px=max_h_render,
+        )
+    else:
+        text_wrapped = _justify_paragraph_to_px(
+            ax,
+            (analysis_text or "").strip(),
+            width_px=col_px_render,
+            font_px=cfg["para_font_px"],
+            fontprops=epilogue_regular,
+            dpi=dpi,
+        )
 
     text_obj = ax.text(
         x(right_x0),
@@ -1492,16 +1578,120 @@ def _draw_body1_fatturato(
         zorder=850,
     )
 
-    # --- retour : position (px depuis le haut) du bas du bloc texte (colonne droite) ---
+    # Bas du paragraphe (px depuis le haut)
     ax.figure.canvas.draw()
-    r = ax.figure.canvas.get_renderer()
-    bb = text_obj.get_window_extent(renderer=r)  # bbox en pixels de rendu
-
-    # conversion bbox->px "layout"
+    bb = text_obj.get_window_extent(renderer=r)
     scale_y = ax.get_window_extent(renderer=r).height / H_PX
     text_bottom_from_top_px = (ax.get_window_extent(renderer=r).y1 - bb.y0) / scale_y
-
     return float(text_bottom_from_top_px)
+
+
+def _measure_body1_metrics(
+    ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str, dpi: int, cfg=None
+):
+    """Mesure la hauteur totale du body (px) pour le centrage + overflow."""
+    cfg = {**BODY1_CFG, **(cfg or {})}
+
+    ax.figure.canvas.draw()
+    r = ax.figure.canvas.get_renderer()
+    scale_y = ax.get_window_extent(renderer=r).height / H_PX
+    ax_w_render = ax.get_window_extent(renderer=r).width
+
+    def h_px(text, font_px, fontprops):
+        _w, h = _measure_text_px(ax, text, font_px, fontprops, dpi)
+        return h / scale_y
+
+    side = cfg["side_margin_px"]
+    gap = cfg["col_gap_px"]
+    usable_w = W_PX - 2 * side - gap
+    left_w = int(usable_w * cfg["left_col_ratio"])
+    right_x0 = side + left_w + gap
+
+    y = 0.0
+
+    if cfg["kicker_enabled"]:
+        y += (
+            h_px(
+                (restaurant_name or "").upper(),
+                cfg["kicker_font_px"],
+                epilogue_semibold,
+            )
+            + cfg["kicker_gap_after_px"]
+        )
+        if cfg.get("kicker_line_enabled"):
+            y += cfg.get("kicker_line_gap_after_px", 0)
+
+    y += (
+        h_px(cfg["section_title_text"], cfg["section_title_font_px"], epilogue_semibold)
+        + cfg["section_title_gap_after_px"]
+    )
+    titles_top_px = y
+
+    left_title = f"Venduto {restaurant_name} {d['month_name']}"
+    left_sub = f"{d['year_n']} vs {d['year_n_1']}"
+
+    y_left = (
+        y
+        + h_px(left_title, cfg["left_title_font_px"], epilogue_semibold)
+        + cfg["left_titles_gap_px"]
+    )
+    y_left = (
+        y_left
+        + h_px(left_sub, cfg["left_subtitle_font_px"], epilogue_regular)
+        + cfg["left_titles_to_chart_gap_px"]
+    )
+    chart_top_left = y_left
+
+    yR = titles_top_px
+    stats_title = f"Fatturato {d['month_name']} {d['year_n']} €"
+    yR += (
+        h_px(stats_title, cfg["stats_title_font_px"], epilogue_regular)
+        + cfg["stats_gap_1_px"]
+    )
+    yR += (
+        h_px(
+            fmt_eur_dot(d["fatturato_n"]), cfg["stats_value_font_px"], epilogue_semibold
+        )
+        + cfg["stats_gap_2_px"]
+    )
+
+    chart_top = max(chart_top_left, yR)
+    yR = chart_top
+
+    yR += (
+        h_px(f"vs {d['year_n_1']}", cfg["stats_vs_font_px"], epilogue_regular)
+        + cfg["stats_gap_1_px"]
+    )
+    yR += cfg["stats_pct_font_px"] * 2 + cfg["stats_gap_3_px"]
+
+    if cfg.get("stats_line_enabled", True):
+        yR += cfg["stats_line_gap_after_px"]
+
+    para_start_px = yR
+
+    para_right_edge_px = W_PX - cfg.get("right_edge_margin_px", cfg["side_margin_px"])
+    col_px_layout = para_right_edge_px - right_x0
+    col_px_render = ax_w_render * (col_px_layout / W_PX)
+
+    para = _justify_paragraph_to_px(
+        ax,
+        (analysis_text or "").strip(),
+        width_px=col_px_render,
+        font_px=cfg["para_font_px"],
+        fontprops=epilogue_regular,
+        dpi=dpi,
+    )
+    para_h_render = _measure_multiline_h_render_px(
+        ax, para, cfg["para_font_px"], epilogue_regular, dpi, cfg["para_linespacing"]
+    )
+    para_h_px = para_h_render / scale_y
+
+    chart_h_px = float(cfg["chart_h_px"])
+
+    chart_bottom_px = float(chart_top + chart_h_px)
+    para_bottom_px = float(para_start_px + para_h_px)
+    bottom_px = max(chart_bottom_px, para_bottom_px)
+    return {"height_px": float(bottom_px), "para_start_px": float(para_start_px)}
 
 
 # =========================
@@ -1584,6 +1774,28 @@ def _fmt_pct(x, decimals=0):
     if decimals <= 0:
         return f"{int(round(x))}%"
     return f"{x:.{decimals}f}%"
+
+
+def _measure_footer1_height_px(ax, W_PX, H_PX, d, dpi: int, cfg=None) -> float:
+    cfg = {**FOOTER1_CFG, **(cfg or {})}
+    title_fp = globals()[cfg["title_fontprops"]]
+    label_fp = globals()[cfg["label_fontprops"]]
+    value_fp = globals()[cfg["value_fontprops"]]
+
+    _, ht = _measure_text_px(ax, "Ricavi - Costi", cfg["title_font_px"], title_fp, dpi)
+    _, hl = _measure_text_px(ax, d["full_date_n"], cfg["label_font_px"], label_fp, dpi)
+    _, hv = _measure_text_px(
+        ax, fmt_eur_dot(d["ric_cost_n"]), cfg["value_font_px"], value_fp, dpi
+    )
+
+    return float(
+        cfg["gap_after_line_px"]
+        + ht
+        + cfg["gap_after_titles_px"]
+        + hl
+        + cfg["gap_label_to_value_px"]
+        + hv
+    )
 
 
 def _draw_footer1(ax, W_PX, H_PX, d, dpi: int, cfg=None):
@@ -1826,7 +2038,7 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
 
     dpi = int(ax.figure.dpi)
 
-    # Header 1 (retourne le y de la ligne du header)
+    # Header (retourne le y de la ligne)
     header_line_y_px = (
         _draw_header1(
             ax,
@@ -1839,13 +2051,43 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
         or 0
     )
 
-    # Texte d’analyse (généré automatiquement)
+    # Texte d'analyse
     p1, p2 = build_page1_suggestions(d)
     analysis_text = f"{p1}\n\n{p2}"
 
-    # Body 1 (retourne le bas du bloc texte colonne droite)
-    body_text_bottom_px = (
-        _draw_body1_fatturato(
+    # Footer ancré : bas des valeurs à 20px du bas
+    footer_h = _measure_footer1_height_px(ax, W_PX, H_PX, d, dpi)
+    footer_line_y_px = int(H_PX - PAGE_TOKENS["pad_bottom_px"] - footer_h)
+
+    # Zone utile du body (entre les lignes)
+    region_start = float(header_line_y_px + BODY1_CFG["gap_after_header_px"])
+    region_end = float(footer_line_y_px - PAGE_TOKENS["gap_body_to_footer_min_px"])
+    region_h = max(0.0, region_end - region_start)
+
+    # Mesure body (gap variable = stats_line_gap_after_px)
+    gap_default = float(BODY1_CFG["stats_line_gap_after_px"])
+    gap_min = float(PAGE_TOKENS["gap_min_px"])
+
+    m0 = _measure_body1_metrics(
+        ax,
+        W_PX,
+        H_PX,
+        d,
+        restaurant_name,
+        analysis_text,
+        dpi,
+        cfg={"stats_line_gap_after_px": gap_default},
+    )
+    body_h0 = m0["height_px"]
+
+    chosen_gap = gap_default
+    m = m0
+
+    # Compression du gap stats->paragraphe si nécessaire
+    if body_h0 > region_h and gap_default > gap_min:
+        overflow = body_h0 - region_h
+        chosen_gap = max(gap_min, gap_default - overflow)
+        m = _measure_body1_metrics(
             ax,
             W_PX,
             H_PX,
@@ -1853,20 +2095,45 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
             restaurant_name,
             analysis_text,
             dpi,
-            cfg={"header_line_y_px": header_line_y_px},
+            cfg={"stats_line_gap_after_px": chosen_gap},
         )
-        or 0
+
+    body_h = m["height_px"]
+
+    # Centrage si ça rentre, sinon on tronque le paragraphe
+    if body_h <= region_h:
+        body_top_px = region_start + (region_h - body_h) / 2.0
+        para_max_bottom_px = None
+    else:
+        body_top_px = region_start
+        para_max_bottom_px = region_end
+
+    _draw_body1_fatturato(
+        ax,
+        W_PX,
+        H_PX,
+        d,
+        restaurant_name,
+        analysis_text,
+        dpi,
+        cfg={
+            "top_px": int(body_top_px),
+            "stats_line_gap_after_px": int(round(chosen_gap)),
+            **(
+                {"para_max_bottom_px": float(para_max_bottom_px)}
+                if para_max_bottom_px is not None
+                else {}
+            ),
+        },
     )
 
-    # Footer 1 calé sous le texte
-    FOOTER_GAP_PX = 28
     _draw_footer1(
         ax,
         W_PX,
         H_PX,
         d,
         dpi,
-        cfg={"top_px": int(body_text_bottom_px + FOOTER_GAP_PX)},
+        cfg={"top_px": int(footer_line_y_px)},
     )
 
 
@@ -1994,35 +2261,24 @@ if uploaded and restaurant_input:
         st.text_area(
             "📝 Commento Beverage Cost", value="", height=280, key="beverage_comment"
         )
-# --- UI : Download PDF ---
-# UI
-st.divider()
 
-pdf_bytes = build_a4_pdf_bytes(data, restaurant_input, dpi=300)
+    # --- UI : Download PDF ---
+    st.divider()
 
-import fitz  # PyMuPDF
+    pdf_bytes = build_a4_pdf_bytes(data, restaurant_input, dpi=300)
+    png_bytes = pdf_bytes_to_png_bytes(pdf_bytes, page_index=0, zoom=2.0)
 
+    c1, c2 = st.columns([1.5, 1], gap="large")
+    with c1:
+        st.image(png_bytes, caption="Aperçu (rendu PDF)", width=580)
+    with c2:
+        st.subheader("📄 Export PDF")
+        st.download_button(
+            label="⬇️ Scarica PDF",
+            data=pdf_bytes,
+            file_name=f"Report_{restaurant_input}.pdf",
+            mime="application/pdf",
+        )
 
-def pdf_bytes_to_png_bytes(
-    pdf_bytes: bytes, page_index: int = 0, zoom: float = 2.0
-) -> bytes:
-    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-    page = doc.load_page(page_index)
-    mat = fitz.Matrix(zoom, zoom)
-    pix = page.get_pixmap(matrix=mat, alpha=False)
-    return pix.tobytes("png")
-
-
-png_bytes = pdf_bytes_to_png_bytes(pdf_bytes, page_index=0, zoom=2.0)
-
-c1, c2 = st.columns([1.5, 1], gap="large")
-with c1:
-    st.image(png_bytes, caption="Aperçu (rendu PDF)", width=580)  # ratio conservé
-with c2:
-    st.subheader("📄 Export PDF")
-    st.download_button(
-        label="⬇️ Scarica PDF",
-        data=pdf_bytes,
-        file_name=f"Report_{restaurant_input}.pdf",
-        mime="application/pdf",
-    )
+else:
+    st.info("Importe un fichier Excel et renseigne le nom client pour générer le PDF.")
