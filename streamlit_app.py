@@ -1641,17 +1641,31 @@ if uploaded and restaurant_input:
             "📝 Commento Beverage Cost", value="", height=280, key="beverage_comment"
         )
 # --- UI : Download PDF ---
+# UI
 st.divider()
 
-# même dpi => mêmes métriques => rendu quasi-identique
-png_bytes = build_a4_png_preview_bytes(data, restaurant_input, dpi=150)
+pdf_bytes = build_a4_pdf_bytes(data, restaurant_input, dpi=300)
+
+import fitz  # PyMuPDF
+
+
+def pdf_bytes_to_png_bytes(
+    pdf_bytes: bytes, page_index: int = 0, zoom: float = 2.0
+) -> bytes:
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    page = doc.load_page(page_index)
+    mat = fitz.Matrix(zoom, zoom)
+    pix = page.get_pixmap(matrix=mat, alpha=False)
+    return pix.tobytes("png")
+
+
+png_bytes = pdf_bytes_to_png_bytes(pdf_bytes, page_index=0, zoom=2.0)
 
 c1, c2 = st.columns([1.5, 1], gap="large")
 with c1:
-    st.image(png_bytes, caption="Aperçu (PNG, dpi=150)", width=800)
+    st.image(png_bytes, caption="Aperçu (rendu PDF)", width=520)  # ratio conservé
 with c2:
     st.subheader("📄 Export PDF")
-    pdf_bytes = build_a4_pdf_bytes(data, restaurant_input, dpi=300)
     st.download_button(
         label="⬇️ Scarica PDF",
         data=pdf_bytes,
