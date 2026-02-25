@@ -1494,6 +1494,316 @@ def _draw_body1_fatturato(
     )
 
 
+# =========================
+# FOOTER 1 — MODULAIRE (px-accurate)
+# =========================
+
+FOOTER1_CFG = {
+    # Position du footer (top = position de la ligne du footer, depuis le haut)
+    "top_px": 700,
+    # Ligne (identique header)
+    "line_side_margin_px": HEADER1_CFG.get("line_side_margin_px", 80),
+    "line_width_px": HEADER1_CFG.get("line_width_px", 2),
+    "line_color": HEADER1_CFG.get("line_color", "highlight"),
+    "gap_after_line_px": 26,
+    # Layout colonnes
+    "side_margin_px": BODY1_CFG.get("side_margin_px", 80),  # pour le contenu footer
+    "mid_gap_px": 40,  # espace “vide” au centre (où vit la séparation)
+    "block_inner_gap_px": 60,  # espace entre les 2 sous-colonnes dans chaque bloc
+    # Titres (même taille que "Venduto", même couleur que "Fatturato")
+    "title_font_px": BODY1_CFG.get("left_title_font_px", 20),
+    "title_color": "accent",
+    "title_fontprops": "epilogue_semibold",
+    "gap_after_titles_px": 28,
+    # Labels au-dessus des valeurs (ex: "Dicembre 2025" / "vs 2024")
+    "label_font_px": BODY1_CFG.get("stats_title_font_px", 14),
+    "label_color": "white",
+    "label_fontprops": "epilogue_regular",
+    "gap_label_to_value_px": 16,
+    # Valeurs (même style que valeur Fatturato)
+    "value_font_px": BODY1_CFG.get("stats_value_font_px", 26),
+    "value_color": "highlight",
+    "value_fontprops": "epilogue_semibold",
+    # Pourcent (marge)
+    "marg_decimals": 0,  # 0 => "36%" ; 1 => "36.0%"
+    # Séparateur vertical
+    "vsep_enabled": True,
+    "vsep_color": "highlight",
+    "vsep_width_px": 3,
+    "vsep_dash": (0, (6, 6)),  # motif pointillé
+    "vsep_top_offset_px": 38,  # descend le haut du trait vs la ligne
+    "vsep_height_px": 90,  # hauteur du trait (à ajuster)
+}
+
+
+def _draw_text_top_center_x_px(
+    ax,
+    W_PX,
+    y_from_top,
+    top_px,
+    center_x_px,
+    s,
+    font_px,
+    fontprops,
+    dpi,
+    color,
+    z=10,
+    fontstyle=None,
+):
+    """Texte aligné center/top à X (en px), retourne hauteur px."""
+    t = ax.text(
+        center_x_px / W_PX,
+        y_from_top(top_px),
+        s,
+        ha="center",
+        va="top",
+        transform=ax.transAxes,
+        fontsize=_px_to_pt(font_px, dpi),
+        fontproperties=fontprops,
+        fontstyle=fontstyle,
+        color=color,
+        zorder=z,
+    )
+    ax.figure.canvas.draw()
+    r = ax.figure.canvas.get_renderer()
+    bb = t.get_window_extent(renderer=r)
+    return bb.height
+
+
+def _fmt_pct(x, decimals=0):
+    if decimals <= 0:
+        return f"{int(round(x))}%"
+    return f"{x:.{decimals}f}%"
+
+
+def _draw_footer1(ax, W_PX, H_PX, d, dpi: int, cfg=None):
+    cfg = {**FOOTER1_CFG, **(cfg or {})}
+
+    # Repère page (ne touche pas au imshow)
+    ax.set_axis_off()
+    ax.set_aspect("auto")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
+    def x(px):
+        return px / W_PX
+
+    def y_from_top(top_px):
+        return 1.0 - (top_px / H_PX)
+
+    # Polices via globals() (comme header/body)
+    title_fp = globals()[cfg["title_fontprops"]]
+    label_fp = globals()[cfg["label_fontprops"]]
+    value_fp = globals()[cfg["value_fontprops"]]
+
+    # --- Ligne du footer (même que header) ---
+    y_line = cfg["top_px"]
+    side_line = cfg["line_side_margin_px"]
+    ax.hlines(
+        y=y_from_top(y_line),
+        xmin=x(side_line),
+        xmax=x(W_PX - side_line),
+        colors=COLORS[cfg["line_color"]],
+        linewidth=_px_to_pt(cfg["line_width_px"], dpi),
+        zorder=800,
+    )
+
+    y = y_line + cfg["gap_after_line_px"]
+
+    # --- Colonnes (2 blocs) ---
+    side = cfg["side_margin_px"]
+    mid_x = W_PX / 2
+    mid_gap = cfg["mid_gap_px"]
+
+    left_block_x0 = side
+    left_block_x1 = mid_x - mid_gap / 2
+    right_block_x0 = mid_x + mid_gap / 2
+    right_block_x1 = W_PX - side
+
+    # centres blocs
+    left_cx = (left_block_x0 + left_block_x1) / 2
+    right_cx = (right_block_x0 + right_block_x1) / 2
+
+    # --- Titres (Ricavi - Costi / Margine) ---
+    h_t1 = _draw_text_top_center_x_px(
+        ax,
+        W_PX,
+        y_from_top,
+        y,
+        left_cx,
+        "Ricavi - Costi",
+        cfg["title_font_px"],
+        title_fp,
+        dpi,
+        COLORS[cfg["title_color"]],
+        z=850,
+    )
+    h_t2 = _draw_text_top_center_x_px(
+        ax,
+        W_PX,
+        y_from_top,
+        y,
+        right_cx,
+        "Margine % su ricavi",
+        cfg["title_font_px"],
+        title_fp,
+        dpi,
+        COLORS[cfg["title_color"]],
+        z=850,
+    )
+
+    y += max(h_t1, h_t2) + cfg["gap_after_titles_px"]
+
+    # --- Sous-colonnes dans chaque bloc (date / vs) ---
+    inner_gap = cfg["block_inner_gap_px"]
+
+    def split_two_cols(x0, x1):
+        w = (x1 - x0 - inner_gap) / 2
+        c1x0 = x0
+        c1cx = c1x0 + w / 2
+        c2x0 = x0 + w + inner_gap
+        c2cx = c2x0 + w / 2
+        return (c1cx, c2cx)
+
+    l_c1cx, l_c2cx = split_two_cols(left_block_x0, left_block_x1)
+    r_c1cx, r_c2cx = split_two_cols(right_block_x0, right_block_x1)
+
+    # labels
+    label_left = d["full_date_n"]  # "Dicembre 2025"
+    label_right = f"vs {d['year_n_1']}"  # "vs 2024"
+
+    hl1 = _draw_text_top_center_x_px(
+        ax,
+        W_PX,
+        y_from_top,
+        y,
+        l_c1cx,
+        label_left,
+        cfg["label_font_px"],
+        label_fp,
+        dpi,
+        COLORS[cfg["label_color"]],
+        z=850,
+    )
+    hl2 = _draw_text_top_center_x_px(
+        ax,
+        W_PX,
+        y_from_top,
+        y,
+        l_c2cx,
+        label_right,
+        cfg["label_font_px"],
+        label_fp,
+        dpi,
+        COLORS[cfg["label_color"]],
+        z=850,
+    )
+
+    hr1 = _draw_text_top_center_x_px(
+        ax,
+        W_PX,
+        y_from_top,
+        y,
+        r_c1cx,
+        label_left,
+        cfg["label_font_px"],
+        label_fp,
+        dpi,
+        COLORS[cfg["label_color"]],
+        z=850,
+    )
+    hr2 = _draw_text_top_center_x_px(
+        ax,
+        W_PX,
+        y_from_top,
+        y,
+        r_c2cx,
+        label_right,
+        cfg["label_font_px"],
+        label_fp,
+        dpi,
+        COLORS[cfg["label_color"]],
+        z=850,
+    )
+
+    y_vals = y + max(hl1, hl2, hr1, hr2) + cfg["gap_label_to_value_px"]
+
+    # --- Valeurs ---
+    ric_n = fmt_eur_dot(d["ric_cost_n"])
+    ric_p = fmt_eur_dot(d["ric_cost_n_1"])
+    marg_n = _fmt_pct(d["marg_n"], decimals=cfg["marg_decimals"])
+    marg_p = _fmt_pct(d["marg_n_1"], decimals=cfg["marg_decimals"])
+
+    hv1 = _draw_text_top_center_x_px(
+        ax,
+        W_PX,
+        y_from_top,
+        y_vals,
+        l_c1cx,
+        ric_n,
+        cfg["value_font_px"],
+        value_fp,
+        dpi,
+        COLORS[cfg["value_color"]],
+        z=850,
+    )
+    hv2 = _draw_text_top_center_x_px(
+        ax,
+        W_PX,
+        y_from_top,
+        y_vals,
+        l_c2cx,
+        ric_p,
+        cfg["value_font_px"],
+        value_fp,
+        dpi,
+        COLORS[cfg["value_color"]],
+        z=850,
+    )
+
+    hv3 = _draw_text_top_center_x_px(
+        ax,
+        W_PX,
+        y_from_top,
+        y_vals,
+        r_c1cx,
+        marg_n,
+        cfg["value_font_px"],
+        value_fp,
+        dpi,
+        COLORS[cfg["value_color"]],
+        z=850,
+    )
+    hv4 = _draw_text_top_center_x_px(
+        ax,
+        W_PX,
+        y_from_top,
+        y_vals,
+        r_c2cx,
+        marg_p,
+        cfg["value_font_px"],
+        value_fp,
+        dpi,
+        COLORS[cfg["value_color"]],
+        z=850,
+    )
+
+    # --- Séparateur vertical pointillé (au centre) ---
+    if cfg["vsep_enabled"]:
+        x_mid = mid_x
+        y0 = y_line + cfg["vsep_top_offset_px"]
+        y1 = y0 + cfg["vsep_height_px"]
+        ax.vlines(
+            x=x(x_mid),
+            ymin=y_from_top(y1),
+            ymax=y_from_top(y0),
+            colors=COLORS[cfg["vsep_color"]],
+            linewidth=_px_to_pt(cfg["vsep_width_px"], dpi),
+            linestyles=cfg["vsep_dash"],
+            zorder=900,
+        )
+
+
 def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
     # Repère "page" 0..1 (aspect auto pour éviter que imshow dérègle l’axe)
     ax.set_axis_off()
@@ -1531,6 +1841,8 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
         dpi,
         cfg={"header_line_y_px": header_line_y_px},
     )
+
+    _draw_footer1(ax, W_PX, H_PX, d, dpi)
 
 
 # ✅ Taille cible en pixels (ton nouveau "format")
