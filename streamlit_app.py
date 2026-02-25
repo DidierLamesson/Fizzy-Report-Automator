@@ -1663,7 +1663,9 @@ png_bytes = pdf_bytes_to_png_bytes(pdf_bytes, page_index=0, zoom=2.0)
 
 c1, c2 = st.columns([1.5, 1], gap="large")
 with c1:
-    st.image(png_bytes, caption="Aperçu (rendu PDF)", width=800)  # ratio conservé
+    st.image(
+        png_bytes, caption="Aperçu (rendu PDF)", width=PAGE_W_PX * 0.8
+    )  # ratio conservé
 with c2:
     st.subheader("📄 Export PDF")
     st.download_button(
