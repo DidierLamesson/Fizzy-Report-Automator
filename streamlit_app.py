@@ -1192,13 +1192,19 @@ def _draw_fatturato_chart_in_page(fig, left, bottom, width, height, d, label, cf
             label=f"Fatturato {d['year_n_1']} €",
         ),
     ]
-    axc.legend(
+    axc.legend(  # ou ax.legend dans make_fatturato_fig
         handles=legend_handles,
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.0),  # reste dans le cadre
+        loc="lower center",  # ✅ le bas de la légende sert d’ancre
+        bbox_to_anchor=(
+            0.5,
+            1.02,
+        ),  # ✅ juste au-dessus de l'axe -> jamais sur les barres
+        borderaxespad=0.0,
         ncol=2,
         frameon=False,
-        fontsize=_px_to_pt(cfg["chart_legend_font_px"], dpi),
+        fontsize=_px_to_pt(
+            cfg["chart_legend_font_px"], dpi
+        ),  # ou fontsize=10 dans make_fatturato_fig
         labelcolor=COLORS["white"],
     )
     return axc
