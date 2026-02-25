@@ -1535,7 +1535,7 @@ FOOTER1_CFG = {
     "value_color": "highlight",
     "value_fontprops": "epilogue_semibold",
     # Pourcent (marge)
-    "marg_decimals": 0,  # 0 => "36%" ; 1 => "36.0%"
+    "marg_decimals": 1,  # 0 => "36%" ; 1 => "36.0%"
     # Séparateur vertical
     "vsep_enabled": True,
     "vsep_color": "highlight",
@@ -1620,15 +1620,19 @@ def _draw_footer1(ax, W_PX, H_PX, d, dpi: int, cfg=None):
 
     y = y_line + cfg["gap_after_line_px"]
 
-    # --- Colonnes (2 blocs) ---
-    side = cfg["side_margin_px"]
+    # --- Colonnes (2 blocs) centrées dans les cadres définis par la ligne + séparateur ---
     mid_x = W_PX / 2
     mid_gap = cfg["mid_gap_px"]
 
-    left_block_x0 = side
+    # bornes EXACTES des cadres : début/fin de la ligne
+    line_left_px = cfg["line_side_margin_px"]
+    line_right_px = W_PX - cfg["line_side_margin_px"]
+
+    # cadres gauche/droite : entre ligne et séparateur (avec mid_gap)
+    left_block_x0 = line_left_px
     left_block_x1 = mid_x - mid_gap / 2
     right_block_x0 = mid_x + mid_gap / 2
-    right_block_x1 = W_PX - side
+    right_block_x1 = line_right_px
 
     # centres blocs
     left_cx = (left_block_x0 + left_block_x1) / 2
