@@ -1429,9 +1429,10 @@ def _draw_body1_fatturato(
         yR += cfg["stats_line_gap_after_px"]
 
     # --- paragraphe (à droite) : justifié + aligné sur la même largeur que la ligne ---
-    col_px = (
-        right_x1 - right_x0
-    )  # largeur exact de la colonne droite (jusqu’à la marge side)
+    para_right_edge_px = (
+        W_PX - cfg["side_margin_px"]
+    )  # => 80px du bord si side_margin_px=80
+    col_px = para_right_edge_px - right_x0
     text_wrapped = _justify_paragraph_to_px(
         ax,
         (analysis_text or "").strip(),
