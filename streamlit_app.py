@@ -900,7 +900,7 @@ import matplotlib.ticker as ticker
 BODY1_CFG = {
     # --- Marges / colonnes ---
     "side_margin_px": 80,  # marge gauche/droite globale
-    "col_gap_px": 40,  # espace entre colonne gauche et droite
+    "col_gap_px": 20,  # espace entre colonne gauche et droite
     "left_col_ratio": 0.56,  # % de largeur pour la colonne gauche (graph)
     # --- Zone de départ du body (depuis le haut de la page) ---
     "gap_after_header_px": 20,  # espace entre la ligne du header et le début du body
@@ -914,7 +914,7 @@ BODY1_CFG = {
     # --- Titre section (fixe) ---
     "section_title_text": "Fatturato",
     "section_title_font_px": 36,
-    "section_title_gap_after_px": 16,
+    "section_title_gap_after_px": 15,
     # --- Sous-titres colonne gauche ---
     "left_title_font_px": 20,  # "Venduto ..."
     "left_subtitle_font_px": 16,  # "2025 vs 2024"
@@ -922,16 +922,16 @@ BODY1_CFG = {
     "left_titles_to_chart_gap_px": 18,
     # --- Chart (barres) ---
     "chart_h_px": 250,  # hauteur chart dans la page
-    "chart_value_font_px": 14,  # valeurs au dessus des barres
-    "chart_tick_font_px": 12,
-    "chart_label_font_px": 12,
-    "chart_legend_font_px": 12,
+    "chart_value_font_px": 16,  # valeurs au dessus des barres
+    "chart_tick_font_px": 14,
+    "chart_label_font_px": 14,
+    "chart_legend_font_px": 14,
     "chart_top_extra_px": 36,  # espace interne pour loger la légende
     # --- Bloc stats colonne droite ---
-    "stats_title_font_px": 14,  # "Fatturato Dicembre 2025 €"
-    "stats_value_font_px": 26,  # "565.048 €"
-    "stats_vs_font_px": 14,  # "vs 2024"
-    "stats_pct_font_px": 20,  # "+3.1%"
+    "stats_title_font_px": 16,  # "Fatturato Dicembre 2025 €"
+    "stats_value_font_px": 30,  # "565.048 €"
+    "stats_vs_font_px": 16,  # "vs 2024"
+    "stats_pct_font_px": 30,  # "+3.1%"
     "stats_gap_1_px": 10,
     "stats_gap_2_px": 18,
     "stats_gap_3_px": 16,
@@ -941,11 +941,11 @@ BODY1_CFG = {
     # --- Ligne sous stats ---
     "stats_line_enabled": True,
     "stats_line_width_px": 2,
-    "stats_line_gap_after_px": 18,
+    "stats_line_gap_after_px": 15,
     "stats_line_left_inset_px": 0,  # décale le début de la ligne dans la colonne droite (0 = align à gauche)
     # La fin de la ligne est alignée à droite avec la même marge que "side_margin_px"
     # --- Paragraphe (texte) ---
-    "para_font_px": 14,
+    "para_font_px": 16,
     "para_linespacing": 1.6,
     "para_wrap_factor": 0.55,  # approx largeur caractère = font_px*0.55
 }
