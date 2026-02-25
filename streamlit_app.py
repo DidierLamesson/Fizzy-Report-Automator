@@ -996,6 +996,99 @@ def _draw_text_top_center_px(
     return bb.height
 
 
+def _measure_text_w_px(ax, s, font_px, fontprops, dpi):
+    t = ax.text(
+        0,
+        0,
+        s,
+        transform=ax.transAxes,
+        fontsize=_px_to_pt(font_px, dpi),
+        fontproperties=fontprops,
+        alpha=0.0,
+    )
+    ax.figure.canvas.draw()
+    r = ax.figure.canvas.get_renderer()
+    w = t.get_window_extent(renderer=r).width
+    t.remove()
+    return w
+
+
+def _wrap_text_by_px(ax, text, max_width_px, font_px, fontprops, dpi):
+    words = (text or "").split()
+    lines, cur = [], []
+    for w in words:
+        trial = (" ".join(cur + [w])) if cur else w
+        if (not cur) or (
+            _measure_text_w_px(ax, trial, font_px, fontprops, dpi) <= max_width_px
+        ):
+            cur.append(w)
+        else:
+            lines.append(" ".join(cur))
+            cur = [w]
+    if cur:
+        lines.append(" ".join(cur))
+    return lines
+
+
+def _justify_line_to_px(ax, line, target_width_px, font_px, fontprops, dpi):
+    # pas de justification si 0/1 mot
+    if " " not in line:
+        return line
+
+    words = line.split()
+    gaps = len(words) - 1
+    base = " ".join(words)
+
+    w = _measure_text_w_px(ax, base, font_px, fontprops, dpi)
+    if w >= target_width_px:
+        return base
+
+    space_w = _measure_text_w_px(ax, " ", font_px, fontprops, dpi)
+    if space_w <= 0:
+        return base
+
+    extra_spaces = int(round((target_width_px - w) / space_w))
+    if extra_spaces <= 0:
+        return base
+
+    add_each = extra_spaces // gaps
+    rem = extra_spaces % gaps
+
+    out = []
+    for i, word in enumerate(words[:-1]):
+        out.append(word)
+        n_spaces = 1 + add_each + (1 if i < rem else 0)
+        out.append(" " * n_spaces)
+    out.append(words[-1])
+    return "".join(out)
+
+
+def _justify_paragraph_to_px(ax, text, width_px, font_px, fontprops, dpi):
+    # garde les paragraphes (séparés par lignes vides)
+    paras = [p.strip() for p in (text or "").split("\n\n") if p.strip()]
+    out_lines = []
+
+    for pi, p in enumerate(paras):
+        # wrap par largeur px
+        lines = _wrap_text_by_px(
+            ax, p.replace("\n", " "), width_px, font_px, fontprops, dpi
+        )
+
+        # justifie toutes les lignes sauf la dernière
+        for li, ln in enumerate(lines):
+            if li < len(lines) - 1:
+                out_lines.append(
+                    _justify_line_to_px(ax, ln, width_px, font_px, fontprops, dpi)
+                )
+            else:
+                out_lines.append(ln)
+
+        if pi < len(paras) - 1:
+            out_lines.append("")  # ligne vide entre paragraphes
+
+    return "\n".join(out_lines)
+
+
 def _place_img_px(ax, img, W_PX, H_PX, left_px, top_px, width_px, z=1000):
     """Place une image RGBA au pixel près (top-left)."""
     aspect = img.width / img.height
@@ -1335,10 +1428,18 @@ def _draw_body1_fatturato(
         )
         yR += cfg["stats_line_gap_after_px"]
 
-    # --- paragraphe (à droite) ---
-    col_px = right_x1 - right_x0
-    wrap_chars = max(20, int(col_px / (cfg["para_font_px"] * cfg["para_wrap_factor"])))
-    text_wrapped = textwrap.fill((analysis_text or "").strip(), width=wrap_chars)
+    # --- paragraphe (à droite) : justifié + aligné sur la même largeur que la ligne ---
+    col_px = (
+        right_x1 - right_x0
+    )  # largeur exact de la colonne droite (jusqu’à la marge side)
+    text_wrapped = _justify_paragraph_to_px(
+        ax,
+        (analysis_text or "").strip(),
+        width_px=col_px,
+        font_px=cfg["para_font_px"],
+        fontprops=epilogue_regular,
+        dpi=dpi,
+    )
 
     ax.text(
         x(right_x0),
