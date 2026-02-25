@@ -655,7 +655,7 @@ HEADER1_CFG = {
     # --- Ligne du haut (logo + pill) ---
     "logo_enabled": True,
     "logo_w_px": 100,  # largeur logo
-    "logo_top_px": 10,  # distance depuis le haut
+    "logo_top_px": 20,  # distance depuis le haut
     "pill_enabled": True,
     "pill_top_px": 80,  # distance depuis le haut
     "pill_right_margin_px": 80,  # marge droite
