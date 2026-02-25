@@ -1637,7 +1637,7 @@ png_bytes = build_a4_png_preview_bytes(data, restaurant_input, dpi=150)
 c1, c2 = st.columns([1.5, 1], gap="large")
 
 with c1:
-    PREVIEW_SCALE = 1.0
+    PREVIEW_SCALE = 0.8
     PREVIEW_W = int(800 * PREVIEW_SCALE)  # 480
     st.image(png_bytes, caption="Aperçu (PNG)", width=PREVIEW_W)
 
