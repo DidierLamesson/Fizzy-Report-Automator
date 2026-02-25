@@ -1644,11 +1644,11 @@ if uploaded and restaurant_input:
 st.divider()
 
 # même dpi => mêmes métriques => rendu quasi-identique
-png_bytes = build_a4_png_preview_bytes(data, restaurant_input, dpi=300)
+png_bytes = build_a4_png_preview_bytes(data, restaurant_input, dpi=150)
 
 c1, c2 = st.columns([1.5, 1], gap="large")
 with c1:
-    st.image(png_bytes, caption="Aperçu (PNG, dpi=300)", width=520)
+    st.image(png_bytes, caption="Aperçu (PNG, dpi=150)", width=800)
 with c2:
     st.subheader("📄 Export PDF")
     pdf_bytes = build_a4_pdf_bytes(data, restaurant_input, dpi=300)
