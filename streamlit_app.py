@@ -894,7 +894,7 @@ BODY1_CFG = {
     # --- Zone de départ du body (depuis le haut de la page) ---
     "gap_after_header_px": 20,  # espace entre la ligne du header et le début du body
     # --- Kicker (nom resto en haut du body) + ligne ---
-    "kicker_enabled": True,
+    "kicker_enabled": False,
     "kicker_font_px": 18,
     "kicker_gap_after_px": 10,
     "kicker_line_enabled": False,
