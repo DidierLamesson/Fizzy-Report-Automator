@@ -1433,6 +1433,11 @@ def _draw_body1_fatturato(
         W_PX - cfg["side_margin_px"]
     )  # => 80px du bord si side_margin_px=80
     col_px = para_right_edge_px - right_x0
+
+    # ✅ conversion logique -> pixels de rendu (sinon ça justifie trop "court")
+    scale_x = ax.figure.bbox.width / W_PX
+    col_px_render = col_px * scale_x
+
     text_wrapped = _justify_paragraph_to_px(
         ax,
         (analysis_text or "").strip(),
