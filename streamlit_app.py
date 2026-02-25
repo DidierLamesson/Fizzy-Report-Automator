@@ -1479,7 +1479,7 @@ def _draw_body1_fatturato(
         dpi=dpi,
     )
 
-    ax.text(
+    text_obj = ax.text(
         x(right_x0),
         y_from_top(yR),
         text_wrapped,
@@ -1492,6 +1492,17 @@ def _draw_body1_fatturato(
         linespacing=cfg["para_linespacing"],
         zorder=850,
     )
+
+    # --- retour : position (px depuis le haut) du bas du bloc texte (colonne droite) ---
+    ax.figure.canvas.draw()
+    r = ax.figure.canvas.get_renderer()
+    bb = text_obj.get_window_extent(renderer=r)  # bbox en pixels de rendu
+
+    # conversion bbox->px "layout"
+    scale_y = ax.get_window_extent(renderer=r).height / H_PX
+    text_bottom_from_top_px = (ax.get_window_extent(renderer=r).y1 - bb.y0) / scale_y
+
+    return float(text_bottom_from_top_px)
 
 
 # =========================
@@ -1805,7 +1816,6 @@ def _draw_footer1(ax, W_PX, H_PX, d, dpi: int, cfg=None):
 
 
 def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
-    # Repère "page" 0..1 (aspect auto pour éviter que imshow dérègle l’axe)
     ax.set_axis_off()
     ax.set_aspect("auto")
     ax.set_xlim(0, 1)
@@ -1813,7 +1823,7 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
 
     dpi = int(ax.figure.dpi)
 
-    # Header 1 : logo + pill date + titre + restaurant + ligne
+    # Header 1 (retourne le y de la ligne du header)
     header_line_y_px = (
         _draw_header1(
             ax,
@@ -1830,19 +1840,31 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
     p1, p2 = build_page1_suggestions(d)
     analysis_text = f"{p1}\n\n{p2}"
 
-    # Body 1 : section Fatturato (titres + chart + stats + paragraphe)
-    _draw_body1_fatturato(
+    # Body 1 (retourne le bas du bloc texte colonne droite)
+    body_text_bottom_px = (
+        _draw_body1_fatturato(
+            ax,
+            W_PX,
+            H_PX,
+            d,
+            restaurant_name,
+            analysis_text,
+            dpi,
+            cfg={"header_line_y_px": header_line_y_px},
+        )
+        or 0
+    )
+
+    # Footer 1 calé sous le texte
+    FOOTER_GAP_PX = 28
+    _draw_footer1(
         ax,
         W_PX,
         H_PX,
         d,
-        restaurant_name,
-        analysis_text,
         dpi,
-        cfg={"header_line_y_px": header_line_y_px},
+        cfg={"top_px": int(body_text_bottom_px + FOOTER_GAP_PX)},
     )
-
-    _draw_footer1(ax, W_PX, H_PX, d, dpi)
 
 
 # ✅ Taille cible en pixels (ton nouveau "format")
