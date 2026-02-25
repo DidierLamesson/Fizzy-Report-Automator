@@ -658,7 +658,7 @@ HEADER1_CFG = {
     "logo_top_px": 10,  # distance depuis le haut
     "pill_enabled": True,
     "pill_top_px": 80,  # distance depuis le haut
-    "pill_right_margin_px": 40,  # marge droite
+    "pill_right_margin_px": 80,  # marge droite
     "pill_font_px": 14,
     "pill_pad_x_px": 6,
     "pill_pad_y_px": 6,
@@ -678,7 +678,7 @@ HEADER1_CFG = {
     "restaurant_color": "accent",  # clé dans COLORS
     "restaurant_fontprops": "epilogue_regular",  # ou "epilogue_semibold"
     # --- Ligne ---
-    "line_side_margin_px": 80,  # marge gauche/droite
+    "line_side_margin_px": 40,  # marge gauche/droite
     "line_width_px": 2,
     "line_color": "highlight",  # clé dans COLORS
 }
@@ -900,6 +900,7 @@ import matplotlib.ticker as ticker
 BODY1_CFG = {
     # --- Marges / colonnes ---
     "side_margin_px": 80,  # marge gauche/droite globale
+    "right_edge_margin_px": 40,  # ✅ bord droit (ligne + texte) à 40px
     "col_gap_px": 20,  # espace entre colonne gauche et droite
     "left_col_ratio": 0.56,  # % de largeur pour la colonne gauche (graph)
     # --- Zone de départ du body (depuis le haut de la page) ---
@@ -1444,31 +1445,29 @@ def _draw_body1_fatturato(
         cfg["stats_pct_font_px"] * 2 + cfg["stats_gap_3_px"]
     )  # avance “assez” (simple & stable)
 
-    # --- ligne sous stats (align droite avec la marge side) ---
+    # --- ligne sous stats (bord droit à 40px) ---
     if cfg["stats_line_enabled"]:
+        right_edge_px = W_PX - cfg.get("right_edge_margin_px", cfg["side_margin_px"])
         ax.hlines(
             y=y_from_top(yR),
             xmin=x(right_x0 + cfg["stats_line_left_inset_px"]),
-            xmax=x(right_x1),
+            xmax=x(right_edge_px),
             colors=COLORS["highlight"],
             linewidth=_px_to_pt(cfg["stats_line_width_px"], dpi),
             zorder=800,
         )
         yR += cfg["stats_line_gap_after_px"]
 
-    # --- paragraphe (à droite) : justifié + aligné sur la même largeur que la ligne ---
-    para_right_edge_px = right_x1  # fin = même bord que la ligne (W_PX - side)
-    col_px_layout = (
-        para_right_edge_px - right_x0
-    )  # largeur en "px layout" (base W_PX=800)
+        # --- paragraphe (à droite) : justifié + aligné sur la même largeur que la ligne ---
+        para_right_edge_px = W_PX - cfg.get(
+            "right_edge_margin_px", cfg["side_margin_px"]
+        )  # ✅ 40px du bord
+        col_px_layout = para_right_edge_px - right_x0
 
-    # ✅ convertir la largeur layout -> largeur en pixels de rendu (renderer)
-    ax.figure.canvas.draw()
-    r = ax.figure.canvas.get_renderer()
-    ax_w_render = ax.get_window_extent(
-        renderer=r
-    ).width  # largeur réelle de l'axe en pixels
-    col_px_render = ax_w_render * (col_px_layout / W_PX)
+        ax.figure.canvas.draw()
+        r = ax.figure.canvas.get_renderer()
+        ax_w_render = ax.get_window_extent(renderer=r).width
+        col_px_render = ax_w_render * (col_px_layout / W_PX)
 
     text_wrapped = _justify_paragraph_to_px(
         ax,
@@ -1513,7 +1512,7 @@ FOOTER1_CFG = {
     # Position du footer (top = position de la ligne du footer, depuis le haut)
     "top_px": 700,
     # Ligne (identique header)
-    "line_side_margin_px": HEADER1_CFG.get("line_side_margin_px", 80),
+    "line_side_margin_px": HEADER1_CFG.get("line_side_margin_px", 40),
     "line_width_px": HEADER1_CFG.get("line_width_px", 2),
     "line_color": HEADER1_CFG.get("line_color", "highlight"),
     "gap_after_line_px": 26,
