@@ -1197,7 +1197,7 @@ def _draw_fatturato_chart_in_page(fig, left, bottom, width, height, d, label, cf
         loc="lower center",  # ✅ le bas de la légende sert d’ancre
         bbox_to_anchor=(
             0.5,
-            1.0,
+            0.95,
         ),  # ✅ juste au-dessus de l'axe -> jamais sur les barres
         borderaxespad=0.0,
         ncol=2,
