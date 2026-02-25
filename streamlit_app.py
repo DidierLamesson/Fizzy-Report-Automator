@@ -1322,30 +1322,15 @@ def _draw_body1_fatturato(
     )
     y_left = y_left + h2 + cfg["left_titles_to_chart_gap_px"]
 
-    # --- Colonne gauche : chart ---
-    chart_top = y_left
-    chart_h = cfg["chart_h_px"]
-    chart_w = left_w
+    yR += hv + cfg["stats_gap_2_px"]
+    yR_before_vs = yR
+    # ✅ top commun : doit être sous les titres gauche ET sous le bloc valeur à droite
+    chart_top = max(chart_top_left, yR_before_vs)
 
-    # coords figure pour add_axes
-    fig = ax.figure
-    chart_left_ax = x(left_x0)
-    chart_bottom_ax = y_from_top(chart_top + chart_h)
-    chart_w_ax = chart_w / W_PX
-    chart_h_ax = chart_h / H_PX
+    # ✅ on force "vs ..." à commencer EXACTEMENT au top du chart
+    yR = chart_top
 
-    _draw_fatturato_chart_in_page(
-        fig,
-        left=chart_left_ax,
-        bottom=chart_bottom_ax,
-        width=chart_w_ax,
-        height=chart_h_ax,
-        d=d,
-        label=restaurant_name,
-        cfg=cfg,
-        dpi=dpi,
-    )
-
+    yR_before_vs = yR
     # --- Colonne droite : bloc stats aligné au titre gauche ("Venduto ...") ---
     yR = titles_top_px
 
@@ -1379,7 +1364,29 @@ def _draw_body1_fatturato(
         z=850,
     )
     yR += hv + cfg["stats_gap_2_px"]
+    yR_before_vs = yR
+    # ✅ Alignement : le top du chart = top de "vs ..."
+    chart_top = max(chart_top_left, yR_before_vs)
+    yR = chart_top
 
+    # --- Dessin du chart avec top recalé (aligné avec "vs ...") ---
+    fig = ax.figure
+    chart_left_ax = x(left_x0)
+    chart_bottom_ax = y_from_top(chart_top + chart_h)
+    chart_w_ax = chart_w / W_PX
+    chart_h_ax = chart_h / H_PX
+
+    _draw_fatturato_chart_in_page(
+        fig,
+        left=chart_left_ax,
+        bottom=chart_bottom_ax,
+        width=chart_w_ax,
+        height=chart_h_ax,
+        d=d,
+        label=restaurant_name,
+        cfg=cfg,
+        dpi=dpi,
+    )
     # vs N-1
     vs_txt = f"vs {d['year_n_1']}"
     hvs = _draw_text_top_left_px(
