@@ -1175,6 +1175,8 @@ def _draw_fatturato_chart_in_page(fig, left, bottom, width, height, d, label, cf
             marker="o",
             color="none",
             markerfacecolor=COLORS["graph1"],
+            markeredgecolor="none",  # ✅ pas de bordure
+            markeredgewidth=0,  # ✅ pas de bordure
             markersize=8,
             label=f"Fatturato {d['year_n']} €",
         ),
@@ -1184,6 +1186,8 @@ def _draw_fatturato_chart_in_page(fig, left, bottom, width, height, d, label, cf
             marker="o",
             color="none",
             markerfacecolor=COLORS["graph2"],
+            markeredgecolor="none",  # ✅ pas de bordure
+            markeredgewidth=0,  # ✅ pas de bordure
             markersize=8,
             label=f"Fatturato {d['year_n_1']} €",
         ),
@@ -1644,7 +1648,7 @@ if uploaded and restaurant_input:
 # UI
 st.divider()
 
-pdf_bytes = build_a4_pdf_bytes(data, restaurant_input, dpi=150)
+pdf_bytes = build_a4_pdf_bytes(data, restaurant_input, dpi=300)
 
 import fitz  # PyMuPDF
 
