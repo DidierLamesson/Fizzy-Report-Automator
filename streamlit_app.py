@@ -1363,13 +1363,16 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
     dpi = int(ax.figure.dpi)
 
     # Header 1 : logo + pill date + titre + restaurant + ligne
-    _draw_header1(
-        ax,
-        W_PX=W_PX,
-        H_PX=H_PX,
-        month_label=d["full_date_n"],
-        restaurant_name=restaurant_name,
-        dpi=dpi,
+    header_line_y_px = (
+        _draw_header1(
+            ax,
+            W_PX=W_PX,
+            H_PX=H_PX,
+            month_label=d["full_date_n"],
+            restaurant_name=restaurant_name,
+            dpi=dpi,
+        )
+        or 0
     )
 
     # Texte d’analyse (généré automatiquement)
