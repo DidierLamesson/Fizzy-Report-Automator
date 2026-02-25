@@ -1322,15 +1322,11 @@ def _draw_body1_fatturato(
     )
     y_left = y_left + h2 + cfg["left_titles_to_chart_gap_px"]
 
-    yR += hv + cfg["stats_gap_2_px"]
-    yR_before_vs = yR
-    # ✅ top commun : doit être sous les titres gauche ET sous le bloc valeur à droite
-    chart_top = max(chart_top_left, yR_before_vs)
+    # --- Colonne gauche : chart (on définit son top "candidat") ---
+    chart_top_left = y_left
+    chart_h = cfg["chart_h_px"]
+    chart_w = left_w
 
-    # ✅ on force "vs ..." à commencer EXACTEMENT au top du chart
-    yR = chart_top
-
-    yR_before_vs = yR
     # --- Colonne droite : bloc stats aligné au titre gauche ("Venduto ...") ---
     yR = titles_top_px
 
@@ -1364,12 +1360,16 @@ def _draw_body1_fatturato(
         z=850,
     )
     yR += hv + cfg["stats_gap_2_px"]
+
+    # --- ALIGNEMENT DEMANDÉ ---
+    # top du chart = top du "vs ..." (donc on choisit un top commun)
     yR_before_vs = yR
-    # ✅ Alignement : le top du chart = top de "vs ..."
     chart_top = max(chart_top_left, yR_before_vs)
+
+    # ✅ le "vs ..." commence au même niveau que le haut du chart
     yR = chart_top
 
-    # --- Dessin du chart avec top recalé (aligné avec "vs ...") ---
+    # --- Dessin du chart avec top recalé ---
     fig = ax.figure
     chart_left_ax = x(left_x0)
     chart_bottom_ax = y_from_top(chart_top + chart_h)
