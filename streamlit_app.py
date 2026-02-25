@@ -1644,7 +1644,7 @@ if uploaded and restaurant_input:
 # UI
 st.divider()
 
-pdf_bytes = build_a4_pdf_bytes(data, restaurant_input, dpi=300)
+pdf_bytes = build_a4_pdf_bytes(data, restaurant_input, dpi=150)
 
 import fitz  # PyMuPDF
 
