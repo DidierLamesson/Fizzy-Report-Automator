@@ -1429,19 +1429,23 @@ def _draw_body1_fatturato(
         yR += cfg["stats_line_gap_after_px"]
 
     # --- paragraphe (à droite) : justifié + aligné sur la même largeur que la ligne ---
-    para_right_edge_px = (
-        W_PX - cfg["side_margin_px"]
-    )  # => 80px du bord si side_margin_px=80
-    col_px = para_right_edge_px - right_x0
+    para_right_edge_px = right_x1  # fin = même bord que la ligne (W_PX - side)
+    col_px_layout = (
+        para_right_edge_px - right_x0
+    )  # largeur en "px layout" (base W_PX=800)
 
-    # ✅ conversion logique -> pixels de rendu (sinon ça justifie trop "court")
-    scale_x = ax.figure.bbox.width / W_PX
-    col_px_render = col_px * scale_x
+    # ✅ convertir la largeur layout -> largeur en pixels de rendu (renderer)
+    ax.figure.canvas.draw()
+    r = ax.figure.canvas.get_renderer()
+    ax_w_render = ax.get_window_extent(
+        renderer=r
+    ).width  # largeur réelle de l'axe en pixels
+    col_px_render = ax_w_render * (col_px_layout / W_PX)
 
     text_wrapped = _justify_paragraph_to_px(
         ax,
         (analysis_text or "").strip(),
-        width_px=col_px,
+        width_px=col_px_render,  # ✅ largeur en pixels de rendu
         font_px=cfg["para_font_px"],
         fontprops=epilogue_regular,
         dpi=dpi,
