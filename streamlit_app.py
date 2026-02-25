@@ -658,7 +658,7 @@ HEADER1_CFG = {
     "gap_restaurant_to_line_px": 15,  # espace restaurant -> ligne
     # --- Titre ---
     "title_text": "Report Mensile",
-    "title_font_px": 80,
+    "title_font_px": 64,
     "title_color": "highlight",  # clé dans COLORS
     "title_fontprops": "ivy_title",
     "title_fontstyle": "italic",
