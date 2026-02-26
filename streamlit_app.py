@@ -1867,8 +1867,8 @@ BODY_PAGE_2_CFG = {
 def _draw_food_cost_chart_in_page_2(fig, left, bottom, width, height, d, label, dpi):
     axc = fig.add_axes([left, bottom, width, height], facecolor=COLORS["bg"])
 
-    x_labels = month_labels_from_graph_dates(d)
-    y = d["food_cost_pctg_n"]
+    x_labels = list(reversed(month_labels_from_graph_dates(d)))
+    y = list(reversed(d["food_cost_pctg_n"]))
 
     axc.plot(
         range(len(y)),
