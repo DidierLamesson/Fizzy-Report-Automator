@@ -1362,7 +1362,10 @@ def _draw_body1_fatturato(
     )
     y += h_sec + cfg["section_title_gap_after_px"]
 
-    titles_top_px = y  # ✅ top commun pour (Venduto...) ET pour le bloc stats à droite
+    # Décalage appliqué uniquement à tout ce qui est SOUS "Fatturato" (pour le centrage)
+    y += float(cfg.get("after_section_offset_px", 0))
+
+    titles_top_px = y  # top commun (Venduto + stats droite) APRÈS décalage
 
     # --- Colonne gauche : titres (variables) ---
     left_title = f"Venduto {restaurant_name} {d['month_name']}"
@@ -1625,7 +1628,8 @@ def _measure_body1_metrics(
         h_px(cfg["section_title_text"], cfg["section_title_font_px"], epilogue_semibold)
         + cfg["section_title_gap_after_px"]
     )
-    titles_top_px = y
+    section_bottom_px = y  # ✅ bas de "Fatturato" (ancré)
+    titles_top_px = y  # (top des titres "Venduto..." avant offset)
 
     left_title = f"Venduto {restaurant_name} {d['month_name']}"
     left_sub = f"{d['year_n']} vs {d['year_n_1']}"
@@ -1691,7 +1695,13 @@ def _measure_body1_metrics(
     chart_bottom_px = float(chart_top + chart_h_px)
     para_bottom_px = float(para_start_px + para_h_px)
     bottom_px = max(chart_bottom_px, para_bottom_px)
-    return {"height_px": float(bottom_px), "para_start_px": float(para_start_px)}
+    return {
+        "height_px": float(bottom_px),
+        "para_start_px": float(para_start_px),
+        "section_bottom_px": float(
+            section_bottom_px
+        ),  # ✅ nécessaire pour centrer le reste
+    }
 
 
 # =========================
@@ -2059,15 +2069,19 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
     footer_h = _measure_footer1_height_px(ax, W_PX, H_PX, d, dpi)
     footer_line_y_px = int(H_PX - PAGE_TOKENS["pad_bottom_px"] - footer_h)
 
-    # Zone utile du body (entre les lignes)
-    region_start = float(header_line_y_px + BODY1_CFG["gap_after_header_px"])
-    region_end = float(footer_line_y_px - PAGE_TOKENS["gap_body_to_footer_min_px"])
+    # Zone utile (footer déjà ancré)
+    region_start = float(
+        header_line_y_px + BODY1_CFG["gap_after_header_px"]
+    )  # top FIXE de "Fatturato"
+    region_end = float(
+        footer_line_y_px - PAGE_TOKENS["gap_body_to_footer_min_px"]
+    )  # garde min paragraphe->footer
     region_h = max(0.0, region_end - region_start)
 
-    # Mesure body (gap variable = stats_line_gap_after_px)
     gap_default = float(BODY1_CFG["stats_line_gap_after_px"])
     gap_min = float(PAGE_TOKENS["gap_min_px"])
 
+    # Mesure body (avec gap variable)
     m0 = _measure_body1_metrics(
         ax,
         W_PX,
@@ -2078,14 +2092,22 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
         dpi,
         cfg={"stats_line_gap_after_px": gap_default},
     )
-    body_h0 = m0["height_px"]
+    section_bottom = float(m0["section_bottom_px"])
+    body_h0 = float(m0["height_px"])
+
+    # On centre uniquement CE QUI EST SOUS "Fatturato"
+    rest_h0 = max(0.0, body_h0 - section_bottom)
+
+    rest_start = region_start + section_bottom + 20.0  # ✅ "bas de Fatturato + 20px"
+    rest_end = region_end
+    rest_region_h = max(0.0, rest_end - rest_start)
 
     chosen_gap = gap_default
     m = m0
 
-    # Compression du gap stats->paragraphe si nécessaire
-    if body_h0 > region_h and gap_default > gap_min:
-        overflow = body_h0 - region_h
+    # Compression du gap stats->paragraphe si nécessaire (sur la zone "rest")
+    if rest_h0 > rest_region_h and gap_default > gap_min:
+        overflow = rest_h0 - rest_region_h
         chosen_gap = max(gap_min, gap_default - overflow)
         m = _measure_body1_metrics(
             ax,
@@ -2097,17 +2119,22 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
             dpi,
             cfg={"stats_line_gap_after_px": chosen_gap},
         )
+        section_bottom = float(m["section_bottom_px"])
+        body_h = float(m["height_px"])
+    else:
+        body_h = body_h0
 
-    body_h = m["height_px"]
+    rest_h = max(0.0, body_h - section_bottom)
 
-    # Centrage si ça rentre, sinon on tronque le paragraphe
-    if body_h <= region_h:
-        body_top_px = region_start + (region_h - body_h) / 2.0
+    # Offset appliqué uniquement sous "Fatturato"
+    if rest_h <= rest_region_h:
+        after_section_offset = (rest_region_h - rest_h) / 2.0
         para_max_bottom_px = None
     else:
-        body_top_px = region_start
-        para_max_bottom_px = region_end
+        after_section_offset = 0.0
+        para_max_bottom_px = rest_end  # on tronque si besoin
 
+    # Dessin body : top_px fixe, et on décale le reste via after_section_offset_px
     _draw_body1_fatturato(
         ax,
         W_PX,
@@ -2117,7 +2144,8 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
         analysis_text,
         dpi,
         cfg={
-            "top_px": int(body_top_px),
+            "top_px": int(region_start),  # ✅ "Fatturato" ancré ici
+            "after_section_offset_px": float(after_section_offset),
             "stats_line_gap_after_px": int(round(chosen_gap)),
             **(
                 {"para_max_bottom_px": float(para_max_bottom_px)}
