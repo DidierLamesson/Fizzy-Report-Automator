@@ -2164,8 +2164,6 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
         cfg={"top_px": int(footer_line_y_px)},
     )
 
-
-def _draw_a4_page_2(ax, W_PX, H_PX):
     # Repère "page" 0..1 (imshow-safe)
     ax.set_axis_off()
     ax.set_aspect("auto")
@@ -2261,8 +2259,6 @@ def build_a4_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes:
     buf.seek(0)
     return buf.getvalue()
 
-
-def build_page2_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes:
     """
     PNG: on peut utiliser `dpi` uniquement pour la netteté de l'aperçu,
     MAIS le layout reste basé sur 800x1000.
@@ -2368,7 +2364,6 @@ if uploaded and restaurant_input:
         st.divider()
         st.subheader("🧾 Page 2 (preview)")
 
-        page2_png = build_page2_png_preview_bytes(data, restaurant_input, dpi=150)
-        st.image(page2_png, caption="Aperçu p2(rendu PDF)", width=580)  # ratio respecté
+
 else:
     st.info("Importe un fichier Excel et renseigne le nom client pour générer le PDF.")
