@@ -1482,13 +1482,14 @@ def _draw_body_fc_bc_summary(
     bullet_sz = cfg["bullet_size_px"]
     bullet_gap = cfg["bullet_gap_px"]
 
-    # ✅ Texte aligné sur la colonne (comme le graph à gauche)
+    # ✅ Texte aligné sur la colonne (comme le graph)
     label_x = left_x0
 
-    # ✅ Puce décalée à gauche (dans la marge), sans décaler le texte
+    # ✅ Puce à gauche, sans décaler le texte
     bullet_x0 = left_x0 - (bullet_sz + bullet_gap)
 
-    cur_right = vsep_x_px - 14
+    # positions dans la zone "current"
+    cur_right = vsep_x_px - 14  # marge avant le séparateur
 
     # positions dans la zone "vs"
     vs_left = vsep_x_px + 14
@@ -1499,9 +1500,26 @@ def _draw_body_fc_bc_summary(
             ax, label, cfg["label_font_px"], epilogue_regular, dpi
         )
 
+        # y valeur alignée "au milieu" du bloc label (visuel stable)
+        y_val_top = y_row_top + max(0, (label_h - value_h) / 2) + (header_h_px * 0.55)
+
+        # label (multiligne)
+        _, label_h = _measure_text_px(
+            ax, label, cfg["label_font_px"], epilogue_regular, dpi
+        )
+
+        # mesure valeur (hauteur) – stable
+        _, value_h = _measure_text_px(
+            ax, "21%", cfg["value_font_px"], epilogue_semibold, dpi
+        )
+
+        # ✅ y de la valeur (inchangé chez toi, mais garanti défini)
+        y_val_top = y_row_top + max(0, (label_h - value_h) / 2)
+
         # ✅ bullet centré verticalement sur le bloc de texte
         bullet_top_px = y_row_top + max(0, (label_h - bullet_sz) / 2)
 
+        # bullet carré
         ax.add_patch(
             FancyBboxPatch(
                 (x(bullet_x0), y_from_top(bullet_top_px)),
@@ -1515,7 +1533,7 @@ def _draw_body_fc_bc_summary(
             )
         )
 
-        # texte label
+        # texte label (aligné à gauche colonne)
         ax.text(
             x(label_x),
             y_from_top(y_row_top),
