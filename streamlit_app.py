@@ -1479,11 +1479,16 @@ def _draw_body_fc_bc_summary(
         ax, "21%", cfg["value_font_px"], epilogue_semibold, dpi
     )
 
-    # positions dans la zone "current"
     bullet_sz = cfg["bullet_size_px"]
     bullet_gap = cfg["bullet_gap_px"]
-    label_x = left_x0 + bullet_sz + bullet_gap
-    cur_right = vsep_x_px - 14  # petite marge avant le séparateur
+
+    # ✅ Texte aligné sur la colonne (comme le graph à gauche)
+    label_x = left_x0
+
+    # ✅ Puce décalée à gauche (dans la marge), sans décaler le texte
+    bullet_x0 = left_x0 - (bullet_sz + bullet_gap)
+
+    cur_right = vsep_x_px - 14
 
     # positions dans la zone "vs"
     vs_left = vsep_x_px + 14
@@ -1500,7 +1505,7 @@ def _draw_body_fc_bc_summary(
         # bullet carré
         ax.add_patch(
             FancyBboxPatch(
-                (x(left_x0), y_from_top(y_row_top + 6)),
+                (x(bullet_x0), y_from_top(y_row_top + 6)),
                 bullet_sz / W_PX,
                 bullet_sz / H_PX,
                 boxstyle="round,pad=0,rounding_size=0.002",
