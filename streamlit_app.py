@@ -996,20 +996,11 @@ def _draw_header1_bis(
 
         pill_bottom_px = PILL_TOP_PX + PILL_H_PX
 
-    # 3) Curseur vertical sous top row
+    # 3) Curseur vertical sous top row (logo/pill)
     toprow_bottom_px = max(logo_bottom_px, pill_bottom_px)
-    y_cursor_px = toprow_bottom_px + cfg["gap_after_toprow_px"]
 
-    # 4) Titre : on NE DESSINE PAS, mais on CONSERVE l’espace qu’il occupe
-    title_text = cfg["title_text"]
-    title_font_px = cfg["title_font_px"]
-    title_fontprops = globals()[cfg["title_fontprops"]]
-    title_fontstyle = cfg["title_fontstyle"]
-
-    _, h_title_px = _measure_text_px(
-        ax, title_text, title_font_px, title_fontprops, dpi, fontstyle=title_fontstyle
-    )
-    y_cursor_px += h_title_px + cfg["gap_title_to_restaurant_px"]
+    # GAP FIXE demandé : 20px entre le bas du logo (ou pill si plus bas) et le resto
+    y_cursor_px = toprow_bottom_px + 20
 
     # 5) Restaurant (inchangé)
     resto_text = (restaurant_name or "").upper()
