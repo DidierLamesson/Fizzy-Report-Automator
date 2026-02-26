@@ -2906,7 +2906,6 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
 
 
 def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
-    # Repère page (imshow-safe)
     ax.set_axis_off()
     ax.set_aspect("auto")
     ax.set_xlim(0, 1)
@@ -2914,7 +2913,7 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
 
     dpi = int(ax.figure.dpi)
 
-    # 1) Header bis (sans "Report Mensile")
+    # Header bis
     header_line_y_px = (
         _draw_header1_bis(
             ax,
@@ -2927,7 +2926,7 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         or 0
     )
 
-    # 2) Texte (placeholder, remplacé ensuite par les champs Streamlit)
+    # Texte (plus tard: depuis Streamlit)
     lorem = (
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
         "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
@@ -2935,7 +2934,7 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. "
     ) * 3
 
-    # 3) Dessine le titre + les 2 charts, récupère les infos de position (dont bas des légendes)
+    # 1) Dessine titre + charts et récupère bas de légende
     charts_info = _draw_body_page_2_food_beverage_cost(
         ax,
         W_PX,
@@ -2945,27 +2944,22 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         dpi,
         cfg={"header_line_y_px": int(header_line_y_px)},
     )
+    legend_bottom_px = float(charts_info["legend_bottom_px"])
 
-    legend_bottom_px = float(
-        charts_info.get("legend_bottom_px", charts_info.get("charts_bottom_px", 0.0))
-    )
-
-    # 4) Zone dispo pour le bloc FC/BC + texte :
-    #    start = bas légende + 20px
-    #    end   = bas page - pad_bottom (20px)
+    # 2) Zone dispo pour le bloc (bas légende + 20) -> (bas page - pad_bottom)
     region_start = legend_bottom_px + 20.0
     region_end = float(H_PX - PAGE_TOKENS["pad_bottom_px"])
     region_h = max(0.0, region_end - region_start)
 
-    # 5) Mesure la hauteur du bloc (dépend du texte)
+    # 3) Mesure la hauteur du bloc FC/BC + texte
     block_h = _measure_body_fc_bc_summary_height_px(
         ax, W_PX, H_PX, d, restaurant_name, lorem, dpi
     )
 
-    # 6) Centre verticalement dans la zone dispo (si trop grand, on colle au start)
+    # 4) Centrage vertical
     top_final = region_start + max(0.0, (region_h - block_h) / 2.0)
 
-    # 7) Dessine le bloc FC/BC + texte à la position centrée
+    # 5) Dessine le bloc sous les charts
     _draw_body_fc_bc_summary(
         ax,
         W_PX,
@@ -2978,6 +2972,62 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
     )
 
     # Pas de footer en page 2 ✅
+    ax.set_axis_off()
+    ax.set_aspect("auto")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
+    dpi = int(ax.figure.dpi)
+
+    # Header bis (sans "Report Mensile")
+    header_line_y_px = (
+        _draw_header1_bis(
+            ax,
+            W_PX=W_PX,
+            H_PX=H_PX,
+            month_label=d["full_date_n"],
+            restaurant_name=restaurant_name,
+            dpi=dpi,
+        )
+        or 0
+    )
+
+    # Texte (plus tard: celui des box Streamlit)
+    lorem = (
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+        "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. "
+    ) * 3
+
+    # Body page 2 : titre + 2 charts
+    charts_bottom_px = _draw_body_page_2_food_beverage_cost(
+        ax,
+        W_PX,
+        H_PX,
+        d,
+        restaurant_name,
+        dpi,
+        cfg={
+            "header_line_y_px": int(header_line_y_px),
+        },
+    )
+
+    # ✅ Bloc FC/BC + texte justifié SOUS les charts
+    _draw_body_fc_bc_summary(
+        ax,
+        W_PX,
+        H_PX,
+        d,
+        restaurant_name,
+        lorem,  # pour l'instant Lorem (plus tard ton texte streamlit)
+        dpi,
+        cfg={
+            "top_px": int(
+                charts_bottom_px + BODY_PAGE_2_CFG.get("gap_after_charts_px", 30)
+            ),
+        },
+    )
 
 
 def _measure_body_fc_bc_summary_height_px(
