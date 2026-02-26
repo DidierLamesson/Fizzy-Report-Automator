@@ -2349,42 +2349,13 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
 
     # Pas de footer en page 2
     # Body vide pour l'instant
-    """Page 2 vide, mais avec les mêmes contraintes que la page 1 :
-    - même taille (800x1000)
-    - mêmes marges (pad_top/pad_bottom/latérales via header/footer)
-    - même méthode de construction (Matplotlib + axes [0,0,1,1])
-    """
+
     ax.set_axis_off()
     ax.set_aspect("auto")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
 
     dpi = int(ax.figure.dpi)
-
-    # Header identique page 1
-    _ = (
-        _draw_header1(
-            ax,
-            W_PX=W_PX,
-            H_PX=H_PX,
-            month_label=d["full_date_n"],
-            restaurant_name=restaurant_name,
-            dpi=dpi,
-        )
-        or 0
-    )
-
-    # Footer identique page 1 (ancré : bas des valeurs à pad_bottom)
-    footer_h = _measure_footer1_height_px(ax, W_PX, H_PX, d, dpi)
-    footer_line_y_px = int(H_PX - PAGE_TOKENS["pad_bottom_px"] - footer_h)
-    _draw_footer1(
-        ax,
-        W_PX,
-        H_PX,
-        d,
-        dpi,
-        cfg={"top_px": int(footer_line_y_px)},
-    )
 
     # Body vide pour l'instant (on n'affiche rien entre header et footer).
 
