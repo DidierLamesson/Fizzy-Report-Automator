@@ -1311,6 +1311,347 @@ def _fit_justified_paragraph_to_height(
     return best
 
 
+# =========================
+# BODY — FC/BC MEDIO (ultimi 6 mesi) vs N-1 + testo giustificato
+# =========================
+BODY_FC_BC_SUMMARY_CFG = {
+    # colonnes (comme page 1)
+    "side_margin_px": BODY1_CFG["side_margin_px"],  # 80
+    "right_edge_margin_px": BODY1_CFG["right_edge_margin_px"],  # 40
+    "col_gap_px": 40,  # espace entre colonne gauche et texte
+    "left_col_ratio": 0.55,  # largeur bloc métriques
+    "gap_after_header_px": BODY1_CFG["gap_after_header_px"],  # 20
+    # styles (proches page 1)
+    "label_font_px": 18,
+    "value_font_px": 30,
+    "arrow_font_px": 18,
+    "vs_title_font_px": 22,
+    "vs_sub_font_px": 14,
+    "vs_gap_after_px": 18,
+    # layout interne bloc gauche
+    "bullet_size_px": 6,
+    "bullet_gap_px": 10,
+    "vs_col_ratio": 0.34,  # part du bloc gauche dédiée au "vs"
+    "row_gap_px": 55,  # espace entre FC et BC
+    "row_bottom_pad_px": 22,
+    # lignes séparatrices
+    "hline_enabled": True,
+    "hline_width_px": 2,
+    "hline_gap_after_px": 0,
+    "hline_to_vsep_gap_px": 22,  # coupe la ligne avant le séparateur vertical
+    # séparateur vertical pointillé
+    "vsep_enabled": True,
+    "vsep_width_px": 2,
+    "vsep_dash": (0, (2, 2)),
+    "vsep_color": "highlight",
+    "vsep_top_offset_px": 0,  # part du top commun
+    "vsep_bottom_pad_px": 12,  # marge bas du séparateur
+    # paragraphe justifié
+    "para_font_px": BODY1_CFG["para_font_px"],  # 16
+    "para_linespacing": BODY1_CFG["para_linespacing"],  # 1.6
+}
+
+
+def _avg_pct(vals):
+    vals = [float(v) for v in (vals or []) if v is not None]
+    return (sum(vals) / len(vals)) if vals else 0.0
+
+
+def _fmt_pct0(v):
+    return f"{v:.0f}%"
+
+
+def _draw_body_fc_bc_summary(
+    ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str, dpi: int, cfg=None
+):
+    """
+    Body type screenshot:
+    - gauche: FC/BC medio ultimi 6 mesi + vs N-1 (2 lignes)
+    - droite: texte justifié
+    - top align: 'vs N-1' == top du paragraphe
+    """
+    cfg = {**BODY_FC_BC_SUMMARY_CFG, **(cfg or {})}
+
+    ax.set_axis_off()
+    ax.set_aspect("auto")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax._W_PX = W_PX
+
+    def x(px):
+        return px / W_PX
+
+    def y_from_top(top_px):
+        return 1.0 - (top_px / H_PX)
+
+    # --- zones colonnes (mêmes règles que page 1 : right_edge_margin_px = 40) ---
+    left_margin = cfg["side_margin_px"]
+    right_margin = cfg["right_edge_margin_px"]
+    gap = cfg["col_gap_px"]
+
+    usable_w = W_PX - left_margin - right_margin - gap
+    left_w = int(usable_w * cfg["left_col_ratio"])
+    right_w = usable_w - left_w
+
+    left_x0 = left_margin
+    left_x1 = left_x0 + left_w
+
+    right_x0 = left_x1 + gap
+    para_right_edge_px = W_PX - right_margin
+
+    # --- top commun (vs + paragraphe) ---
+    if cfg.get("top_px") is not None:
+        top_px = int(cfg["top_px"])
+    else:
+        header_line_y_px = int(cfg.get("header_line_y_px", 0))
+        top_px = int(header_line_y_px + cfg["gap_after_header_px"])
+
+    # --- split interne bloc gauche : current | vsep | vs ---
+    vs_col_w = int(left_w * cfg["vs_col_ratio"])
+    cur_col_w = left_w - vs_col_w
+
+    vsep_x_px = left_x0 + cur_col_w
+    vs_x0 = vsep_x_px
+    vs_x1 = left_x1
+
+    # --- HEADER "vs N-1" (TOP aligné avec paragraphe) ---
+    vs_title = f"vs {d['year_n_1']}"
+    vs_sub = "Lug-Dic"
+
+    # centré dans la zone vs
+    ax.text(
+        x((vs_x0 + vs_x1) / 2),
+        y_from_top(top_px),
+        vs_title,
+        ha="center",
+        va="top",
+        transform=ax.transAxes,
+        fontsize=_px_to_pt(cfg["vs_title_font_px"], dpi),
+        fontproperties=epilogue_semibold,
+        color=COLORS["white"],
+        zorder=850,
+    )
+    _, h_vs_title = _measure_text_px(
+        ax, vs_title, cfg["vs_title_font_px"], epilogue_semibold, dpi
+    )
+
+    ax.text(
+        x((vs_x0 + vs_x1) / 2),
+        y_from_top(top_px + h_vs_title + 4),
+        vs_sub,
+        ha="center",
+        va="top",
+        transform=ax.transAxes,
+        fontsize=_px_to_pt(cfg["vs_sub_font_px"], dpi),
+        fontproperties=epilogue_regular,
+        color=COLORS["white"],
+        zorder=850,
+    )
+    _, h_vs_sub = _measure_text_px(
+        ax, vs_sub, cfg["vs_sub_font_px"], epilogue_regular, dpi
+    )
+
+    header_h_px = h_vs_title + 4 + h_vs_sub + cfg["vs_gap_after_px"]
+
+    # --- données (moyennes % sur 6 mois) ---
+    fc_n = _avg_pct(d.get("food_cost_pctg_n"))
+    fc_n_1 = _avg_pct(d.get("food_cost_pctg_n_1"))
+    bc_n = _avg_pct(d.get("beverage_cost_pctg_n"))
+    bc_n_1 = _avg_pct(d.get("beverage_cost_pctg_n_1"))
+
+    rows = [
+        ("FC Medio\nultimi 6 mesi", fc_n, fc_n_1),
+        ("BC Medio\nultimi 6 mesi", bc_n, bc_n_1),
+    ]
+
+    # --- dessin rows (gauche) ---
+    y_row_top = top_px  # label top = top commun (comme screenshot)
+
+    # pré-mesures utiles
+    _, value_h = _measure_text_px(
+        ax, "21%", cfg["value_font_px"], epilogue_semibold, dpi
+    )
+
+    # positions dans la zone "current"
+    bullet_sz = cfg["bullet_size_px"]
+    bullet_gap = cfg["bullet_gap_px"]
+    label_x = left_x0 + bullet_sz + bullet_gap
+    cur_right = vsep_x_px - 14  # petite marge avant le séparateur
+
+    # positions dans la zone "vs"
+    vs_left = vsep_x_px + 14
+
+    for idx, (label, v_cur, v_vs) in enumerate(rows):
+        # label (multiligne)
+        _, label_h = _measure_text_px(
+            ax, label, cfg["label_font_px"], epilogue_regular, dpi
+        )
+
+        # y valeur alignée "au milieu" du bloc label (visuel stable)
+        y_val_top = y_row_top + max(0, (label_h - value_h) / 2) + (header_h_px * 0.55)
+
+        # bullet carré
+        ax.add_patch(
+            FancyBboxPatch(
+                (x(left_x0), y_from_top(y_row_top + 6)),
+                bullet_sz / W_PX,
+                bullet_sz / H_PX,
+                boxstyle="round,pad=0,rounding_size=0.002",
+                transform=ax.transAxes,
+                facecolor=COLORS["highlight"],
+                edgecolor="none",
+                zorder=900,
+            )
+        )
+
+        # texte label
+        ax.text(
+            x(label_x),
+            y_from_top(y_row_top),
+            label,
+            ha="left",
+            va="top",
+            transform=ax.transAxes,
+            fontsize=_px_to_pt(cfg["label_font_px"], dpi),
+            fontproperties=epilogue_regular,
+            color=COLORS["white"],
+            zorder=850,
+            linespacing=1.2,
+        )
+
+        # current: "→ 21%"
+        cur_txt = _fmt_pct0(v_cur)
+        ax.text(
+            x(cur_right - 70),
+            y_from_top(y_val_top),
+            "→",
+            ha="left",
+            va="top",
+            transform=ax.transAxes,
+            fontsize=_px_to_pt(cfg["arrow_font_px"], dpi),
+            fontproperties=epilogue_regular,
+            color=COLORS["white"],
+            zorder=850,
+        )
+        ax.text(
+            x(cur_right),
+            y_from_top(y_val_top),
+            cur_txt,
+            ha="right",
+            va="top",
+            transform=ax.transAxes,
+            fontsize=_px_to_pt(cfg["value_font_px"], dpi),
+            fontproperties=epilogue_semibold,
+            color=COLORS["highlight"],
+            zorder=850,
+        )
+
+        # vs: "→ 19%"
+        vs_txt = _fmt_pct0(v_vs)
+        ax.text(
+            x(vs_left),
+            y_from_top(y_val_top),
+            "→",
+            ha="left",
+            va="top",
+            transform=ax.transAxes,
+            fontsize=_px_to_pt(cfg["arrow_font_px"], dpi),
+            fontproperties=epilogue_regular,
+            color=COLORS["white"],
+            zorder=850,
+        )
+        ax.text(
+            x(vs_x1 - 10),
+            y_from_top(y_val_top),
+            vs_txt,
+            ha="right",
+            va="top",
+            transform=ax.transAxes,
+            fontsize=_px_to_pt(cfg["value_font_px"], dpi),
+            fontproperties=epilogue_semibold,
+            color=COLORS["highlight"],
+            zorder=850,
+        )
+
+        # hauteur row + séparateurs
+        row_h = (
+            max(label_h, (y_val_top - y_row_top + value_h)) + cfg["row_bottom_pad_px"]
+        )
+        y_line = y_row_top + row_h
+
+        if cfg["hline_enabled"]:
+            cut = cfg["hline_to_vsep_gap_px"]
+            # segment gauche
+            ax.hlines(
+                y=y_from_top(y_line),
+                xmin=x(left_x0),
+                xmax=x(vsep_x_px - cut),
+                colors=COLORS["highlight"],
+                linewidth=_px_to_pt(cfg["hline_width_px"], dpi),
+                zorder=800,
+            )
+            # segment droit
+            ax.hlines(
+                y=y_from_top(y_line),
+                xmin=x(vsep_x_px + cut),
+                xmax=x(left_x1),
+                colors=COLORS["highlight"],
+                linewidth=_px_to_pt(cfg["hline_width_px"], dpi),
+                zorder=800,
+            )
+
+        # prochaine row
+        if idx == 0:
+            y_row_top = y_line + cfg["row_gap_px"]
+
+    left_block_bottom_px = y_row_top  # approx
+
+    # --- séparateur vertical pointillé (couvre les 2 rows) ---
+    if cfg["vsep_enabled"]:
+        y0 = top_px + cfg["vsep_top_offset_px"]
+        y1 = left_block_bottom_px - cfg["vsep_bottom_pad_px"]
+        ax.vlines(
+            x=x(vsep_x_px),
+            ymin=y_from_top(y1),
+            ymax=y_from_top(y0),
+            colors=COLORS[cfg["vsep_color"]],
+            linewidth=_px_to_pt(cfg["vsep_width_px"], dpi),
+            linestyles=cfg["vsep_dash"],
+            zorder=900,
+        )
+
+    # --- paragraphe justifié (TOP aligné avec "vs ...") ---
+    # -> même logique que page 1 pour passer en "px render"
+    ax.figure.canvas.draw()
+    r = ax.figure.canvas.get_renderer()
+    ax_w_render = ax.get_window_extent(renderer=r).width
+    col_px_layout = para_right_edge_px - right_x0
+    col_px_render = ax_w_render * (col_px_layout / W_PX)
+
+    text_wrapped = _justify_paragraph_to_px(
+        ax,
+        (analysis_text or "").strip(),
+        width_px=col_px_render,
+        font_px=cfg["para_font_px"],
+        fontprops=epilogue_regular,
+        dpi=dpi,
+    )
+
+    ax.text(
+        x(right_x0),
+        y_from_top(top_px),
+        text_wrapped,
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        color=COLORS["white"],
+        fontsize=_px_to_pt(cfg["para_font_px"], dpi),
+        fontproperties=epilogue_regular,
+        linespacing=cfg["para_linespacing"],
+        zorder=850,
+    )
+
+
 def _place_img_px(ax, img, W_PX, H_PX, left_px, top_px, width_px, z=1000):
     """Place une image RGBA au pixel près (top-left)."""
     aspect = img.width / img.height
