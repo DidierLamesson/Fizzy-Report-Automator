@@ -1319,16 +1319,16 @@ BODY_FC_BC_SUMMARY_CFG = {
     "side_margin_px": BODY1_CFG["side_margin_px"],  # 80
     "right_edge_margin_px": BODY1_CFG["right_edge_margin_px"],  # 40
     "col_gap_px": 40,  # espace entre colonne gauche et texte
-    "left_col_ratio": 0.55,  # largeur bloc métriques
+    "left_col_ratio": 0.5,  # largeur bloc métriques
     "rows_offset_px": 5,  # ✅ descend FC/BC (mais pas le header vs)
     "gap_after_header_px": BODY1_CFG["gap_after_header_px"],  # 20
     # styles (proches page 1)
-    "label_font_px": 18,
-    "value_font_px": 30,
-    "arrow_font_px": 18,
-    "vs_title_font_px": 22,
-    "vs_sub_font_px": 14,
-    "vs_gap_after_px": 18,
+    "label_font_px": BODY1_CFG["left_title_font_px"],  # 20 (Venduto...)
+    "value_font_px": BODY1_CFG["stats_pct_font_px"],  # 30 (+3.1%)
+    "arrow_font_px": BODY1_CFG["stats_vs_font_px"],  # 16 (vs 2024) — ou mets 18 si tu veux → aligner visuellement la flèche
+    "vs_title_font_px": BODY1_CFG["stats_vs_font_px"],  # 16 (vs 2024)
+    "vs_sub_font_px": BODY1_CFG["left_subtitle_font_px"]# 16 (2025 vs 2024) ou BODY1_CFG["chart_label_font_px"]=14 si tu préfères plus petit
+    "vs_gap_after_px": BODY1_CFG["stats_gap_2_px"],  # 18 (gap après la valeur)
     # layout interne bloc gauche
     "bullet_size_px": 6,
     "bullet_gap_px": 10,
