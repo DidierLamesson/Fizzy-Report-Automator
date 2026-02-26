@@ -1357,8 +1357,8 @@ def _avg_pct(vals):
     return (sum(vals) / len(vals)) if vals else 0.0
 
 
-def _fmt_pct0(v):
-    return f"{v:.0f}%"
+def _fmt_pct1(v):
+    return f"{v:.1f}%"
 
 
 def _draw_body_fc_bc_summary(
@@ -1520,7 +1520,7 @@ def _draw_body_fc_bc_summary(
         )
 
         # current: "→ 21%"
-        cur_txt = _fmt_pct0(v_cur)
+        cur_txt = _fmt_pct1(v_cur)
         ax.text(
             x(cur_right - 70),
             y_from_top(y_val_top),
@@ -1547,7 +1547,7 @@ def _draw_body_fc_bc_summary(
         )
 
         # vs: "→ 19%"
-        vs_txt = _fmt_pct0(v_vs)
+        vs_txt = _fmt_pct1(v_vs)
         ax.text(
             x(vs_left),
             y_from_top(y_val_top),
@@ -2901,6 +2901,14 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         )
         or 0
     )
+
+    # Texte (plus tard: celui des box Streamlit)
+    lorem = (
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+        "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. "
+    ) * 3
 
     # Body page 2 : titre + 2 charts
     _draw_body_page_2_food_beverage_cost(
