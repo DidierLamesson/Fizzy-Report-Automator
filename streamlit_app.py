@@ -488,8 +488,8 @@ def make_food_cost_fig(d, label):
     fig.patch.set_facecolor(COLORS["bg"])
     ax.set_facecolor(COLORS["bg"])
 
-    x_labels = month_labels_from_graph_dates(d)
-    y = d["food_cost_pctg_n"]  # année en cours (déjà en %)
+    x_labels = list(reversed(month_labels_from_graph_dates(d)))
+    y = list(reversed(d["food_cost_pctg_n"]))
 
     ax.plot(
         range(len(y)),
@@ -551,8 +551,8 @@ def make_beverage_cost_fig(d, label):
     fig.patch.set_facecolor(COLORS["bg"])
     ax.set_facecolor(COLORS["bg"])
 
-    x_labels = month_labels_from_graph_dates(d)
-    y = d["beverage_cost_pctg_n"]  # année en cours (déjà en %)
+    x_labels = list(reversed(month_labels_from_graph_dates(d)))
+    y = list(reversed(d["beverage_cost_pctg_n"]))
 
     # On garde un rouge proche de ton exemple, sinon dis-moi si tu veux une autre teinte.
     BEV_COLOR = "#e74c3c"
