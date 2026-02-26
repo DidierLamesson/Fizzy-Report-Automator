@@ -1325,9 +1325,13 @@ BODY_FC_BC_SUMMARY_CFG = {
     # styles (proches page 1)
     "label_font_px": BODY1_CFG["left_title_font_px"],  # 20 (Venduto...)
     "value_font_px": BODY1_CFG["stats_pct_font_px"],  # 30 (+3.1%)
-    "arrow_font_px": BODY1_CFG["stats_vs_font_px"],  # 16 (vs 2024) — ou mets 18 si tu veux → aligner visuellement la flèche
+    "arrow_font_px": BODY1_CFG[
+        "stats_vs_font_px"
+    ],  # 16 (vs 2024) — ou mets 18 si tu veux → aligner visuellement la flèche
     "vs_title_font_px": BODY1_CFG["stats_vs_font_px"],  # 16 (vs 2024)
-    "vs_sub_font_px": BODY1_CFG["left_subtitle_font_px"]# 16 (2025 vs 2024) ou BODY1_CFG["chart_label_font_px"]=14 si tu préfères plus petit
+    "vs_sub_font_px": BODY1_CFG[
+        "left_subtitle_font_px"
+    ],  # 16 (2025 vs 2024) ou BODY1_CFG["chart_label_font_px"]=14 si tu préfères plus petit
     "vs_gap_after_px": BODY1_CFG["stats_gap_2_px"],  # 18 (gap après la valeur)
     # layout interne bloc gauche
     "bullet_size_px": 6,
