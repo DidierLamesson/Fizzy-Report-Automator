@@ -1851,7 +1851,7 @@ BODY_PAGE_2_CFG = {
     # mêmes colonnes que page 1
     "side_margin_px": BODY1_CFG["side_margin_px"],  # 80
     "col_gap_px": BODY1_CFG["col_gap_px"],  # 20
-    "left_col_ratio": BODY1_CFG["left_col_ratio"],  # 0.56 (si tu veux 50/50: mets 0.5)
+    "left_col_ratio": 0.5,  # 0.56 (si tu veux 50/50: mets 0.5)
     # placement vertical
     "gap_after_header_px": BODY1_CFG["gap_after_header_px"],
     # --- Titre section (fixe) ---
@@ -1859,8 +1859,8 @@ BODY_PAGE_2_CFG = {
     "section_title_font_px": BODY1_CFG["section_title_font_px"],  # 36
     "section_title_gap_after_px": BODY1_CFG["section_title_gap_after_px"],  # 15
     # charts
-    "chart_h_px": 380,  # ajuste si tu veux + grand
-    "charts_gap_after_title_px": 10,
+    "chart_h_px": 250,  # ajuste si tu veux + grand
+    "charts_gap_after_title_px": 20,
 }
 
 
