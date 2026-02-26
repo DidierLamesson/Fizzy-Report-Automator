@@ -1852,14 +1852,14 @@ BODY_PAGE_2_CFG = {
     "side_margin_px": BODY1_CFG["side_margin_px"],  # 80 (gauche)
     "right_edge_margin_px": BODY1_CFG["right_edge_margin_px"],  # ✅ 40 (droite)
     "col_gap_px": 40,  # ✅ espace entre les 2 charts (au lieu de 20)
-    "left_col_ratio": BODY1_CFG["left_col_ratio"],
+    "left_col_ratio": 0.5,
     "gap_after_header_px": BODY1_CFG["gap_after_header_px"],
     # --- Titre section (fixe) ---
     "section_title_text": "Food & Beverage cost",
     "section_title_font_px": BODY1_CFG["section_title_font_px"],
-    "section_title_gap_after_px": BODY1_CFG["section_title_gap_after_px"],
+    "section_title_gap_after_px": 20,
     # charts
-    "chart_h_px": 380,
+    "chart_h_px": 250,
     "charts_gap_after_title_px": 10,
 }
 
