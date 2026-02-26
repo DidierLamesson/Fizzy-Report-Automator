@@ -1928,8 +1928,8 @@ def _draw_beverage_cost_chart_in_page_2(
 ):
     axc = fig.add_axes([left, bottom, width, height], facecolor=COLORS["bg"])
 
-    x_labels = month_labels_from_graph_dates(d)
-    y = d["beverage_cost_pctg_n"]
+    x_labels = list(reversed(month_labels_from_graph_dates(d)))
+    y = list(reversed(d["beverage_cost_pctg_n"]))
 
     BEV_COLOR = "#e74c3c"
 
