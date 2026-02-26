@@ -2202,6 +2202,7 @@ BODY_PAGE_2_CFG = {
     # charts
     "chart_h_px": 250,
     "charts_gap_after_title_px": 10,
+    "gap_after_charts_px": 20,
 }
 
 
@@ -2408,6 +2409,7 @@ def _draw_body_page_2_food_beverage_cost(
         label=restaurant_name,
         dpi=dpi,
     )
+    return float(chart_top + chart_h)
 
 
 # =========================
@@ -2911,7 +2913,7 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
     ) * 3
 
     # Body page 2 : titre + 2 charts
-    _draw_body_page_2_food_beverage_cost(
+    charts_bottom_px = _draw_body_page_2_food_beverage_cost(
         ax,
         W_PX,
         H_PX,
@@ -2920,6 +2922,22 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         dpi,
         cfg={
             "header_line_y_px": int(header_line_y_px),
+        },
+    )
+
+    # ✅ Bloc FC/BC + texte justifié SOUS les charts
+    _draw_body_fc_bc_summary(
+        ax,
+        W_PX,
+        H_PX,
+        d,
+        restaurant_name,
+        lorem,  # pour l'instant Lorem (plus tard ton texte streamlit)
+        dpi,
+        cfg={
+            "top_px": int(
+                charts_bottom_px + BODY_PAGE_2_CFG.get("gap_after_charts_px", 30)
+            ),
         },
     )
 
