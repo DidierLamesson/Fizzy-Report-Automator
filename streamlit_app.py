@@ -1323,7 +1323,7 @@ BODY_FC_BC_SUMMARY_CFG = {
     "rows_offset_px": 5,  # ✅ descend FC/BC (mais pas le header vs)
     "gap_after_header_px": BODY1_CFG["gap_after_header_px"],  # 20
     # styles (proches page 1)
-    "label_font_px": BODY1_CFG["left_title_font_px"],  # 20 (Venduto...)
+    "label_font_px": BODY1_CFG["stats_vs_font_px"],  # 20 (Venduto...)
     "value_font_px": BODY1_CFG["stats_pct_font_px"],  # 30 (+3.1%)
     "arrow_font_px": BODY1_CFG[
         "stats_vs_font_px"
