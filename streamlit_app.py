@@ -1849,7 +1849,7 @@ def _measure_body1_metrics(
 # =========================
 BODY_PAGE_2_CFG = {
     # mêmes colonnes que page 1
-    "side_margin_px": BODY1_CFG["side_margin_px"],  # 80
+    "side_margin_px": 40,  # 80
     "col_gap_px": BODY1_CFG["col_gap_px"],  # 20
     "left_col_ratio": 0.5,  # 0.56 (si tu veux 50/50: mets 0.5)
     # placement vertical
