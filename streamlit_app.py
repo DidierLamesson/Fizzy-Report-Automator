@@ -1341,7 +1341,7 @@ BODY_FC_BC_SUMMARY_CFG = {
     "row_bottom_pad_px": 22,
     # lignes séparatrices
     "hline_enabled": True,
-    "hline_width_px": 2,
+    "hline_width_px": 1,
     "hline_gap_after_px": 0,
     "hline_to_vsep_gap_px": 22,  # coupe la ligne avant le séparateur vertical
     # séparateur vertical pointillé
