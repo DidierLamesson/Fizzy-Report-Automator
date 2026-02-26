@@ -1845,6 +1845,229 @@ def _measure_body1_metrics(
 
 
 # =========================
+# BODY PAGE 2 — FOOD & BEVERAGE COST (2 colonnes)
+# =========================
+BODY_PAGE_2_CFG = {
+    # mêmes colonnes que page 1
+    "side_margin_px": BODY1_CFG["side_margin_px"],  # 80
+    "col_gap_px": BODY1_CFG["col_gap_px"],  # 20
+    "left_col_ratio": BODY1_CFG["left_col_ratio"],  # 0.56 (si tu veux 50/50: mets 0.5)
+    # placement vertical
+    "gap_after_header_px": BODY1_CFG["gap_after_header_px"],
+    # --- Titre section (fixe) ---
+    "section_title_text": "Food & Beverage cost",
+    "section_title_font_px": BODY1_CFG["section_title_font_px"],  # 36
+    "section_title_gap_after_px": BODY1_CFG["section_title_gap_after_px"],  # 15
+    # charts
+    "chart_h_px": 380,  # ajuste si tu veux + grand
+    "charts_gap_after_title_px": 10,
+}
+
+
+def _draw_food_cost_chart_in_page_2(fig, left, bottom, width, height, d, label, dpi):
+    axc = fig.add_axes([left, bottom, width, height], facecolor=COLORS["bg"])
+
+    x_labels = month_labels_from_graph_dates(d)
+    y = d["food_cost_pctg_n"]
+
+    axc.plot(
+        range(len(y)),
+        y,
+        marker="o",
+        linewidth=3,
+        markersize=10,
+        color=COLORS["graph1"],
+        zorder=3,
+    )
+
+    axc.set_title(
+        f"Andamento Food Cost Mensile {d['year_n']}",
+        color=COLORS["white"],
+        fontsize=16,
+        fontproperties=epilogue_semibold,
+        loc="left",
+        pad=10,
+    )
+
+    axc.plot([], [], marker="o", linestyle="None", color=COLORS["graph1"], label=label)
+    leg = axc.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.02),
+        frameon=False,
+        fontsize=10,
+        labelcolor=COLORS["white"],
+        handlelength=0,
+    )
+    for t in leg.get_texts():
+        t.set_fontproperties(epilogue_regular)
+
+    axc.set_xticks(range(len(x_labels)))
+    axc.set_xticklabels(
+        x_labels,
+        rotation=45,
+        ha="right",
+        color=COLORS["white"],
+        fontsize=9,
+        fontproperties=epilogue_regular,
+    )
+    axc.tick_params(axis="x", colors=COLORS["white"], labelsize=9, length=0)
+
+    axc.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
+    axc.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
+    axc.set_ylim(0, max(25, (max(y) if y else 0) + 5))
+
+    axc.grid(False)
+    for s in axc.spines.values():
+        s.set_visible(False)
+
+    return axc
+
+
+def _draw_beverage_cost_chart_in_page_2(
+    fig, left, bottom, width, height, d, label, dpi
+):
+    axc = fig.add_axes([left, bottom, width, height], facecolor=COLORS["bg"])
+
+    x_labels = month_labels_from_graph_dates(d)
+    y = d["beverage_cost_pctg_n"]
+
+    BEV_COLOR = "#e74c3c"
+
+    axc.plot(
+        range(len(y)),
+        y,
+        marker="o",
+        linewidth=3,
+        markersize=10,
+        color=BEV_COLOR,
+        zorder=3,
+    )
+
+    axc.set_title(
+        f"Andamento Beverage Cost Mensile {d['year_n']}",
+        color=COLORS["white"],
+        fontsize=16,
+        fontproperties=epilogue_semibold,
+        loc="left",
+        pad=10,
+    )
+
+    axc.plot([], [], marker="o", linestyle="None", color=BEV_COLOR, label=label)
+    leg = axc.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.02),
+        frameon=False,
+        fontsize=10,
+        labelcolor=COLORS["white"],
+        handlelength=0,
+    )
+    for t in leg.get_texts():
+        t.set_fontproperties(epilogue_regular)
+
+    axc.set_xticks(range(len(x_labels)))
+    axc.set_xticklabels(
+        x_labels,
+        rotation=45,
+        ha="right",
+        color=COLORS["white"],
+        fontsize=9,
+        fontproperties=epilogue_regular,
+    )
+    axc.tick_params(axis="x", colors=COLORS["white"], labelsize=9, length=0)
+
+    axc.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
+    axc.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
+    axc.set_ylim(0, max(12, (max(y) if y else 0) + 2))
+
+    axc.grid(False)
+    for s in axc.spines.values():
+        s.set_visible(False)
+
+    return axc
+
+
+def _draw_body_page_2_food_beverage_cost(
+    ax, W_PX, H_PX, d, restaurant_name: str, dpi: int, cfg=None
+):
+    cfg = {**BODY_PAGE_2_CFG, **(cfg or {})}
+
+    ax.set_axis_off()
+    ax.set_aspect("auto")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
+    # hack interne déjà utilisé en page 1
+    ax._W_PX = W_PX
+
+    def x(px):
+        return px / W_PX
+
+    def y_from_top(top_px):
+        return 1.0 - (top_px / H_PX)
+
+    side = cfg["side_margin_px"]
+    gap = cfg["col_gap_px"]
+
+    usable_w = W_PX - 2 * side - gap
+    left_w = int(usable_w * cfg["left_col_ratio"])
+    right_w = usable_w - left_w
+
+    left_x0 = side
+    right_x0 = side + left_w + gap
+
+    # top de body
+    if cfg.get("top_px") is not None:
+        y = int(cfg["top_px"])
+    else:
+        header_line_y_px = int(cfg.get("header_line_y_px", 0))
+        y = header_line_y_px + cfg["gap_after_header_px"]
+
+    # --- Titre section (fixe) ---
+    h_sec = _draw_text_top_center_px(
+        ax,
+        y_from_top,
+        y,
+        cfg["section_title_text"],
+        cfg["section_title_font_px"],
+        epilogue_semibold,
+        dpi,
+        COLORS["accent"],
+        z=850,
+    )
+    y += h_sec + cfg["section_title_gap_after_px"] + cfg["charts_gap_after_title_px"]
+
+    # --- Charts (2 colonnes) ---
+    chart_top = y
+    chart_h = cfg["chart_h_px"]
+
+    fig = ax.figure
+
+    # colonne gauche = Food
+    _draw_food_cost_chart_in_page_2(
+        fig,
+        left=x(left_x0),
+        bottom=y_from_top(chart_top + chart_h),
+        width=(left_w / W_PX),
+        height=(chart_h / H_PX),
+        d=d,
+        label=restaurant_name,
+        dpi=dpi,
+    )
+
+    # colonne droite = Beverage
+    _draw_beverage_cost_chart_in_page_2(
+        fig,
+        left=x(right_x0),
+        bottom=y_from_top(chart_top + chart_h),
+        width=(right_w / W_PX),
+        height=(chart_h / H_PX),
+        d=d,
+        label=restaurant_name,
+        dpi=dpi,
+    )
+
+
+# =========================
 # FOOTER 1 — MODULAIRE (px-accurate)
 # =========================
 
@@ -2316,11 +2539,6 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
 
 
 def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
-    """Page 2 vide :
-    - même taille / repère que page 1
-    - header bis (sans 'Report Mensile')
-    - pas de footer
-    """
     ax.set_axis_off()
     ax.set_aspect("auto")
     ax.set_xlim(0, 1)
@@ -2328,27 +2546,33 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
 
     dpi = int(ax.figure.dpi)
 
-    # Header bis (sans le titre)
-    _draw_header1_bis(
-        ax,
-        W_PX=W_PX,
-        H_PX=H_PX,
-        month_label=d["full_date_n"],
-        restaurant_name=restaurant_name,
-        dpi=dpi,
+    # Header bis (sans "Report Mensile")
+    header_line_y_px = (
+        _draw_header1_bis(
+            ax,
+            W_PX=W_PX,
+            H_PX=H_PX,
+            month_label=d["full_date_n"],
+            restaurant_name=restaurant_name,
+            dpi=dpi,
+        )
+        or 0
     )
 
-    # Pas de footer en page 2
-    # Body vide pour l'instant
+    # Body page 2 : titre + 2 charts
+    _draw_body_page_2_food_beverage_cost(
+        ax,
+        W_PX,
+        H_PX,
+        d,
+        restaurant_name,
+        dpi,
+        cfg={
+            "header_line_y_px": int(header_line_y_px),
+        },
+    )
 
-    ax.set_axis_off()
-    ax.set_aspect("auto")
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
-
-    dpi = int(ax.figure.dpi)
-
-    # Body vide pour l'instant (on n'affiche rien entre header et footer).
+    # Pas de footer en page 2 ✅
 
 
 # =========================
