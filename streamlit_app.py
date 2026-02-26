@@ -2262,7 +2262,7 @@ def _draw_food_cost_chart_in_page_2(fig, left, bottom, width, height, d, label, 
     for s in axc.spines.values():
         s.set_visible(False)
 
-    return axc
+    return axc, leg
 
 
 def _draw_beverage_cost_chart_in_page_2(
@@ -2325,7 +2325,7 @@ def _draw_beverage_cost_chart_in_page_2(
     for s in axc.spines.values():
         s.set_visible(False)
 
-    return axc
+    return axc, leg
 
 
 def _draw_body_page_2_food_beverage_cost(
@@ -2338,7 +2338,6 @@ def _draw_body_page_2_food_beverage_cost(
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
 
-    # hack interne déjà utilisé en page 1
     ax._W_PX = W_PX
 
     def x(px):
@@ -2347,9 +2346,9 @@ def _draw_body_page_2_food_beverage_cost(
     def y_from_top(top_px):
         return 1.0 - (top_px / H_PX)
 
-    left_margin = cfg["side_margin_px"]  # 80
-    right_margin = cfg.get("right_edge_margin_px", left_margin)  # ✅ 40
-    gap = cfg["col_gap_px"]  # ✅ 40
+    left_margin = cfg["side_margin_px"]
+    right_margin = cfg.get("right_edge_margin_px", left_margin)
+    gap = cfg["col_gap_px"]
 
     usable_w = W_PX - left_margin - right_margin - gap
     left_w = int(usable_w * cfg["left_col_ratio"])
@@ -2357,14 +2356,13 @@ def _draw_body_page_2_food_beverage_cost(
 
     left_x0 = left_margin
     right_x0 = left_margin + left_w + gap
-    right_x1 = W_PX - right_margin  # (si tu en as besoin plus tard)
 
     # top de body
     if cfg.get("top_px") is not None:
         y = int(cfg["top_px"])
     else:
         header_line_y_px = int(cfg.get("header_line_y_px", 0))
-        y = header_line_y_px + cfg["gap_after_header_px"]
+        y = int(header_line_y_px + cfg["gap_after_header_px"])
 
     # --- Titre section (fixe) ---
     h_sec = _draw_text_top_center_px(
@@ -2378,16 +2376,18 @@ def _draw_body_page_2_food_beverage_cost(
         COLORS["accent"],
         z=850,
     )
-    y += h_sec + cfg["section_title_gap_after_px"] + cfg["charts_gap_after_title_px"]
+    y += int(
+        h_sec + cfg["section_title_gap_after_px"] + cfg["charts_gap_after_title_px"]
+    )
 
     # --- Charts (2 colonnes) ---
     chart_top = y
-    chart_h = cfg["chart_h_px"]
+    chart_h = int(cfg["chart_h_px"])
 
     fig = ax.figure
 
-    # colonne gauche = Food
-    _draw_food_cost_chart_in_page_2(
+    # gauche = Food
+    ax_food, leg_food = _draw_food_cost_chart_in_page_2(
         fig,
         left=x(left_x0),
         bottom=y_from_top(chart_top + chart_h),
@@ -2398,8 +2398,8 @@ def _draw_body_page_2_food_beverage_cost(
         dpi=dpi,
     )
 
-    # colonne droite = Beverage
-    _draw_beverage_cost_chart_in_page_2(
+    # droite = Beverage
+    ax_bev, leg_bev = _draw_beverage_cost_chart_in_page_2(
         fig,
         left=x(right_x0),
         bottom=y_from_top(chart_top + chart_h),
@@ -2409,7 +2409,29 @@ def _draw_body_page_2_food_beverage_cost(
         label=restaurant_name,
         dpi=dpi,
     )
-    return float(chart_top + chart_h)
+
+    # ✅ Mesure "bas de légende" (px depuis le haut de la page)
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+    ax_bb = ax.get_window_extent(renderer=r)
+    scale_y = ax_bb.height / H_PX  # px render / px layout
+
+    def legend_bottom_from_top_px(leg):
+        if leg is None:
+            return float(chart_top)
+        bb = leg.get_window_extent(renderer=r)  # bb.y0 = bottom (pixels render)
+        return float((ax_bb.y1 - bb.y0) / scale_y)
+
+    legend_bottom_px = max(
+        legend_bottom_from_top_px(leg_food),
+        legend_bottom_from_top_px(leg_bev),
+    )
+
+    return {
+        "charts_top_px": float(chart_top),
+        "charts_bottom_px": float(chart_top + chart_h),
+        "legend_bottom_px": float(legend_bottom_px),
+    }
 
 
 # =========================
@@ -2891,6 +2913,72 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
 
     dpi = int(ax.figure.dpi)
 
+    # Header bis
+    header_line_y_px = (
+        _draw_header1_bis(
+            ax,
+            W_PX=W_PX,
+            H_PX=H_PX,
+            month_label=d["full_date_n"],
+            restaurant_name=restaurant_name,
+            dpi=dpi,
+        )
+        or 0
+    )
+
+    # Texte (plus tard: depuis Streamlit)
+    lorem = (
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+        "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. "
+    ) * 3
+
+    # 1) Dessine titre + charts et récupère bas de légende
+    charts_info = _draw_body_page_2_food_beverage_cost(
+        ax,
+        W_PX,
+        H_PX,
+        d,
+        restaurant_name,
+        dpi,
+        cfg={"header_line_y_px": int(header_line_y_px)},
+    )
+    legend_bottom_px = float(charts_info["legend_bottom_px"])
+
+    # 2) Zone dispo pour le bloc (bas légende + 20) -> (bas page - pad_bottom)
+    region_start = legend_bottom_px + 20.0
+    region_end = float(H_PX - PAGE_TOKENS["pad_bottom_px"])
+    region_h = max(0.0, region_end - region_start)
+
+    # 3) Mesure la hauteur du bloc FC/BC + texte
+    block_h = _measure_body_fc_bc_summary_height_px(
+        ax, W_PX, H_PX, d, restaurant_name, lorem, dpi
+    )
+
+    # 4) Centrage vertical
+    top_final = region_start + max(0.0, (region_h - block_h) / 2.0)
+
+    # 5) Dessine le bloc sous les charts
+    _draw_body_fc_bc_summary(
+        ax,
+        W_PX,
+        H_PX,
+        d,
+        restaurant_name,
+        lorem,
+        dpi,
+        cfg={"top_px": int(round(top_final))},
+    )
+
+    # Pas de footer en page 2 ✅
+    ax.set_axis_off()
+    ax.set_aspect("auto")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
+    dpi = int(ax.figure.dpi)
+
     # Header bis (sans "Report Mensile")
     header_line_y_px = (
         _draw_header1_bis(
@@ -2941,6 +3029,85 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         },
     )
 
+
+def _measure_body_fc_bc_summary_height_px(
+    ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str, dpi: int, cfg=None
+) -> float:
+    cfg = {**BODY_FC_BC_SUMMARY_CFG, **(cfg or {})}
+
+    ax.figure.canvas.draw()
+    r = ax.figure.canvas.get_renderer()
+    ax_bb = ax.get_window_extent(renderer=r)
+    scale_y = ax_bb.height / H_PX
+    ax_w_render = ax_bb.width
+
+    def h_px(s, font_px, fp):
+        _w, h = _measure_text_px(ax, s, font_px, fp, dpi)
+        return float(h / scale_y)
+
+    # colonnes (identiques au draw)
+    left_margin = cfg["side_margin_px"]
+    right_margin = cfg["right_edge_margin_px"]
+    gap = cfg["col_gap_px"]
+
+    usable_w = W_PX - left_margin - right_margin - gap
+    left_w = int(usable_w * cfg["left_col_ratio"])
+
+    # zone texte
+    right_x0 = left_margin + left_w + gap
+    para_right_edge_px = W_PX - right_margin
+    col_px_layout = para_right_edge_px - right_x0
+    col_px_render = ax_w_render * (col_px_layout / W_PX)
+
+    # header "vs"
+    vs_title = f"vs {d['year_n_1']}"
+    vs_sub = "Lug-Dic"
+    header_h = (
+        h_px(vs_title, cfg["vs_title_font_px"], epilogue_semibold)
+        + 4
+        + h_px(vs_sub, cfg["vs_sub_font_px"], epilogue_regular)
+        + cfg["vs_gap_after_px"]
+    )
+
+    # rows gauche (reprise de ta logique)
+    _, value_h_render = _measure_text_px(
+        ax, "21.0%", cfg["value_font_px"], epilogue_semibold, dpi
+    )
+    value_h = float(value_h_render / scale_y)
+
+    rows_labels = ["FC Medio\nultimi 6 mesi", "BC Medio\nultimi 6 mesi"]
+    row_hs = []
+    for lab in rows_labels:
+        _w, lab_h_render = _measure_text_px(
+            ax, lab, cfg["label_font_px"], epilogue_regular, dpi
+        )
+        lab_h = float(lab_h_render / scale_y)
+        # y_val_top = y_row_top + max(0,(lab_h - value_h)/2) + header_h*0.55
+        # row_h = max(lab_h, (y_val_top - y_row_top + value_h)) + row_bottom_pad
+        row_h = (
+            max(lab_h, (max(0.0, (lab_h - value_h) / 2.0) + header_h * 0.55 + value_h))
+            + cfg["row_bottom_pad_px"]
+        )
+        row_hs.append(row_h)
+
+    left_block_h = row_hs[0] + cfg["row_gap_px"] + row_hs[1]  # 2 rows + gap
+
+    # paragraphe (justifié) — hauteur réelle via render
+    para = _justify_paragraph_to_px(
+        ax,
+        (analysis_text or "").strip(),
+        width_px=col_px_render,
+        font_px=cfg["para_font_px"],
+        fontprops=epilogue_regular,
+        dpi=dpi,
+    )
+    para_h_render = _measure_multiline_h_render_px(
+        ax, para, cfg["para_font_px"], epilogue_regular, dpi, cfg["para_linespacing"]
+    )
+    para_h = float(para_h_render / scale_y)
+
+    # hauteur totale du bloc = max(gauche, droite)
+    return float(max(left_block_h, para_h))
     # Pas de footer en page 2 ✅
 
 
