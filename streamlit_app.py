@@ -1499,13 +1499,12 @@ def _draw_body_fc_bc_summary(
             ax, label, cfg["label_font_px"], epilogue_regular, dpi
         )
 
-        # y valeur alignée "au milieu" du bloc label (visuel stable)
-        y_val_top = y_row_top + max(0, (label_h - value_h) / 2) + (header_h_px * 0.55)
+        # ✅ bullet centré verticalement sur le bloc de texte
+        bullet_top_px = y_row_top + max(0, (label_h - bullet_sz) / 2)
 
-        # bullet carré
         ax.add_patch(
             FancyBboxPatch(
-                (x(bullet_x0), y_from_top(y_row_top + 6)),
+                (x(bullet_x0), y_from_top(bullet_top_px)),
                 bullet_sz / W_PX,
                 bullet_sz / H_PX,
                 boxstyle="round,pad=0,rounding_size=0.002",
