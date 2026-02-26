@@ -894,6 +894,155 @@ def _draw_header1(
     return y_cursor_px  # ✅ position de la ligne en px depuis le haut
 
 
+def _draw_header1_bis(
+    ax, W_PX, H_PX, month_label: str, restaurant_name: str, dpi: int, cfg=None
+):
+    """
+    Identique à _draw_header1, MAIS sans dessiner le titre "Report Mensile".
+    Important : on conserve la même "hauteur" de header (espacements inclus),
+    donc restaurant + ligne restent alignés comme en page 1.
+    """
+    cfg = {**HEADER1_CFG, **(cfg or {})}
+
+    ax.set_axis_off()
+    ax.set_aspect("auto")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
+    def x(px):
+        return px / W_PX
+
+    def y_from_top(top_px):
+        return 1.0 - (top_px / H_PX)
+
+    def rect_from_top(left_px, top_px, w_px, h_px):
+        x0 = x(left_px)
+        y1 = y_from_top(top_px)
+        y0 = y_from_top(top_px + h_px)
+        return x0, y0, (w_px / W_PX), (h_px / H_PX)
+
+    # 1) Logo
+    logo_bottom_px = 0
+    if cfg["logo_enabled"] and LOGO_PATH.exists():
+        logo = _trim_transparent(_img_rgba(LOGO_PATH))
+
+        LOGO_W_PX = cfg["logo_w_px"]
+        LOGO_TOP_PX = cfg["logo_top_px"]
+
+        aspect = logo.width / logo.height
+        logo_h_px = LOGO_W_PX / aspect
+
+        left_px = (W_PX - LOGO_W_PX) / 2
+        x0_px, x1_px = left_px, left_px + LOGO_W_PX
+        y1_px = H_PX - LOGO_TOP_PX
+        y0_px = y1_px - logo_h_px
+
+        ax.imshow(
+            logo,
+            extent=[x(x0_px), x(x1_px), (y0_px / H_PX), (y1_px / H_PX)],
+            zorder=1000,
+            aspect="auto",
+        )
+
+        logo_bottom_px = LOGO_TOP_PX + logo_h_px
+
+    # 2) Pill (date)
+    pill_bottom_px = 0
+    if cfg["pill_enabled"]:
+        pill_text = month_label
+
+        PILL_TOP_PX = cfg["pill_top_px"]
+        PILL_RIGHT_MARGIN_PX = cfg["pill_right_margin_px"]
+        pill_font_px = cfg["pill_font_px"]
+        pad_x_px = cfg["pill_pad_x_px"]
+        pad_y_px = cfg["pill_pad_y_px"]
+
+        text_w_px, text_h_px = _measure_text_px(
+            ax, pill_text, pill_font_px, epilogue_regular, dpi
+        )
+        PILL_W_PX = int(text_w_px + 2 * pad_x_px)
+        PILL_H_PX = int(text_h_px + 2 * pad_y_px)
+
+        pill_left_px = W_PX - PILL_RIGHT_MARGIN_PX - PILL_W_PX
+        x0, y0, w_ax, h_ax = rect_from_top(
+            pill_left_px, PILL_TOP_PX, PILL_W_PX, PILL_H_PX
+        )
+
+        ax.add_patch(
+            FancyBboxPatch(
+                (x0, y0),
+                w_ax,
+                h_ax,
+                boxstyle=f"round,pad=0.0,rounding_size={min(h_ax/2, w_ax/2)}",
+                transform=ax.transAxes,
+                facecolor=COLORS["bg"],
+                edgecolor=COLORS["highlight"],
+                linewidth=_px_to_pt(cfg["pill_border_width_px"], dpi),
+                zorder=900,
+            )
+        )
+        ax.text(
+            x0 + w_ax / 2,
+            y0 + h_ax / 2,
+            pill_text,
+            transform=ax.transAxes,
+            ha="center",
+            va="center",
+            color=COLORS["white"],
+            fontsize=_px_to_pt(pill_font_px, dpi),
+            fontproperties=epilogue_regular,
+            zorder=901,
+        )
+
+        pill_bottom_px = PILL_TOP_PX + PILL_H_PX
+
+    # 3) Curseur vertical sous top row
+    toprow_bottom_px = max(logo_bottom_px, pill_bottom_px)
+    y_cursor_px = toprow_bottom_px + cfg["gap_after_toprow_px"]
+
+    # 4) Titre : on NE DESSINE PAS, mais on CONSERVE l’espace qu’il occupe
+    title_text = cfg["title_text"]
+    title_font_px = cfg["title_font_px"]
+    title_fontprops = globals()[cfg["title_fontprops"]]
+    title_fontstyle = cfg["title_fontstyle"]
+
+    _, h_title_px = _measure_text_px(
+        ax, title_text, title_font_px, title_fontprops, dpi, fontstyle=title_fontstyle
+    )
+    y_cursor_px += h_title_px + cfg["gap_title_to_restaurant_px"]
+
+    # 5) Restaurant (inchangé)
+    resto_text = (restaurant_name or "").upper()
+    resto_font_px = cfg["restaurant_font_px"]
+    resto_color = COLORS[cfg["restaurant_color"]]
+    resto_fontprops = globals()[cfg["restaurant_fontprops"]]
+
+    h_resto_px = _draw_text_top_px(
+        ax,
+        y_from_top,
+        y_cursor_px,
+        resto_text,
+        resto_font_px,
+        resto_fontprops,
+        dpi,
+        resto_color,
+        z=850,
+    )
+    y_cursor_px += h_resto_px + cfg["gap_restaurant_to_line_px"]
+
+    # 6) Ligne (inchangé)
+    SIDE_MARGIN_PX = cfg["line_side_margin_px"]
+    ax.hlines(
+        y=y_from_top(y_cursor_px),
+        xmin=x(SIDE_MARGIN_PX),
+        xmax=x(W_PX - SIDE_MARGIN_PX),
+        colors=COLORS[cfg["line_color"]],
+        linewidth=_px_to_pt(cfg["line_width_px"], dpi),
+        zorder=800,
+    )
+    return y_cursor_px
+
+
 # =========================
 # BODY 1 — FATTURATO (px-accurate, "modulaire", imshow-safe)
 # =========================
@@ -2040,6 +2189,11 @@ def _draw_footer1(ax, W_PX, H_PX, d, dpi: int, cfg=None):
         )
 
 
+# =========================
+# CREATION PAGE1 (layout) — SQUELETTE (avec header + body + footer, mais sans contenu dynamique)
+# =========================
+
+
 def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
     ax.set_axis_off()
     ax.set_aspect("auto")
@@ -2166,9 +2320,35 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
 
 
 # =========================
-# 9bis) PDF PAGE 2 (layout) — SQUELETTE (vide)
+# CREATION PAGE2 (layout) — SQUELETTE (avec header + footer, mais body vide pour l'instant)
 # =========================
+
+
 def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
+    """Page 2 vide :
+    - même taille / repère que page 1
+    - header bis (sans 'Report Mensile')
+    - pas de footer
+    """
+    ax.set_axis_off()
+    ax.set_aspect("auto")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
+    dpi = int(ax.figure.dpi)
+
+    # Header bis (sans le titre)
+    _draw_header1_bis(
+        ax,
+        W_PX=W_PX,
+        H_PX=H_PX,
+        month_label=d["full_date_n"],
+        restaurant_name=restaurant_name,
+        dpi=dpi,
+    )
+
+    # Pas de footer en page 2
+    # Body vide pour l'instant
     """Page 2 vide, mais avec les mêmes contraintes que la page 1 :
     - même taille (800x1000)
     - mêmes marges (pad_top/pad_bottom/latérales via header/footer)
@@ -2209,6 +2389,10 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
     # Body vide pour l'instant (on n'affiche rien entre header et footer).
 
 
+# =========================
+# CONFIG GLOBALE DES PAGES (pour page 1 + page 2)
+# =========================
+
 # ✅ Taille cible en pixels (ton nouveau "format")
 PAGE_W_PX = 800
 PAGE_H_PX = 1000
@@ -2222,6 +2406,10 @@ PAGE_SIZE_INCH = (PAGE_W_PX / BASE_DPI, PAGE_H_PX / BASE_DPI)
 PAGE_2_W_PX = PAGE_W_PX
 PAGE_2_H_PX = PAGE_H_PX
 PAGE_2_SIZE_INCH = PAGE_SIZE_INCH
+
+# =========================
+# GENERATION PDF/PNG (pages 1 & 2)
+# =========================
 
 
 def build_a4_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
