@@ -1320,7 +1320,7 @@ BODY_FC_BC_SUMMARY_CFG = {
     "right_edge_margin_px": BODY1_CFG["right_edge_margin_px"],  # 40
     "col_gap_px": 40,  # espace entre colonne gauche et texte
     "left_col_ratio": 0.55,  # largeur bloc métriques
-    "rows_offset_px": 20,  # ✅ descend FC/BC (mais pas le header vs)
+    "rows_offset_px": 5,  # ✅ descend FC/BC (mais pas le header vs)
     "gap_after_header_px": BODY1_CFG["gap_after_header_px"],  # 20
     # styles (proches page 1)
     "label_font_px": 18,
