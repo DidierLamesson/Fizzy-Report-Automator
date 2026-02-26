@@ -2165,6 +2165,39 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
     )
 
 
+def _draw_a4_page_2(ax, W_PX, H_PX):
+    # Repère "page" 0..1 (imshow-safe)
+    ax.set_axis_off()
+    ax.set_aspect("auto")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    # Rien à dessiner pour l’instant (fond = COLORS["bg"] via figure/axes)
+
+
+def build_page2_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes:
+    # Même format que tes pages (réutilise tes constantes existantes)
+    fig = plt.figure(figsize=PAGE_SIZE_INCH, dpi=dpi, facecolor=COLORS["bg"])
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
+
+    # IMPORTANT : layout basé sur la grille “logique”
+    W_PX, H_PX = PAGE_W_PX, PAGE_H_PX
+    _draw_a4_page_2(ax, W_PX, H_PX)
+
+    buf = BytesIO()
+    fig.savefig(
+        buf,
+        format="png",
+        bbox_inches=None,
+        pad_inches=0,
+        facecolor=fig.get_facecolor(),
+        edgecolor="none",
+    )
+    plt.close(fig)
+    buf.seek(0)
+    return buf.getvalue()
+
+
 # ✅ Taille cible en pixels (ton nouveau "format")
 PAGE_W_PX = 800
 PAGE_H_PX = 1000
@@ -2307,6 +2340,10 @@ if uploaded and restaurant_input:
             file_name=f"Report_{restaurant_input}.pdf",
             mime="application/pdf",
         )
+        st.divider()
+        st.subheader("🧾 Page 2 (preview)")
 
+        page2_png = build_page2_png_preview_bytes(data, restaurant_input, dpi=150)
+        st.image(page2_png, caption="Aperçu p2(rendu PDF)", width=580)  # ratio respecté
 else:
     st.info("Importe un fichier Excel et renseigne le nom client pour générer le PDF.")
