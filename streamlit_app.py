@@ -1849,18 +1849,18 @@ def _measure_body1_metrics(
 # =========================
 BODY_PAGE_2_CFG = {
     # mêmes colonnes que page 1
-    "side_margin_px": 40,  # 80
-    "col_gap_px": BODY1_CFG["col_gap_px"],  # 20
-    "left_col_ratio": 0.5,  # 0.56 (si tu veux 50/50: mets 0.5)
-    # placement vertical
+    "side_margin_px": BODY1_CFG["side_margin_px"],  # 80 (gauche)
+    "right_edge_margin_px": BODY1_CFG["right_edge_margin_px"],  # ✅ 40 (droite)
+    "col_gap_px": 40,  # ✅ espace entre les 2 charts (au lieu de 20)
+    "left_col_ratio": BODY1_CFG["left_col_ratio"],
     "gap_after_header_px": BODY1_CFG["gap_after_header_px"],
     # --- Titre section (fixe) ---
     "section_title_text": "Food & Beverage cost",
-    "section_title_font_px": BODY1_CFG["section_title_font_px"],  # 36
-    "section_title_gap_after_px": BODY1_CFG["section_title_gap_after_px"],  # 15
+    "section_title_font_px": BODY1_CFG["section_title_font_px"],
+    "section_title_gap_after_px": BODY1_CFG["section_title_gap_after_px"],
     # charts
-    "chart_h_px": 250,  # ajuste si tu veux + grand
-    "charts_gap_after_title_px": 20,
+    "chart_h_px": 380,
+    "charts_gap_after_title_px": 10,
 }
 
 
@@ -2005,15 +2005,17 @@ def _draw_body_page_2_food_beverage_cost(
     def y_from_top(top_px):
         return 1.0 - (top_px / H_PX)
 
-    side = cfg["side_margin_px"]
-    gap = cfg["col_gap_px"]
+    left_margin = cfg["side_margin_px"]  # 80
+    right_margin = cfg.get("right_edge_margin_px", left_margin)  # ✅ 40
+    gap = cfg["col_gap_px"]  # ✅ 40
 
-    usable_w = W_PX - 2 * side - gap
+    usable_w = W_PX - left_margin - right_margin - gap
     left_w = int(usable_w * cfg["left_col_ratio"])
     right_w = usable_w - left_w
 
-    left_x0 = side
-    right_x0 = side + left_w + gap
+    left_x0 = left_margin
+    right_x0 = left_margin + left_w + gap
+    right_x1 = W_PX - right_margin  # (si tu en as besoin plus tard)
 
     # top de body
     if cfg.get("top_px") is not None:
