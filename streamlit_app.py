@@ -2338,7 +2338,6 @@ def _draw_body_page_2_food_beverage_cost(
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
 
-    # hack interne déjà utilisé en page 1
     ax._W_PX = W_PX
 
     def x(px):
@@ -2347,9 +2346,9 @@ def _draw_body_page_2_food_beverage_cost(
     def y_from_top(top_px):
         return 1.0 - (top_px / H_PX)
 
-    left_margin = cfg["side_margin_px"]  # 80
-    right_margin = cfg.get("right_edge_margin_px", left_margin)  # ✅ 40
-    gap = cfg["col_gap_px"]  # ✅ 40
+    left_margin = cfg["side_margin_px"]
+    right_margin = cfg.get("right_edge_margin_px", left_margin)
+    gap = cfg["col_gap_px"]
 
     usable_w = W_PX - left_margin - right_margin - gap
     left_w = int(usable_w * cfg["left_col_ratio"])
@@ -2357,7 +2356,6 @@ def _draw_body_page_2_food_beverage_cost(
 
     left_x0 = left_margin
     right_x0 = left_margin + left_w + gap
-    right_x1 = W_PX - right_margin  # (si tu en as besoin plus tard)
 
     # top de body
     if cfg.get("top_px") is not None:
@@ -2366,7 +2364,7 @@ def _draw_body_page_2_food_beverage_cost(
         header_line_y_px = int(cfg.get("header_line_y_px", 0))
         y = header_line_y_px + cfg["gap_after_header_px"]
 
-    # --- Titre section (fixe) ---
+    # --- Titre section ---
     h_sec = _draw_text_top_center_px(
         ax,
         y_from_top,
@@ -2380,14 +2378,13 @@ def _draw_body_page_2_food_beverage_cost(
     )
     y += h_sec + cfg["section_title_gap_after_px"] + cfg["charts_gap_after_title_px"]
 
-    # --- Charts (2 colonnes) ---
     chart_top = y
     chart_h = cfg["chart_h_px"]
 
     fig = ax.figure
 
-    # colonne gauche = Food
-    _draw_food_cost_chart_in_page_2(
+    # --- Charts (2 colonnes) ---
+    ax_food = _draw_food_cost_chart_in_page_2(
         fig,
         left=x(left_x0),
         bottom=y_from_top(chart_top + chart_h),
@@ -2398,8 +2395,7 @@ def _draw_body_page_2_food_beverage_cost(
         dpi=dpi,
     )
 
-    # colonne droite = Beverage
-    _draw_beverage_cost_chart_in_page_2(
+    ax_bev = _draw_beverage_cost_chart_in_page_2(
         fig,
         left=x(right_x0),
         bottom=y_from_top(chart_top + chart_h),
@@ -2409,7 +2405,25 @@ def _draw_body_page_2_food_beverage_cost(
         label=restaurant_name,
         dpi=dpi,
     )
-    return float(chart_top + chart_h)
+
+    # ✅ Mesure du vrai bas rendu (inclut tick labels / titres / etc.)
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+
+    page_bb = ax.get_window_extent(renderer=r)  # bbox de la page (display px)
+    scale_y = page_bb.height / H_PX  # conversion display_px -> layout_px
+
+    def bottom_from_top_layout_px(axc):
+        tight = axc.get_tightbbox(r)  # bbox "tight" (display px)
+        # distance depuis le haut de la page (layout px)
+        return (page_bb.y1 - tight.y0) / scale_y
+
+    true_bottom = max(
+        bottom_from_top_layout_px(ax_food),
+        bottom_from_top_layout_px(ax_bev),
+    )
+
+    return float(true_bottom)
 
 
 # =========================
@@ -2912,7 +2926,7 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. "
     ) * 3
 
-    # Body page 2 : titre + 2 charts
+    # charts_bottom_px = vrai bas rendu des charts (ticks inclus)
     charts_bottom_px = _draw_body_page_2_food_beverage_cost(
         ax,
         W_PX,
@@ -2920,28 +2934,26 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         d,
         restaurant_name,
         dpi,
-        cfg={
-            "header_line_y_px": int(header_line_y_px),
-        },
+        cfg={"header_line_y_px": int(header_line_y_px)},
     )
 
-    # ✅ Bloc FC/BC + texte justifié SOUS les charts
     _draw_body_fc_bc_summary(
         ax,
         W_PX,
         H_PX,
         d,
         restaurant_name,
-        lorem,  # pour l'instant Lorem (plus tard ton texte streamlit)
+        lorem,  # (remplacé ensuite par tes textes streamlit)
         dpi,
         cfg={
             "top_px": int(
-                charts_bottom_px + BODY_PAGE_2_CFG.get("gap_after_charts_px", 30)
-            ),
+                charts_bottom_px + 20
+            )  # ✅ EXACTEMENT 20px sous les graphiques réels
         },
     )
 
-    # Pas de footer en page 2 ✅
+
+# Pas de footer en page 2 ✅
 
 
 # =========================
