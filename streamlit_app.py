@@ -2165,6 +2165,50 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
     )
 
 
+# =========================
+# 9bis) PDF PAGE 2 (layout) — SQUELETTE (vide)
+# =========================
+def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
+    """Page 2 vide, mais avec les mêmes contraintes que la page 1 :
+    - même taille (800x1000)
+    - mêmes marges (pad_top/pad_bottom/latérales via header/footer)
+    - même méthode de construction (Matplotlib + axes [0,0,1,1])
+    """
+    ax.set_axis_off()
+    ax.set_aspect("auto")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
+    dpi = int(ax.figure.dpi)
+
+    # Header identique page 1
+    _ = (
+        _draw_header1(
+            ax,
+            W_PX=W_PX,
+            H_PX=H_PX,
+            month_label=d["full_date_n"],
+            restaurant_name=restaurant_name,
+            dpi=dpi,
+        )
+        or 0
+    )
+
+    # Footer identique page 1 (ancré : bas des valeurs à pad_bottom)
+    footer_h = _measure_footer1_height_px(ax, W_PX, H_PX, d, dpi)
+    footer_line_y_px = int(H_PX - PAGE_TOKENS["pad_bottom_px"] - footer_h)
+    _draw_footer1(
+        ax,
+        W_PX,
+        H_PX,
+        d,
+        dpi,
+        cfg={"top_px": int(footer_line_y_px)},
+    )
+
+    # Body vide pour l'instant (on n'affiche rien entre header et footer).
+
+
 # ✅ Taille cible en pixels (ton nouveau "format")
 PAGE_W_PX = 800
 PAGE_H_PX = 1000
@@ -2174,6 +2218,10 @@ BASE_DPI = 100
 
 # ✅ Taille “physique” (inches) qui correspond à 800x1000 px à BASE_DPI
 PAGE_SIZE_INCH = (PAGE_W_PX / BASE_DPI, PAGE_H_PX / BASE_DPI)
+# --- Page 2 : on garde exactement la même “grille” que la page 1 (pour l'instant) ---
+PAGE_2_W_PX = PAGE_W_PX
+PAGE_2_H_PX = PAGE_H_PX
+PAGE_2_SIZE_INCH = PAGE_SIZE_INCH
 
 
 def build_a4_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
@@ -2216,6 +2264,55 @@ def build_a4_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes:
     # ✅ layout basé sur la "grille" 800x1000 (indépendant du dpi de rendu)
     W_PX, H_PX = PAGE_W_PX, PAGE_H_PX
     _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name)
+
+    buf = BytesIO()
+    fig.savefig(
+        buf,
+        format="png",
+        bbox_inches=None,
+        pad_inches=0,
+        facecolor=fig.get_facecolor(),
+        edgecolor="none",
+    )
+    plt.close(fig)
+    buf.seek(0)
+    return buf.getvalue()
+
+
+def build_a4_page_2_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
+    """
+    PDF PAGE 2 : même verrouillage de format que page 1 (800x1000 via PAGE_2_SIZE_INCH + BASE_DPI).
+    Le param `dpi` est gardé uniquement pour compat, mais n'influence pas la taille physique.
+    """
+    fig = plt.figure(figsize=PAGE_2_SIZE_INCH, dpi=BASE_DPI, facecolor=COLORS["bg"])
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
+
+    W_PX, H_PX = PAGE_2_W_PX, PAGE_2_H_PX
+    _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name)
+
+    buf = BytesIO()
+    fig.savefig(
+        buf,
+        format="pdf",
+        bbox_inches=None,
+        pad_inches=0,
+        facecolor=fig.get_facecolor(),
+        edgecolor="none",
+    )
+    plt.close(fig)
+    buf.seek(0)
+    return buf.getvalue()
+
+
+def build_a4_page_2_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes:
+    """PNG PAGE 2 : `dpi` ne joue que sur la netteté de l'aperçu."""
+    fig = plt.figure(figsize=PAGE_2_SIZE_INCH, dpi=dpi, facecolor=COLORS["bg"])
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
+
+    W_PX, H_PX = PAGE_2_W_PX, PAGE_2_H_PX
+    _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name)
 
     buf = BytesIO()
     fig.savefig(
@@ -2305,6 +2402,23 @@ if uploaded and restaurant_input:
             label="⬇️ Scarica PDF",
             data=pdf_bytes,
             file_name=f"Report_{restaurant_input}.pdf",
+            mime="application/pdf",
+        )
+    # --- UI : Download PDF (PAGE 2) ---
+    st.divider()
+
+    pdf_bytes_page_2 = build_a4_page_2_pdf_bytes(data, restaurant_input, dpi=300)
+    png_bytes_page_2 = pdf_bytes_to_png_bytes(pdf_bytes_page_2, page_index=0, zoom=2.0)
+
+    c1, c2 = st.columns([1.5, 1], gap="large")
+    with c1:
+        st.image(png_bytes_page_2, caption="Aperçu (rendu PDF) — Page 2", width=580)
+    with c2:
+        st.subheader("📄 Export PDF — Page 2")
+        st.download_button(
+            label="⬇️ Scarica PDF (Page 2)",
+            data=pdf_bytes_page_2,
+            file_name=f"Report_{restaurant_input}_page_2.pdf",
             mime="application/pdf",
         )
 
