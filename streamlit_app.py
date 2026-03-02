@@ -1608,7 +1608,7 @@ def _draw_body_fc_bc_summary(
         )
         y_line = y_row_top + row_h
 
-        if cfg["hline_enabled"]:
+        if cfg["hline_enabled"] and idx == 0:
             cut = cfg["hline_to_vsep_gap_px"]
             # segment gauche
             ax.hlines(
