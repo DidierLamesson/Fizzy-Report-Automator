@@ -1576,39 +1576,43 @@ def _draw_body_fc_bc_summary(
             zorder=850,
         )
 
-        # hauteur row
+        # hauteur row (inchangée pour le flux vertical)
         row_h = (
             max(label_h, (y_val_top - y_row_top + value_h)) + cfg["row_bottom_pad_px"]
         )
         row_bottom_px = y_row_top + row_h
 
-        if cfg["hline_enabled"] and idx == 0:
-            # milieu exact entre le bas de FC et le haut de BC
+        if idx == 0:
             next_row_top_px = row_bottom_px + cfg["row_gap_px"]
-            y_sep_px = row_bottom_px + (next_row_top_px - row_bottom_px) / 2
 
-            cut = cfg["hline_to_vsep_gap_px"]
+            # ✅ séparateur au milieu entre :
+            # - bas du label FC
+            # - haut du label BC
+            fc_label_bottom_px = y_row_top + label_h
+            y_sep_px = fc_label_bottom_px + (next_row_top_px - fc_label_bottom_px) / 2
 
-            # segment gauche
-            ax.hlines(
-                y=y_from_top(y_sep_px),
-                xmin=x(left_x0),
-                xmax=x(vsep_x_px - cut),
-                colors=COLORS["highlight"],
-                linewidth=_px_to_pt(cfg["hline_width_px"], dpi),
-                zorder=800,
-            )
+            if cfg["hline_enabled"]:
+                cut = cfg["hline_to_vsep_gap_px"]
 
-            # segment droit
-            ax.hlines(
-                y=y_from_top(y_sep_px),
-                xmin=x(vsep_x_px + cut),
-                xmax=x(left_x1),
-                colors=COLORS["highlight"],
-                linewidth=_px_to_pt(cfg["hline_width_px"], dpi),
-                zorder=800,
-            )
+                ax.hlines(
+                    y=y_from_top(y_sep_px),
+                    xmin=x(left_x0),
+                    xmax=x(vsep_x_px - cut),
+                    colors=COLORS["highlight"],
+                    linewidth=_px_to_pt(cfg["hline_width_px"], dpi),
+                    zorder=800,
+                )
 
+                ax.hlines(
+                    y=y_from_top(y_sep_px),
+                    xmin=x(vsep_x_px + cut),
+                    xmax=x(left_x1),
+                    colors=COLORS["highlight"],
+                    linewidth=_px_to_pt(cfg["hline_width_px"], dpi),
+                    zorder=800,
+                )
+
+            # prochaine row inchangée
             y_row_top = next_row_top_px
 
     left_block_bottom_px = y_row_top
