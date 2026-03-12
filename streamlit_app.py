@@ -2463,6 +2463,8 @@ BODY_PAGE_3_CFG = {
     "gauge_fill_color": "#72d7cf",
     # --- Textes sous gauges ---
     "gauge_value_font_px": 28,
+    "gauge_to_pct_gap_px": 12,
+    "pct_to_month_gap_px": 12,
     "gauge_month_font_px": 16,
     "gauge_month_gap_after_px": 16,
     "vs_label_font_px": 16,
@@ -2681,9 +2683,8 @@ def _draw_body_page_3_staff(
     left_cx = left_gauge_x0 + gauge_w / 2
     right_cx = right_gauge_x0 + gauge_w / 2
 
-    # --- % blancs entre bas jauges et haut des mois ---
+    # --- % blancs puis labels des mois sous les gauges ---
     gauge_bottom_px = gauge_top_px + gauge_h
-    months_top_px = gauge_bottom_px + 8
 
     _, pct_h = _measure_text_px(
         ax,
@@ -2693,7 +2694,8 @@ def _draw_body_page_3_staff(
         dpi,
     )
 
-    pct_top_px = gauge_bottom_px + ((months_top_px - gauge_bottom_px) - pct_h) / 2
+    pct_top_px = gauge_bottom_px + cfg["gauge_to_pct_gap_px"]
+    months_top_px = pct_top_px + pct_h + cfg["pct_to_month_gap_px"]
 
     _draw_text_top_center_x_px(
         ax,
