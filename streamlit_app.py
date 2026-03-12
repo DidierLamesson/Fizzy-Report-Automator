@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.font_manager as fm
-from matplotlib.patches import FancyBboxPatch
+from matplotlib.patches import FancyBboxPatch, Arc
 from PIL import Image
 import fitz  # pip install pymupdf
 
@@ -2432,43 +2432,166 @@ def _draw_body_page_2_food_beverage_cost(
 
     return float(true_bottom)
 
+
 # =========================
-# BODY PAGE 3 — INCIDENZA STAFF (squelette)
+# BODY PAGE 3 — INCIDENZA STAFF
 # =========================
 BODY_PAGE_3_CFG = {
-    # mêmes colonnes / mêmes marges que page 2
+    # mêmes marges / logique que les autres pages
     "side_margin_px": BODY1_CFG["side_margin_px"],
     "right_edge_margin_px": BODY1_CFG["right_edge_margin_px"],
-    "col_gap_px": 40,
-    "left_col_ratio": 0.5,
     "gap_after_header_px": BODY1_CFG["gap_after_header_px"],
-    # --- Titre section (fixe) ---
+    # --- Titre section ---
     "section_title_text": "Incidenza staff",
     "section_title_font_px": BODY1_CFG["section_title_font_px"],
     "section_title_gap_after_px": 20,
+    # --- Sous-titre du bloc graphique ---
+    "chart_title_text": "costo azienda",
+    "chart_title_font_px": 22,
+    "chart_title_gap_after_px": 18,
+    # --- Zone graphique centrée ---
+    "gauge_w_px": 170,
+    "gauge_h_px": 100,
+    "gauge_gap_px": 46,
+    # --- Arc gauge ---
+    "gauge_theta1_deg": 20,
+    "gauge_theta2_deg": 160,
+    "gauge_line_width_px": 26,
+    "gauge_max_pct": 50.0,
+    # couleurs provisoires = comme ton exemple
+    "gauge_base_color": "#3f47bf",
+    "gauge_fill_color": "#72d7cf",
+    # --- Textes sous gauges ---
+    "gauge_value_font_px": 28,
+    "gauge_month_font_px": 16,
+    "gauge_month_gap_after_px": 16,
+    "vs_label_font_px": 16,
+    "vs_value_font_px": 18,
+    "vs_row_gap_after_month_px": 16,
 }
+
+
+def _fmt_pct_no_sign(x, decimals=0):
+    if decimals == 0:
+        return f"{int(round(float(x)))}%"
+    return f"{float(x):.{decimals}f}%"
+
+
+def _month_year_label_from_dt(dt, fallback_year: int) -> str:
+    months_it = {
+        1: "Gennaio",
+        2: "Febbraio",
+        3: "Marzo",
+        4: "Aprile",
+        5: "Maggio",
+        6: "Giugno",
+        7: "Luglio",
+        8: "Agosto",
+        9: "Settembre",
+        10: "Ottobre",
+        11: "Novembre",
+        12: "Dicembre",
+    }
+    if hasattr(dt, "month") and hasattr(dt, "year"):
+        return f"{months_it.get(dt.month, str(dt))} {dt.year}"
+    if hasattr(dt, "month"):
+        return f"{months_it.get(dt.month, str(dt))} {fallback_year}"
+    return str(dt)
+
+
+def _draw_staff_gauge_in_page_3(
+    fig, left, bottom, width, height, value_pct, dpi: int, cfg=None
+):
+    """
+    Gauge simple sans fond blanc :
+    - arc de base
+    - arc de progression
+    - valeur centrée
+    """
+    cfg = {**BODY_PAGE_3_CFG, **(cfg or {})}
+
+    axg = fig.add_axes([left, bottom, width, height], facecolor="none")
+    axg.set_axis_off()
+    axg.set_xlim(-1.25, 1.25)
+    axg.set_ylim(-1.00, 1.10)
+    axg.set_aspect("equal")
+
+    theta1 = float(cfg["gauge_theta1_deg"])
+    theta2 = float(cfg["gauge_theta2_deg"])
+    span = max(1.0, theta2 - theta1)
+
+    max_pct = max(1.0, float(cfg["gauge_max_pct"]))
+    frac = min(max(float(value_pct) / max_pct, 0.0), 1.0)
+
+    lw_pt = _px_to_pt(cfg["gauge_line_width_px"], dpi)
+
+    # arc complet
+    axg.add_patch(
+        Arc(
+            (0, 0),
+            2.0,
+            2.0,
+            theta1=theta1,
+            theta2=theta2,
+            linewidth=lw_pt,
+            color=cfg["gauge_base_color"],
+            capstyle="round",
+            zorder=2,
+        )
+    )
+
+    # arc rempli (part depuis la gauche)
+    if frac > 0:
+        fill_theta1 = theta2 - span * frac
+        fill_theta2 = theta2
+        axg.add_patch(
+            Arc(
+                (0, 0),
+                2.0,
+                2.0,
+                theta1=fill_theta1,
+                theta2=fill_theta2,
+                linewidth=lw_pt,
+                color=cfg["gauge_fill_color"],
+                capstyle="round",
+                zorder=3,
+            )
+        )
+
+    # valeur au centre
+    axg.text(
+        0,
+        0.02,
+        _fmt_pct_no_sign(value_pct, decimals=0),
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=_px_to_pt(cfg["gauge_value_font_px"], dpi),
+        fontproperties=epilogue_regular,
+        zorder=5,
+    )
+
+    return axg
 
 
 def _draw_body_page_3_staff(
     ax, W_PX, H_PX, d, restaurant_name: str, dpi: int, cfg=None
 ):
-    """
-    Squelette page 3 :
-    - même logique générale que page 2
-    - même header bis
-    - pour l'instant on pose uniquement le titre de section
-    """
     cfg = {**BODY_PAGE_3_CFG, **(cfg or {})}
 
     ax.set_axis_off()
     ax.set_aspect("auto")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
+    ax._W_PX = W_PX
+
+    def x(px):
+        return px / W_PX
 
     def y_from_top(top_px):
         return 1.0 - (top_px / H_PX)
 
-    # top de body
+    # --- top du body ---
     if cfg.get("top_px") is not None:
         y = int(cfg["top_px"])
     else:
@@ -2487,8 +2610,167 @@ def _draw_body_page_3_staff(
         COLORS["accent"],
         z=850,
     )
+    y += h_sec + cfg["section_title_gap_after_px"]
 
-    return float(y + h_sec)
+    # --- Titre interne du bloc graphique ---
+    h_chart_title = _draw_text_top_center_px(
+        ax,
+        y_from_top,
+        y,
+        cfg["chart_title_text"],
+        cfg["chart_title_font_px"],
+        epilogue_semibold,
+        dpi,
+        COLORS["white"],
+        z=850,
+    )
+    y += h_chart_title + cfg["chart_title_gap_after_px"]
+
+    # --- Données : mois du report + mois précédent ---
+    staff_n = list(d.get("staff_cost_pctg_n") or [])
+    staff_n_1 = list(d.get("staff_cost_pctg_n_1") or [])
+    raw_dates = list(d.get("graph_cost_dates") or [])
+
+    if not staff_n:
+        return float(y)
+
+    # On aligne les dates sur la longueur réelle des données staff
+    if raw_dates:
+        raw_dates = raw_dates[-len(staff_n) :]
+
+    idx_cur = len(staff_n) - 1
+    idx_prev_month = max(0, len(staff_n) - 2)
+
+    cur_pct = float(staff_n[idx_cur])
+    prev_month_pct = float(staff_n[idx_prev_month])
+
+    cur_vs_pct = float(staff_n_1[idx_cur]) if idx_cur < len(staff_n_1) else 0.0
+    prev_month_vs_pct = (
+        float(staff_n_1[idx_prev_month]) if idx_prev_month < len(staff_n_1) else 0.0
+    )
+
+    cur_label = d.get("full_date_n", f"{d['month_name']} {d['year_n']}")
+    if raw_dates and idx_prev_month < len(raw_dates):
+        prev_month_label = _month_year_label_from_dt(
+            raw_dates[idx_prev_month], d["year_n"]
+        )
+    else:
+        prev_month_label = d.get("full_date_n", f"{d['month_name']} {d['year_n']}")
+
+    # --- Zone gauges centrée ---
+    gauge_w = int(cfg["gauge_w_px"])
+    gauge_h = int(cfg["gauge_h_px"])
+    gauge_gap = int(cfg["gauge_gap_px"])
+
+    total_gauges_w = gauge_w * 2 + gauge_gap
+    left_gauge_x0 = int((W_PX - total_gauges_w) / 2)
+    right_gauge_x0 = left_gauge_x0 + gauge_w + gauge_gap
+
+    gauge_top_px = y
+    fig = ax.figure
+
+    _draw_staff_gauge_in_page_3(
+        fig,
+        left=x(left_gauge_x0),
+        bottom=y_from_top(gauge_top_px + gauge_h),
+        width=(gauge_w / W_PX),
+        height=(gauge_h / H_PX),
+        value_pct=cur_pct,
+        dpi=dpi,
+        cfg=cfg,
+    )
+
+    _draw_staff_gauge_in_page_3(
+        fig,
+        left=x(right_gauge_x0),
+        bottom=y_from_top(gauge_top_px + gauge_h),
+        width=(gauge_w / W_PX),
+        height=(gauge_h / H_PX),
+        value_pct=prev_month_pct,
+        dpi=dpi,
+        cfg=cfg,
+    )
+
+    left_cx = left_gauge_x0 + gauge_w / 2
+    right_cx = right_gauge_x0 + gauge_w / 2
+
+    # --- Labels des mois sous les gauges ---
+    months_top_px = gauge_top_px + gauge_h + 8
+
+    h_m1 = _draw_text_top_center_x_px(
+        ax,
+        W_PX,
+        y_from_top,
+        months_top_px,
+        left_cx,
+        cur_label,
+        cfg["gauge_month_font_px"],
+        epilogue_semibold,
+        dpi,
+        COLORS["white"],
+        z=850,
+    )
+    h_m2 = _draw_text_top_center_x_px(
+        ax,
+        W_PX,
+        y_from_top,
+        months_top_px,
+        right_cx,
+        prev_month_label,
+        cfg["gauge_month_font_px"],
+        epilogue_semibold,
+        dpi,
+        COLORS["white"],
+        z=850,
+    )
+
+    months_h = max(h_m1, h_m2)
+
+    # --- Ligne "vs N-1" alignée à gauche ---
+    vs_top_px = months_top_px + months_h + cfg["vs_row_gap_after_month_px"]
+
+    _draw_text_top_left_px(
+        ax,
+        cfg["side_margin_px"],
+        y_from_top,
+        vs_top_px,
+        f"vs {d['year_n_1']}",
+        cfg["vs_label_font_px"],
+        epilogue_semibold,
+        dpi,
+        COLORS["accent"],
+        z=850,
+    )
+
+    _draw_text_top_center_x_px(
+        ax,
+        W_PX,
+        y_from_top,
+        vs_top_px,
+        left_cx,
+        _fmt_pct_no_sign(cur_vs_pct, decimals=0),
+        cfg["vs_value_font_px"],
+        epilogue_semibold,
+        dpi,
+        COLORS["accent"],
+        z=850,
+    )
+    h_vs_1 = _draw_text_top_center_x_px(
+        ax,
+        W_PX,
+        y_from_top,
+        vs_top_px,
+        right_cx,
+        _fmt_pct_no_sign(prev_month_vs_pct, decimals=0),
+        cfg["vs_value_font_px"],
+        epilogue_semibold,
+        dpi,
+        COLORS["accent"],
+        z=850,
+    )
+
+    return float(vs_top_px + h_vs_1)
+
 
 # =========================
 # FOOTER 1 — MODULAIRE (px-accurate)
@@ -2593,6 +2875,7 @@ def _measure_footer1_height_px(ax, W_PX, H_PX, d, dpi: int, cfg=None) -> float:
         + hv
     )
 
+
 def _measure_footer1_visual_bottom_px(ax, W_PX, H_PX, d, dpi: int, cfg=None) -> float:
     """
     Mesure le vrai bas visuel des valeurs du footer page 1
@@ -2637,6 +2920,7 @@ def _measure_footer1_visual_bottom_px(ax, W_PX, H_PX, d, dpi: int, cfg=None) -> 
     _, hv4 = _measure_text_px(ax, marg_p, cfg["value_font_px"], value_fp, dpi)
 
     return float(y_vals + max(hv1, hv2, hv3, hv4))
+
 
 def _draw_footer1(ax, W_PX, H_PX, d, dpi: int, cfg=None):
     cfg = {**FOOTER1_CFG, **(cfg or {})}
@@ -3044,7 +3328,7 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         dpi,
         cfg={"header_line_y_px": int(header_line_y_px)},
     )
-    
+
     # Reproduit la cote basse RÉELLE du footer page 1, sans changer son rendu
     footer_h = _measure_footer1_height_px(ax, W_PX, H_PX, d, dpi)
     footer_line_y_px = int(H_PX - PAGE_TOKENS["pad_bottom_px"] - footer_h)
@@ -3057,7 +3341,7 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         dpi,
         cfg={"top_px": int(footer_line_y_px)},
     )
-    
+
     _draw_body_fc_bc_summary(
         ax,
         W_PX,
@@ -3072,7 +3356,9 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         },
     )
 
+
 # Pas de footer en page 2 ✅
+
 
 # =========================
 # CREATION PAGE3 (layout) — SQUELETTE
@@ -3314,6 +3600,7 @@ def build_a4_page_3_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes
     plt.close(fig)
     buf.seek(0)
     return buf.getvalue()
+
 
 # ==# =========================
 # 10) UI
