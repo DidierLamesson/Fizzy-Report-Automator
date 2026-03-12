@@ -2432,6 +2432,63 @@ def _draw_body_page_2_food_beverage_cost(
 
     return float(true_bottom)
 
+# =========================
+# BODY PAGE 3 — INCIDENZA STAFF (squelette)
+# =========================
+BODY_PAGE_3_CFG = {
+    # mêmes colonnes / mêmes marges que page 2
+    "side_margin_px": BODY1_CFG["side_margin_px"],
+    "right_edge_margin_px": BODY1_CFG["right_edge_margin_px"],
+    "col_gap_px": 40,
+    "left_col_ratio": 0.5,
+    "gap_after_header_px": BODY1_CFG["gap_after_header_px"],
+    # --- Titre section (fixe) ---
+    "section_title_text": "Incidenza staff",
+    "section_title_font_px": BODY1_CFG["section_title_font_px"],
+    "section_title_gap_after_px": 20,
+}
+
+
+def _draw_body_page_3_staff(
+    ax, W_PX, H_PX, d, restaurant_name: str, dpi: int, cfg=None
+):
+    """
+    Squelette page 3 :
+    - même logique générale que page 2
+    - même header bis
+    - pour l'instant on pose uniquement le titre de section
+    """
+    cfg = {**BODY_PAGE_3_CFG, **(cfg or {})}
+
+    ax.set_axis_off()
+    ax.set_aspect("auto")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
+    def y_from_top(top_px):
+        return 1.0 - (top_px / H_PX)
+
+    # top de body
+    if cfg.get("top_px") is not None:
+        y = int(cfg["top_px"])
+    else:
+        header_line_y_px = int(cfg.get("header_line_y_px", 0))
+        y = header_line_y_px + cfg["gap_after_header_px"]
+
+    # --- Titre section ---
+    h_sec = _draw_text_top_center_px(
+        ax,
+        y_from_top,
+        y,
+        cfg["section_title_text"],
+        cfg["section_title_font_px"],
+        epilogue_semibold,
+        dpi,
+        COLORS["accent"],
+        z=850,
+    )
+
+    return float(y + h_sec)
 
 # =========================
 # FOOTER 1 — MODULAIRE (px-accurate)
@@ -3017,6 +3074,42 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
 
 # Pas de footer en page 2 ✅
 
+# =========================
+# CREATION PAGE3 (layout) — SQUELETTE
+# =========================
+def _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name: str):
+    ax.set_axis_off()
+    ax.set_aspect("auto")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
+    dpi = int(ax.figure.dpi)
+
+    # Header bis (sans "Report Mensile")
+    header_line_y_px = (
+        _draw_header1_bis(
+            ax,
+            W_PX=W_PX,
+            H_PX=H_PX,
+            month_label=d["full_date_n"],
+            restaurant_name=restaurant_name,
+            dpi=dpi,
+        )
+        or 0
+    )
+
+    _draw_body_page_3_staff(
+        ax,
+        W_PX,
+        H_PX,
+        d,
+        restaurant_name,
+        dpi,
+        cfg={"header_line_y_px": int(header_line_y_px)},
+    )
+
+
+# Pas de footer en page 3 ✅
 
 # =========================
 # CONFIG GLOBALE DES PAGES (pour page 1 + page 2)
@@ -3038,6 +3131,35 @@ PAGE_2_SIZE_INCH = PAGE_SIZE_INCH
 
 # =========================
 # GENERATION PDF/PNG (pages 1 & 2)
+# =========================
+
+
+# =========================
+# CONFIG GLOBALE DES PAGES (pour page 1 + page 2 + page 3)
+# =========================
+
+# ✅ Taille cible en pixels (ton nouveau "format")
+PAGE_W_PX = 800
+PAGE_H_PX = 1000
+
+# ✅ DPI de référence : fixe la taille physique du PDF
+BASE_DPI = 100
+
+# ✅ Taille “physique” (inches) qui correspond à 800x1000 px à BASE_DPI
+PAGE_SIZE_INCH = (PAGE_W_PX / BASE_DPI, PAGE_H_PX / BASE_DPI)
+
+# --- Page 2 : on garde exactement la même “grille” que la page 1 ---
+PAGE_2_W_PX = PAGE_W_PX
+PAGE_2_H_PX = PAGE_H_PX
+PAGE_2_SIZE_INCH = PAGE_SIZE_INCH
+
+# --- Page 3 : on garde exactement la même “grille” que la page 1 ---
+PAGE_3_W_PX = PAGE_W_PX
+PAGE_3_H_PX = PAGE_H_PX
+PAGE_3_SIZE_INCH = PAGE_SIZE_INCH
+
+# =========================
+# GENERATION PDF/PNG (pages 1, 2 & 3)
 # =========================
 
 
@@ -3145,7 +3267,55 @@ def build_a4_page_2_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes
     return buf.getvalue()
 
 
-# =========================
+def build_a4_page_3_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
+    """
+    PDF PAGE 3 : même verrouillage de format que pages 1 et 2.
+    Le param `dpi` est gardé uniquement pour compat.
+    """
+    fig = plt.figure(figsize=PAGE_3_SIZE_INCH, dpi=BASE_DPI, facecolor=COLORS["bg"])
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
+
+    W_PX, H_PX = PAGE_3_W_PX, PAGE_3_H_PX
+    _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name)
+
+    buf = BytesIO()
+    fig.savefig(
+        buf,
+        format="pdf",
+        bbox_inches=None,
+        pad_inches=0,
+        facecolor=fig.get_facecolor(),
+        edgecolor="none",
+    )
+    plt.close(fig)
+    buf.seek(0)
+    return buf.getvalue()
+
+
+def build_a4_page_3_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes:
+    """PNG PAGE 3 : `dpi` ne joue que sur la netteté de l'aperçu."""
+    fig = plt.figure(figsize=PAGE_3_SIZE_INCH, dpi=dpi, facecolor=COLORS["bg"])
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
+
+    W_PX, H_PX = PAGE_3_W_PX, PAGE_3_H_PX
+    _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name)
+
+    buf = BytesIO()
+    fig.savefig(
+        buf,
+        format="png",
+        bbox_inches=None,
+        pad_inches=0,
+        facecolor=fig.get_facecolor(),
+        edgecolor="none",
+    )
+    plt.close(fig)
+    buf.seek(0)
+    return buf.getvalue()
+
+# ==# =========================
 # 10) UI
 # =========================
 st.title("Report Fizzy Automatizzazione ⚡️")
@@ -3221,6 +3391,7 @@ if uploaded and restaurant_input:
             file_name=f"Report_{restaurant_input}.pdf",
             mime="application/pdf",
         )
+
     # --- UI : Download PDF (PAGE 2) ---
     st.divider()
 
@@ -3236,6 +3407,24 @@ if uploaded and restaurant_input:
             label="⬇️ Scarica PDF (Page 2)",
             data=pdf_bytes_page_2,
             file_name=f"Report_{restaurant_input}_page_2.pdf",
+            mime="application/pdf",
+        )
+
+    # --- UI : Download PDF (PAGE 3) ---
+    st.divider()
+
+    pdf_bytes_page_3 = build_a4_page_3_pdf_bytes(data, restaurant_input, dpi=300)
+    png_bytes_page_3 = pdf_bytes_to_png_bytes(pdf_bytes_page_3, page_index=0, zoom=2.0)
+
+    c1, c2 = st.columns([1.5, 1], gap="large")
+    with c1:
+        st.image(png_bytes_page_3, caption="Aperçu (rendu PDF) — Page 3", width=580)
+    with c2:
+        st.subheader("📄 Export PDF — Page 3")
+        st.download_button(
+            label="⬇️ Scarica PDF (Page 3)",
+            data=pdf_bytes_page_3,
+            file_name=f"Report_{restaurant_input}_page_3.pdf",
             mime="application/pdf",
         )
 
