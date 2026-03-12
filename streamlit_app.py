@@ -3018,7 +3018,7 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         dpi,
         cfg={
             "top_px": int(charts_bottom_px + 20),
-            "para_max_bottom_px": float(page1_footer_visual_bottom_px),
+            "para_max_bottom_px": float(H_PX - 10),
         },
     )
 
