@@ -2464,7 +2464,7 @@ BODY_PAGE_3_CFG = {
     # --- Textes sous gauges ---
     "gauge_value_font_px": 28,
     "gauge_month_font_px": 16,
-    "gauge_month_gap_after_px": 16,
+    "gauge_month_gap_after_px": 40,
     "vs_label_font_px": 16,
     "vs_value_font_px": 18,
     "vs_row_gap_after_month_px": 16,
