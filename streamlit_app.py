@@ -2630,13 +2630,14 @@ def _draw_body_page_3_staff(
     idx_cur = len(staff_n) - 1
     idx_prev_month = max(0, len(staff_n) - 2)
 
-    cur_pct = float(staff_n[idx_cur])
-    prev_month_pct = float(staff_n[idx_prev_month])
+    if len(staff_n) < 2 or len(staff_n_1) < 2:
+        return float(y)
 
-    cur_vs_pct = float(staff_n_1[idx_cur]) if idx_cur < len(staff_n_1) else 0.0
-    prev_month_vs_pct = (
-        float(staff_n_1[idx_prev_month]) if idx_prev_month < len(staff_n_1) else 0.0
-    )
+    cur_pct = float(staff_n[0])  # mois du report
+    prev_month_pct = float(staff_n[1])  # mois m-1
+
+    cur_vs_pct = float(staff_n_1[0])  # même mois en N-1
+    prev_month_vs_pct = float(staff_n_1[1])  # mois m-1 en N-1
 
     cur_label = d.get("full_date_n", f"{d['month_name']} {d['year_n']}")
     if raw_dates and idx_prev_month < len(raw_dates):
