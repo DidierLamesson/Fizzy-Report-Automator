@@ -2446,7 +2446,7 @@ BODY_PAGE_3_CFG = {
     "section_title_font_px": BODY1_CFG["section_title_font_px"],
     "section_title_gap_after_px": 20,
     # --- Sous-titre du bloc graphique ---
-    "chart_title_text": "costo azienda",
+    "chart_title_text": "Costo azienda",
     "chart_title_font_px": 22,
     "chart_title_gap_after_px": 18,
     # --- Zone graphique centrée ---
@@ -2457,7 +2457,7 @@ BODY_PAGE_3_CFG = {
     "gauge_theta1_deg": 20,
     "gauge_theta2_deg": 160,
     "gauge_line_width_px": 26,
-    "gauge_max_pct": 50.0,
+    "gauge_max_pct": 75.0,
     # couleurs provisoires = comme ton exemple
     "gauge_base_color": "#3f47bf",
     "gauge_fill_color": "#72d7cf",
