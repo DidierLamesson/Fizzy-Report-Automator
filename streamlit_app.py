@@ -2464,7 +2464,7 @@ BODY_PAGE_3_CFG = {
     # --- Textes sous gauges ---
     "gauge_value_font_px": 28,
     "gauge_month_font_px": 16,
-    "gauge_month_gap_after_px": 40,
+    "gauge_month_gap_after_px": 16,
     "vs_label_font_px": 16,
     "vs_value_font_px": 18,
     "vs_row_gap_after_month_px": 16,
@@ -2559,21 +2559,6 @@ def _draw_staff_gauge_in_page_3(
                 zorder=3,
             )
         )
-
-    # valeur au centre
-    axg.text(
-        0,
-        0.02,
-        _fmt_pct_no_sign(value_pct, decimals=0),
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=_px_to_pt(cfg["gauge_value_font_px"], dpi),
-        fontproperties=epilogue_regular,
-        zorder=5,
-    )
-
-    return axg
 
 
 def _draw_body_page_3_staff(
@@ -2696,9 +2681,49 @@ def _draw_body_page_3_staff(
     left_cx = left_gauge_x0 + gauge_w / 2
     right_cx = right_gauge_x0 + gauge_w / 2
 
-    # --- Labels des mois sous les gauges ---
-    months_top_px = gauge_top_px + gauge_h + 8
+    # --- % blancs entre bas jauges et haut des mois ---
+    gauge_bottom_px = gauge_top_px + gauge_h
+    months_top_px = gauge_bottom_px + 8
 
+    _, pct_h = _measure_text_px(
+        ax,
+        _fmt_pct_no_sign(cur_pct, decimals=0),
+        cfg["gauge_value_font_px"],
+        epilogue_regular,
+        dpi,
+    )
+
+    pct_top_px = gauge_bottom_px + ((months_top_px - gauge_bottom_px) - pct_h) / 2
+
+    _draw_text_top_center_x_px(
+        ax,
+        W_PX,
+        y_from_top,
+        pct_top_px,
+        left_cx,
+        _fmt_pct_no_sign(cur_pct, decimals=0),
+        cfg["gauge_value_font_px"],
+        epilogue_regular,
+        dpi,
+        COLORS["white"],
+        z=850,
+    )
+
+    _draw_text_top_center_x_px(
+        ax,
+        W_PX,
+        y_from_top,
+        pct_top_px,
+        right_cx,
+        _fmt_pct_no_sign(prev_month_pct, decimals=0),
+        cfg["gauge_value_font_px"],
+        epilogue_regular,
+        dpi,
+        COLORS["white"],
+        z=850,
+    )
+
+    # --- Labels des mois sous les gauges ---
     h_m1 = _draw_text_top_center_x_px(
         ax,
         W_PX,
@@ -2712,6 +2737,7 @@ def _draw_body_page_3_staff(
         COLORS["white"],
         z=850,
     )
+
     h_m2 = _draw_text_top_center_x_px(
         ax,
         W_PX,
