@@ -1346,8 +1346,8 @@ BODY_FC_BC_SUMMARY_CFG = {
     "hline_to_vsep_gap_px": 22,  # coupe la ligne avant le séparateur vertical
     # séparateur vertical pointillé
     "vsep_enabled": True,
-    "vsep_width_px": 2,
-    "vsep_dash": (0, (2, 2)),
+    "vsep_width_px": 3,
+    "vsep_dash": (0, (6, 6)),
     "vsep_color": "highlight",
     "vsep_top_offset_px": 0,  # part du top commun
     "vsep_bottom_pad_px": 12,  # marge bas du séparateur
