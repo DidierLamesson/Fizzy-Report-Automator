@@ -2957,11 +2957,11 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         H_PX,
         d,
         restaurant_name,
-        lorem,
+        lorem,  # (remplacé ensuite par tes textes streamlit)
         dpi,
         cfg={
-            "top_px": int(charts_bottom_px + 20),
-            "para_max_bottom_px": float(H_PX - PAGE_TOKENS["pad_bottom_px"]),
+            "top_px": int(charts_bottom_px + 20),   # ✅ 20 px sous les graphiques réels
+            "para_max_bottom_px": float(H_PX - 10), # ✅ borne visuelle alignée au rendu page 1
         },
     )
 
