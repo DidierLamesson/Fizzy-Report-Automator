@@ -2543,6 +2543,50 @@ def _measure_footer1_height_px(ax, W_PX, H_PX, d, dpi: int, cfg=None) -> float:
         + hv
     )
 
+def _measure_footer1_visual_bottom_px(ax, W_PX, H_PX, d, dpi: int, cfg=None) -> float:
+    """
+    Mesure le vrai bas visuel des valeurs du footer page 1
+    pour un top_px donné, sans rien dessiner de visible.
+    """
+    cfg = {**FOOTER1_CFG, **(cfg or {})}
+
+    title_fp = globals()[cfg["title_fontprops"]]
+    label_fp = globals()[cfg["label_fontprops"]]
+    value_fp = globals()[cfg["value_fontprops"]]
+
+    y_line = float(cfg["top_px"])
+    y = y_line + cfg["gap_after_line_px"]
+
+    # Titres
+    _, h_t1 = _measure_text_px(
+        ax, "Ricavi - Costi", cfg["title_font_px"], title_fp, dpi
+    )
+    _, h_t2 = _measure_text_px(
+        ax, "Margine % su ricavi", cfg["title_font_px"], title_fp, dpi
+    )
+    y += max(h_t1, h_t2) + cfg["gap_after_titles_px"]
+
+    # Labels
+    label_left = d["full_date_n"]
+    label_right = f"vs {d['year_n_1']}"
+
+    _, hl1 = _measure_text_px(ax, label_left, cfg["label_font_px"], label_fp, dpi)
+    _, hl2 = _measure_text_px(ax, label_right, cfg["label_font_px"], label_fp, dpi)
+
+    y_vals = y + max(hl1, hl2) + cfg["gap_label_to_value_px"]
+
+    # Valeurs
+    ric_n = fmt_eur_dot(d["ric_cost_n"])
+    ric_p = fmt_eur_dot(d["ric_cost_n_1"])
+    marg_n = _fmt_pct(d["marg_n"], decimals=cfg["marg_decimals"])
+    marg_p = _fmt_pct(d["marg_n_1"], decimals=cfg["marg_decimals"])
+
+    _, hv1 = _measure_text_px(ax, ric_n, cfg["value_font_px"], value_fp, dpi)
+    _, hv2 = _measure_text_px(ax, ric_p, cfg["value_font_px"], value_fp, dpi)
+    _, hv3 = _measure_text_px(ax, marg_n, cfg["value_font_px"], value_fp, dpi)
+    _, hv4 = _measure_text_px(ax, marg_p, cfg["value_font_px"], value_fp, dpi)
+
+    return float(y_vals + max(hv1, hv2, hv3, hv4))
 
 def _draw_footer1(ax, W_PX, H_PX, d, dpi: int, cfg=None):
     cfg = {**FOOTER1_CFG, **(cfg or {})}
@@ -2950,21 +2994,33 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         dpi,
         cfg={"header_line_y_px": int(header_line_y_px)},
     )
+    
+    # Reproduit la cote basse RÉELLE du footer page 1, sans changer son rendu
+    footer_h = _measure_footer1_height_px(ax, W_PX, H_PX, d, dpi)
+    footer_line_y_px = int(H_PX - PAGE_TOKENS["pad_bottom_px"] - footer_h)
 
+    page1_footer_visual_bottom_px = _measure_footer1_visual_bottom_px(
+        ax,
+        W_PX,
+        H_PX,
+        d,
+        dpi,
+        cfg={"top_px": int(footer_line_y_px)},
+    )
+    
     _draw_body_fc_bc_summary(
         ax,
         W_PX,
         H_PX,
         d,
         restaurant_name,
-        lorem,  # (remplacé ensuite par tes textes streamlit)
+        lorem,
         dpi,
         cfg={
-            "top_px": int(charts_bottom_px + 20),   # ✅ 20 px sous les graphiques réels
-            "para_max_bottom_px": float(H_PX - 10), # ✅ borne visuelle alignée au rendu page 1
+            "top_px": int(charts_bottom_px + 20),
+            "para_max_bottom_px": float(page1_footer_visual_bottom_px),
         },
     )
-
 
 # Pas de footer en page 2 ✅
 
