@@ -245,9 +245,9 @@ def load_data(file):
     ]  # Colonne J (N-1)
 
     # --- 5. Extraction des données "Incidenza Staff" ---
-    staff_monthly_n = [clean_val(df.iloc[i, 3]) for i in range(50, 55)]  # Colonne D (N)
+    staff_monthly_n = [clean_val(df.iloc[i, 3]) for i in range(50, 56)]  # Colonne D (N)
     staff_monthly_n_1 = [
-        clean_val(df.iloc[i, 9]) for i in range(50, 55)
+        clean_val(df.iloc[i, 9]) for i in range(50, 56)
     ]  # Colonne J (N-1)
 
     # --- 6. Calcul des pourcentages de Food Cost ---
