@@ -2463,7 +2463,7 @@ BODY_PAGE_3_CFG = {
     "gauge_fill_color": "#72d7cf",
     # --- Textes sous gauges ---
     "gauge_value_font_px": 28,
-    "gauge_to_pct_gap_px": -10,
+    "gauge_to_pct_gap_px": -30,
     "pct_to_month_gap_px": 12,
     "gauge_month_font_px": 16,
     "gauge_month_gap_after_px": 16,
