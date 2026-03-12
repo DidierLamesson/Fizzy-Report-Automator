@@ -2512,8 +2512,8 @@ def _draw_staff_gauge_in_page_3(
 
     axg = fig.add_axes([left, bottom, width, height], facecolor="none")
     axg.set_axis_off()
-    axg.set_xlim(-1.25, 1.25)
-    axg.set_ylim(-1.00, 1.10)
+    axg.set_xlim(-1.35, 1.35)
+    axg.set_ylim(-1.25, 1.25)
     axg.set_aspect("equal")
 
     theta1 = float(cfg["gauge_theta1_deg"])
@@ -2536,6 +2536,7 @@ def _draw_staff_gauge_in_page_3(
             linewidth=lw_pt,
             color=cfg["gauge_base_color"],
             capstyle="round",
+            clip_on=False,
             zorder=2,
         )
     )
@@ -2554,6 +2555,7 @@ def _draw_staff_gauge_in_page_3(
                 linewidth=lw_pt,
                 color=cfg["gauge_fill_color"],
                 capstyle="round",
+                clip_on=False,
                 zorder=3,
             )
         )
