@@ -1470,11 +1470,8 @@ def _draw_body_fc_bc_summary(
     ]
 
     # --- dessin rows (gauche) ---
-    y_row_top = (
-        top_px + header_h_px + cfg.get("rows_offset_px", 0)
-    )  # ✅ rows plus bas, header inchangé
+    y_row_top = top_px + header_h_px + cfg.get("rows_offset_px", 0)
 
-    # pré-mesures utiles
     _, value_h = _measure_text_px(
         ax, "21%", cfg["value_font_px"], epilogue_semibold, dpi
     )
@@ -1482,44 +1479,24 @@ def _draw_body_fc_bc_summary(
     bullet_sz = cfg["bullet_size_px"]
     bullet_gap = cfg["bullet_gap_px"]
 
-    # ✅ Texte aligné sur la colonne (comme le graph)
     label_x = left_x0
-
-    # ✅ Puce à gauche, sans décaler le texte
     bullet_x0 = left_x0 - (bullet_sz + bullet_gap)
 
-    # positions dans la zone "current"
-    cur_right = vsep_x_px - 14  # marge avant le séparateur
-
-    # positions dans la zone "vs"
+    cur_right = vsep_x_px - 14
     vs_left = vsep_x_px + 14
 
     for idx, (label, v_cur, v_vs) in enumerate(rows):
-        # label (multiligne)
         _, label_h = _measure_text_px(
             ax, label, cfg["label_font_px"], epilogue_regular, dpi
         )
 
-        # y valeur alignée "au milieu" du bloc label (visuel stable)
-        y_val_top = y_row_top + max(0, (label_h - value_h) / 2) + (header_h_px * 0.55)
-
-        # label (multiligne)
-        _, label_h = _measure_text_px(
-            ax, label, cfg["label_font_px"], epilogue_regular, dpi
-        )
-
-        # mesure valeur (hauteur) – stable
         _, value_h = _measure_text_px(
             ax, "21%", cfg["value_font_px"], epilogue_semibold, dpi
         )
 
-        # ✅ y de la valeur (inchangé chez toi, mais garanti défini)
         y_val_top = y_row_top + max(0, (label_h - value_h) / 2)
-
-        # ✅ bullet centré verticalement sur le bloc de texte
         bullet_top_px = y_row_top + max(0, (label_h - bullet_sz) / 2)
 
-        # bullet carré
         ax.add_patch(
             FancyBboxPatch(
                 (x(bullet_x0), y_from_top(bullet_top_px)),
@@ -1533,7 +1510,6 @@ def _draw_body_fc_bc_summary(
             )
         )
 
-        # texte label (aligné à gauche colonne)
         ax.text(
             x(label_x),
             y_from_top(y_row_top),
@@ -1548,7 +1524,6 @@ def _draw_body_fc_bc_summary(
             linespacing=1.2,
         )
 
-        # current: "→ 21%"
         cur_txt = _fmt_pct1(v_cur)
         ax.text(
             x(cur_right - 70),
@@ -1575,7 +1550,6 @@ def _draw_body_fc_bc_summary(
             zorder=850,
         )
 
-        # vs: "→ 19%"
         vs_txt = _fmt_pct1(v_vs)
         ax.text(
             x(vs_left),
@@ -1602,7 +1576,6 @@ def _draw_body_fc_bc_summary(
             zorder=850,
         )
 
-        # hauteur row + séparateurs
         row_h = (
             max(label_h, (y_val_top - y_row_top + value_h)) + cfg["row_bottom_pad_px"]
         )
@@ -1610,7 +1583,6 @@ def _draw_body_fc_bc_summary(
 
         if cfg["hline_enabled"] and idx == 0:
             cut = cfg["hline_to_vsep_gap_px"]
-            # segment gauche
             ax.hlines(
                 y=y_from_top(y_line),
                 xmin=x(left_x0),
@@ -1619,7 +1591,6 @@ def _draw_body_fc_bc_summary(
                 linewidth=_px_to_pt(cfg["hline_width_px"], dpi),
                 zorder=800,
             )
-            # segment droit
             ax.hlines(
                 y=y_from_top(y_line),
                 xmin=x(vsep_x_px + cut),
@@ -1629,13 +1600,11 @@ def _draw_body_fc_bc_summary(
                 zorder=800,
             )
 
-        # prochaine row
         if idx == 0:
             y_row_top = y_line + cfg["row_gap_px"]
 
-    left_block_bottom_px = y_row_top  # approx
+    left_block_bottom_px = y_row_top
 
-    # --- séparateur vertical pointillé (couvre les 2 rows) ---
     if cfg["vsep_enabled"]:
         y0 = top_px + cfg["vsep_top_offset_px"]
         y1 = left_block_bottom_px - cfg["vsep_bottom_pad_px"]
@@ -1650,21 +1619,37 @@ def _draw_body_fc_bc_summary(
         )
 
     # --- paragraphe justifié (TOP aligné avec "vs ...") ---
-    # -> même logique que page 1 pour passer en "px render"
     ax.figure.canvas.draw()
     r = ax.figure.canvas.get_renderer()
-    ax_w_render = ax.get_window_extent(renderer=r).width
+    ax_bb = ax.get_window_extent(renderer=r)
+    ax_w_render = ax_bb.width
+    scale_y = ax_bb.height / H_PX
+
     col_px_layout = para_right_edge_px - right_x0
     col_px_render = ax_w_render * (col_px_layout / W_PX)
 
-    text_wrapped = _justify_paragraph_to_px(
-        ax,
-        (analysis_text or "").strip(),
-        width_px=col_px_render,
-        font_px=cfg["para_font_px"],
-        fontprops=epilogue_regular,
-        dpi=dpi,
-    )
+    para_max_bottom_px = cfg.get("para_max_bottom_px")
+    if para_max_bottom_px is not None:
+        max_h_render = max(0.0, (para_max_bottom_px - top_px) * scale_y)
+        text_wrapped = _fit_justified_paragraph_to_height(
+            ax,
+            (analysis_text or "").strip(),
+            width_px=col_px_render,
+            font_px=cfg["para_font_px"],
+            fontprops=epilogue_regular,
+            dpi=dpi,
+            linespacing=cfg["para_linespacing"],
+            max_height_render_px=max_h_render,
+        )
+    else:
+        text_wrapped = _justify_paragraph_to_px(
+            ax,
+            (analysis_text or "").strip(),
+            width_px=col_px_render,
+            font_px=cfg["para_font_px"],
+            fontprops=epilogue_regular,
+            dpi=dpi,
+        )
 
     ax.text(
         x(right_x0),
@@ -2972,12 +2957,11 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         H_PX,
         d,
         restaurant_name,
-        lorem,  # (remplacé ensuite par tes textes streamlit)
+        lorem,
         dpi,
         cfg={
-            "top_px": int(
-                charts_bottom_px + 20
-            )  # ✅ EXACTEMENT 20px sous les graphiques réels
+            "top_px": int(charts_bottom_px + 20),
+            "para_max_bottom_px": float(H_PX - PAGE_TOKENS["pad_bottom_px"]),
         },
     )
 
