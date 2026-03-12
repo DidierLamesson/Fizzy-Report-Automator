@@ -1457,6 +1457,8 @@ def _draw_body_fc_bc_summary(
     )
 
     header_h_px = h_vs_title + 4 + h_vs_sub + cfg["vs_gap_after_px"]
+    vsep_top_px = top_px + h_vs_title + 4 + h_vs_sub
+    bc_label_bottom_px = None
 
     # --- données (moyennes % sur 6 mois) ---
     fc_n = _avg_pct(d.get("food_cost_pctg_n"))
@@ -1523,20 +1525,10 @@ def _draw_body_fc_bc_summary(
             zorder=850,
             linespacing=1.2,
         )
-
+        if idx == 1:
+            bc_label_bottom_px = y_row_top + label_h
+        # current
         cur_txt = _fmt_pct1(v_cur)
-        ax.text(
-            x(cur_right - 70),
-            y_from_top(y_val_top),
-            "→",
-            ha="left",
-            va="top",
-            transform=ax.transAxes,
-            fontsize=_px_to_pt(cfg["arrow_font_px"], dpi),
-            fontproperties=epilogue_regular,
-            color=COLORS["white"],
-            zorder=850,
-        )
         ax.text(
             x(cur_right),
             y_from_top(y_val_top),
@@ -1550,19 +1542,8 @@ def _draw_body_fc_bc_summary(
             zorder=850,
         )
 
+        # vs
         vs_txt = _fmt_pct1(v_vs)
-        ax.text(
-            x(vs_left),
-            y_from_top(y_val_top),
-            "→",
-            ha="left",
-            va="top",
-            transform=ax.transAxes,
-            fontsize=_px_to_pt(cfg["arrow_font_px"], dpi),
-            fontproperties=epilogue_regular,
-            color=COLORS["white"],
-            zorder=850,
-        )
         ax.text(
             x(vs_x1 - 10),
             y_from_top(y_val_top),
@@ -1575,7 +1556,6 @@ def _draw_body_fc_bc_summary(
             color=COLORS["highlight"],
             zorder=850,
         )
-
         # hauteur row (inchangée pour le flux vertical)
         row_h = (
             max(label_h, (y_val_top - y_row_top + value_h)) + cfg["row_bottom_pad_px"]
@@ -1617,9 +1597,10 @@ def _draw_body_fc_bc_summary(
 
     left_block_bottom_px = y_row_top
 
-    if cfg["vsep_enabled"]:
-        y0 = top_px + cfg["vsep_top_offset_px"]
-        y1 = left_block_bottom_px - cfg["vsep_bottom_pad_px"]
+    # --- séparateur vertical (placement calé sur les vrais blocs) ---
+    if cfg["vsep_enabled"] and bc_label_bottom_px is not None:
+        y0 = vsep_top_px
+        y1 = bc_label_bottom_px
         ax.vlines(
             x=x(vsep_x_px),
             ymin=y_from_top(y1),
