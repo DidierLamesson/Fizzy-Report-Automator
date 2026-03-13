@@ -3958,7 +3958,7 @@ if uploaded and restaurant_input:
             )
             st.text_area(
                 "📝 Testo finale (modificabile)",
-                height=150,
+                height=300,
                 key=FINAL_TEXT_STATE_KEYS["page1_final"],
                 placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
             )
