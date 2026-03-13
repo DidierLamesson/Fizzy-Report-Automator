@@ -3903,16 +3903,16 @@ if uploaded and restaurant_input:
         preview_fig = make_fatturato_fig(data, label=restaurant_input)
         st.pyplot(preview_fig)
 
-    @with col_edit:
-    st.subheader("✍️ Analisa scritta")
+    with col_edit:
+        st.subheader("✍️ Analisa scritta")
 
-    st.caption("💡 Proposte di testo")
-    st.text_area(
-        "Proposta paragrafo 1",
-        height=120,
-        key=SUGGESTION_TEXT_STATE_KEYS["page1_p1"],
-        disabled=True,
-    )
+        st.caption("💡 Proposte di testo")
+        st.text_area(
+            "Proposta paragrafo 1",
+            height=120,
+            key=SUGGESTION_TEXT_STATE_KEYS["page1_p1"],
+            disabled=True,
+        )
     st.text_area(
         "Proposta paragrafo 2",
         height=120,
