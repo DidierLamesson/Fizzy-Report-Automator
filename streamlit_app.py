@@ -534,18 +534,20 @@ def _ensure_report_text_state(d, restaurant_name: str):
 
 def get_report_text_state():
     """
-    Patch 2 : le payload continue temporairement à lire les suggestions,
-    en attendant le patch 3.
+    Patch 3 :
+    retourne maintenant les textes finaux utilisateur,
+    qui deviennent la source unique du PDF / PNG.
     """
     return {
-        "page1_p1": st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p1"], ""),
-        "page1_p2": st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p2"], ""),
-        "page2_food": st.session_state.get(
-            SUGGESTION_TEXT_STATE_KEYS["page2_food"], ""
+        "page1_final": st.session_state.get(FINAL_TEXT_STATE_KEYS["page1_final"], ""),
+        "page2_food_final": st.session_state.get(
+            FINAL_TEXT_STATE_KEYS["page2_food_final"], ""
         ),
-        "page2_bev": st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_bev"], ""),
-        "page3_staff": st.session_state.get(
-            SUGGESTION_TEXT_STATE_KEYS["page3_staff"], ""
+        "page2_bev_final": st.session_state.get(
+            FINAL_TEXT_STATE_KEYS["page2_bev_final"], ""
+        ),
+        "page3_staff_final": st.session_state.get(
+            FINAL_TEXT_STATE_KEYS["page3_staff_final"], ""
         ),
     }
 
@@ -569,17 +571,16 @@ def build_report_text_payload(report_texts: dict):
     Source de vérité unique pour les 3 pages.
     """
     page1_text = _join_text_blocks(
-        report_texts.get("page1_p1", ""),
-        report_texts.get("page1_p2", ""),
+        report_texts.get("page1_final", ""),
     )
 
     page2_text = _join_text_blocks(
-        report_texts.get("page2_food", ""),
-        report_texts.get("page2_bev", ""),
+        report_texts.get("page2_food_final", ""),
+        report_texts.get("page2_bev_final", ""),
     )
 
     page3_text = _join_text_blocks(
-        report_texts.get("page3_staff", ""),
+        report_texts.get("page3_staff_final", ""),
     )
 
     return {
