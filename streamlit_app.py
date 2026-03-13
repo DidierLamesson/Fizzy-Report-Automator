@@ -1,19 +1,18 @@
 import re
-import textwrap
 from io import BytesIO
 from pathlib import Path
 
-import streamlit as st
-import pandas as pd
+import fitz  # pip install pymupdf
+import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-import matplotlib.font_manager as fm
-from matplotlib.patches import FancyBboxPatch, Arc
+import pandas as pd
+import streamlit as st
+from matplotlib.patches import Arc, FancyBboxPatch
 from PIL import Image
-import fitz  # pip install pymupdf
 
 # =========================
-# 3) COULEURS (ta palette)
+# 1) CONSTANTES VISUELLES (couleurs + mois)
 # =========================
 COLORS = {
     "bg": "#172e4d",
@@ -24,15 +23,30 @@ COLORS = {
     "white": "#ffffff",
 }
 
+MONTHS_IT = {
+    1: "Gennaio",
+    2: "Febbraio",
+    3: "Marzo",
+    4: "Aprile",
+    5: "Maggio",
+    6: "Giugno",
+    7: "Luglio",
+    8: "Agosto",
+    9: "Settembre",
+    10: "Ottobre",
+    11: "Novembre",
+    12: "Dicembre",
+}
+
 # =========================
-# 2) PATHS ASSETS (ton repo)
+# 2) CHEMINS DES ASSETS
 # =========================
 BASE_DIR = Path(__file__).resolve().parent
 ASSETS_DIR = BASE_DIR / "assets"
 FONTS_DIR = ASSETS_DIR / "fonts"
 IMG_DIR = ASSETS_DIR / "img"
 
-# Fonts (d'après ton screenshot repo)
+# Polices
 FONT_EPILOGUE_REG = FONTS_DIR / "Epilogue-Regular.otf"
 FONT_EPILOGUE_ITALIC = FONTS_DIR / "Epilogue-Italic.otf"
 FONT_EPILOGUE_SEMIBOLD = FONTS_DIR / "Epilogue-SemiBold.otf"
@@ -43,22 +57,24 @@ FONT_IVY = FONTS_DIR / "fonnts.com-Ivy-Presto-Display-Light.otf"
 LOGO_PATH = IMG_DIR / "Logo Fizzy.png"
 ARROW_UP_PATH = IMG_DIR / "Arrow_up.png"
 ARROW_DOWN_PATH = IMG_DIR / "Arrow_down.png"
-ARROW_ROUND_PATH = IMG_DIR / "Arrow_round.png"
 
 
 # =========================
-# 4) FONTS MATPLOTLIB
+# 3) CONFIGURATION DES POLICES MATPLOTLIB
 # =========================
 def _register_font(path: Path):
     if path.exists():
         fm.fontManager.addfont(str(path))
 
 
-_register_font(FONT_EPILOGUE_REG)
-_register_font(FONT_EPILOGUE_ITALIC)
-_register_font(FONT_EPILOGUE_SEMIBOLD)
-_register_font(FONT_EPILOGUE_SEMIBOLD_ITALIC)
-_register_font(FONT_IVY)
+for font_path in (
+    FONT_EPILOGUE_REG,
+    FONT_EPILOGUE_ITALIC,
+    FONT_EPILOGUE_SEMIBOLD,
+    FONT_EPILOGUE_SEMIBOLD_ITALIC,
+    FONT_IVY,
+):
+    _register_font(font_path)
 
 epilogue_regular = fm.FontProperties(fname=str(FONT_EPILOGUE_REG))
 epilogue_italic = fm.FontProperties(fname=str(FONT_EPILOGUE_ITALIC))
@@ -70,9 +86,8 @@ plt.rcParams["font.family"] = epilogue_regular.get_name()
 plt.rcParams["pdf.fonttype"] = 42
 plt.rcParams["ps.fonttype"] = 42
 
-
 # =========================
-# 1) CONFIG STREAMLIT
+# 4) CONFIGURATION STREAMLIT
 # =========================
 st.set_page_config(
     page_title="FIZZY Automator",
@@ -83,7 +98,7 @@ st.set_page_config(
 
 
 # =========================
-# 5) HELPERS (format + wrap)
+# 5) HELPERS DE FORMATAGE ET DE CALCUL
 # =========================
 def clean_val(val):
     """Robuste: gère NaN, float/int, et strings '507 767' / '507.767' / '507,767'."""
@@ -122,37 +137,11 @@ def fmt_pct_1(x):
     return f"{sign}{x:.1f}%"
 
 
-def wrap_for_box(text, width=44):
-    lines = []
-    for para in (text or "").split("\n"):
-        para = para.strip()
-        if not para:
-            lines.append("")
-            continue
-        lines.extend(textwrap.wrap(para, width=width))
-        lines.append("")
-    return "\n".join(lines).strip()
-
-
 def month_labels_from_graph_dates(d):
-    months_it = {
-        1: "Gennaio",
-        2: "Febbraio",
-        3: "Marzo",
-        4: "Aprile",
-        5: "Maggio",
-        6: "Giugno",
-        7: "Luglio",
-        8: "Agosto",
-        9: "Settembre",
-        10: "Ottobre",
-        11: "Novembre",
-        12: "Dicembre",
-    }
     labels = []
     for dt in d["graph_cost_dates"]:
         if hasattr(dt, "month"):
-            labels.append(months_it.get(dt.month, str(dt)))
+            labels.append(MONTHS_IT.get(dt.month, str(dt)))
         else:
             labels.append(str(dt))
     return labels
@@ -191,45 +180,41 @@ def pdf_bytes_to_png_bytes(
     return pix.tobytes("png")
 
 
+def _compute_ratio_pct_series(costs, revenues):
+    pct_series = []
+    for cost, revenue in zip(costs, revenues):
+        pctg = (cost / revenue) * 100 if revenue > 0 else 0.0
+        pct_series.append(round(pctg, 2))
+    return pct_series
+
+
+def _safe_avg(values):
+    return (sum(values) / len(values)) if values else 0.0
+
+
 # =========================
-# 6) LOAD DATA (TON ANCIEN COMPLET)
+# 6) CHARGEMENT ET PREPARATION DES DONNEES
 # =========================
 def load_data(file):
     df = pd.read_excel(file, sheet_name="Dati report", header=None)
 
-    # Dictionnaire de traduction des mois
-    months_it = {
-        1: "Gennaio",
-        2: "Febbraio",
-        3: "Marzo",
-        4: "Aprile",
-        5: "Maggio",
-        6: "Giugno",
-        7: "Luglio",
-        8: "Agosto",
-        9: "Settembre",
-        10: "Ottobre",
-        11: "Novembre",
-        12: "Dicembre",
-    }
-
-    # --- 1. Extraction de la date ---
+    # --- 1. Extraction de la date du report ---
     raw_date = df.iloc[4, 2]  # Supposons que la date est en C5
     if hasattr(raw_date, "month"):
-        mes_it = months_it[raw_date.month]
+        mes_it = MONTHS_IT[raw_date.month]
         anno_n = raw_date.year
     else:
         mes_it = "Mese"
         anno_n = 2026  # Valeur par défaut
 
-    # --- 2. Extraction des données "Fatturato" ---
+    # --- 2. Extraction des donnees de chiffre d'affaires ---
     fatturato_n = clean_val(df.iloc[8, 2])  # Fatturato N (ligne 9, colonne C)
     fatturato_n_1 = clean_val(df.iloc[9, 2])  # Fatturato N-1 (ligne 10, colonne C)
     diff_fatturato = round(
         clean_val(df.iloc[8, 3]) * 100, 1
     )  # % variation (ligne 9, colonne D)
 
-    # Ricavi - Costi et Margine
+    # Ricavi - costi et marge
     ric_cost_n = clean_val(df.iloc[11, 2])  # Ricavi - Costi N (ligne 12, colonne C)
     ric_cost_n_1 = clean_val(df.iloc[12, 2])  # Ricavi - Costi N-1 (ligne 13, colonne C)
     marg_n = round(
@@ -239,11 +224,11 @@ def load_data(file):
         clean_val(df.iloc[15, 2]) * 100, 1
     )  # Margine N-1 (ligne 16, colonne C)
 
-    # --- 3. Extraction des dates pour les 6 mois glissants (mêmes pour Food, Beverage & Labour) ---
+    # --- 3. Extraction des dates pour les 6 mois glissants ---
     graph_cost_dates = [df.iloc[i, 1] for i in range(24, 30)]  # Dates en colonne B
     graph_cost_dates_n_1 = [df.iloc[i, 7] for i in range(24, 30)]  # Dates en colonne H
 
-    # --- 3. Extraction des dates et données "Food Cost" ---
+    # --- 4. Extraction des bases de CA mensuel ---
     fatturato_mensile_n = [
         clean_val(df.iloc[i, 2]) for i in range(24, 30)
     ]  # Fatturato mensuel N en colonne C
@@ -251,7 +236,12 @@ def load_data(file):
         clean_val(df.iloc[i, 8]) for i in range(24, 30)
     ]  # Fatturato mensuel N-1 en colonne I
 
-    # Food Cost mensuel (N et N-1)
+    beverage_fatturato_n = [clean_val(df.iloc[i, 2]) for i in range(36, 42)]
+    beverage_fatturato_n_1 = [clean_val(df.iloc[i, 8]) for i in range(36, 42)]
+    staff_fatturato_n = [clean_val(df.iloc[i, 2]) for i in range(50, 56)]
+    staff_fatturato_n_1 = [clean_val(df.iloc[i, 8]) for i in range(50, 56)]
+
+    # --- 5. Extraction des coûts mensuels ---
     food_cost_monthly_n = [
         clean_val(df.iloc[i, 3]) for i in range(24, 30)
     ]  # Colonne D (N)
@@ -259,7 +249,6 @@ def load_data(file):
         clean_val(df.iloc[i, 9]) for i in range(24, 30)
     ]  # Colonne J (N-1)
 
-    # --- 4. Extraction des données "Beverage Cost" ---
     beverage_cost_monthly_n = [
         clean_val(df.iloc[i, 3]) for i in range(36, 42)
     ]  # Colonne D (N)
@@ -267,86 +256,44 @@ def load_data(file):
         clean_val(df.iloc[i, 9]) for i in range(36, 42)
     ]  # Colonne J (N-1)
 
-    # --- 5. Extraction des données "Incidenza Staff" ---
     staff_monthly_n = [clean_val(df.iloc[i, 3]) for i in range(50, 56)]  # Colonne D (N)
     staff_monthly_n_1 = [
         clean_val(df.iloc[i, 9]) for i in range(50, 56)
     ]  # Colonne J (N-1)
 
-    # --- 6. Calcul des pourcentages de Food Cost ---
-    food_cost_pctg_n = []
-    for i in range(len(food_cost_monthly_n)):
-        fatturato = fatturato_mensile_n[i]
-        food_cost = food_cost_monthly_n[i]
-        if fatturato > 0:
-            pctg = (food_cost / fatturato) * 100
-        else:
-            pctg = 0.0
-        food_cost_pctg_n.append(round(pctg, 2))
-
-    food_cost_pctg_n_1 = []
-    for i in range(len(food_cost_monthly_n_1)):
-        fatturato = fatturato_mensile_n_1[i]
-        food_cost = food_cost_monthly_n_1[i]
-        if fatturato > 0:
-            pctg = (food_cost / fatturato) * 100
-        else:
-            pctg = 0.0
-        food_cost_pctg_n_1.append(round(pctg, 2))
-
-    # --- 7. Calcul des pourcentages de Beverage Cost ---
-    beverage_cost_pctg_n = []
-    for i in range(len(beverage_cost_monthly_n)):
-        fatturato = clean_val(df.iloc[36 + i, 2])
-        beverage_cost = beverage_cost_monthly_n[i]
-        if fatturato > 0:
-            pctg = (beverage_cost / fatturato) * 100
-        else:
-            pctg = 0.0
-        beverage_cost_pctg_n.append(round(pctg, 2))
-
-    beverage_cost_pctg_n_1 = []
-    for i in range(len(beverage_cost_monthly_n_1)):
-        fatturato = clean_val(df.iloc[36 + i, 8])
-        beverage_cost = beverage_cost_monthly_n_1[i]
-        if fatturato > 0:
-            pctg = (beverage_cost / fatturato) * 100
-        else:
-            pctg = 0.0
-        beverage_cost_pctg_n_1.append(round(pctg, 2))
-
-    # --- 8. Calcul des pourcentages de Staff Cost ---
-    staff_cost_pctg_n = []
-    for i in range(len(staff_monthly_n)):
-        fatturato = clean_val(df.iloc[50 + i, 2])
-        staff_cost = staff_monthly_n[i]
-        if fatturato > 0:
-            pctg = (staff_cost / fatturato) * 100
-        else:
-            pctg = 0.0
-        staff_cost_pctg_n.append(round(pctg, 2))
-
-    staff_cost_pctg_n_1 = []
-    for i in range(len(staff_monthly_n_1)):
-        fatturato = clean_val(df.iloc[50 + i, 8])
-        staff_cost = staff_monthly_n_1[i]
-        if fatturato > 0:
-            pctg = (staff_cost / fatturato) * 100
-        else:
-            pctg = 0.0
-        staff_cost_pctg_n_1.append(round(pctg, 2))
-
-    # --- 9. Calcul des moyennes ---
-    food_cost_avg_n = sum(food_cost_monthly_n) / len(food_cost_monthly_n)
-    food_cost_avg_n_1 = sum(food_cost_monthly_n_1) / len(food_cost_monthly_n_1)
-    beverage_cost_avg_n = sum(beverage_cost_monthly_n) / len(beverage_cost_monthly_n)
-    beverage_cost_avg_n_1 = sum(beverage_cost_monthly_n_1) / len(
-        beverage_cost_monthly_n_1
+    # --- 6. Calcul des pourcentages ---
+    food_cost_pctg_n = _compute_ratio_pct_series(
+        food_cost_monthly_n, fatturato_mensile_n
     )
-    staff_cost_avg_n = sum(staff_monthly_n) / len(staff_monthly_n)
-    staff_cost_avg_n_1 = sum(staff_monthly_n_1) / len(staff_monthly_n_1)
+    food_cost_pctg_n_1 = _compute_ratio_pct_series(
+        food_cost_monthly_n_1,
+        fatturato_mensile_n_1,
+    )
 
-    # --- 10. Retour des données ---
+    beverage_cost_pctg_n = _compute_ratio_pct_series(
+        beverage_cost_monthly_n,
+        beverage_fatturato_n,
+    )
+    beverage_cost_pctg_n_1 = _compute_ratio_pct_series(
+        beverage_cost_monthly_n_1,
+        beverage_fatturato_n_1,
+    )
+
+    staff_cost_pctg_n = _compute_ratio_pct_series(staff_monthly_n, staff_fatturato_n)
+    staff_cost_pctg_n_1 = _compute_ratio_pct_series(
+        staff_monthly_n_1,
+        staff_fatturato_n_1,
+    )
+
+    # --- 7. Calcul des moyennes ---
+    food_cost_avg_n = _safe_avg(food_cost_monthly_n)
+    food_cost_avg_n_1 = _safe_avg(food_cost_monthly_n_1)
+    beverage_cost_avg_n = _safe_avg(beverage_cost_monthly_n)
+    beverage_cost_avg_n_1 = _safe_avg(beverage_cost_monthly_n_1)
+    staff_cost_avg_n = _safe_avg(staff_monthly_n)
+    staff_cost_avg_n_1 = _safe_avg(staff_monthly_n_1)
+
+    # --- 8. Retour des données ---
     return {
         # Fatturato
         "month_name": mes_it,
@@ -393,7 +340,7 @@ def load_data(file):
 
 
 # =========================
-# 7) SUGGESTIONS TEXT (page 1)
+# 7) TEXTES DYNAMIQUES — PAGE 1
 # =========================
 def build_page1_suggestions(d):
     fatt_n = d["fatturato_n"]
@@ -433,7 +380,7 @@ def build_page1_suggestions(d):
 
 
 # =========================
-# 8) PREVIEW GRAPHIQUE (FIG) (simple)
+# 8) PREVIEW DU GRAPHIQUE DE CHIFFRE D’AFFAIRES
 # =========================
 def make_fatturato_fig(d, label):
     fig, ax = plt.subplots(figsize=(6, 6))
@@ -636,11 +583,8 @@ def make_beverage_cost_fig(d, label):
 
 
 # =========================
-# 9) PDF PAGE 1 (layout)
+# 9) MISE EN PAGE PDF — COMPOSANTS COMMUNS
 # =========================
-
-from matplotlib.patches import Rectangle, FancyBboxPatch
-from PIL import Image
 
 
 def _px_to_pt(px, dpi):
@@ -661,11 +605,8 @@ def _trim_transparent(img: Image.Image) -> Image.Image:
     return img.crop(bbox) if bbox else img
 
 
-from matplotlib.patches import Rectangle, FancyBboxPatch
-from PIL import Image
-
 # =========================
-# PAGE TOKENS (layout)
+# 9.1) TOKENS DE MISE EN PAGE
 # =========================
 PAGE_TOKENS = {
     "pad_top_px": 20,
@@ -675,7 +616,7 @@ PAGE_TOKENS = {
 }
 
 # =========================
-# HEADER 1 — MODULAIRE (px-accurate, imshow-safe)
+# 9.2) HEADER — PAGE 1
 # =========================
 # Dépendances attendues (déjà chez toi) :
 # - COLORS, LOGO_PATH
@@ -1059,7 +1000,7 @@ def _draw_header1_bis(
 
 
 # =========================
-# BODY 1 — FATTURATO (px-accurate, "modulaire", imshow-safe)
+# 9.3) CORPS — PAGE 1 / FATTURATO
 # =========================
 # Dépendances attendues (déjà chez toi) :
 # - COLORS, ARROW_UP_PATH, ARROW_DOWN_PATH
@@ -1067,9 +1008,6 @@ def _draw_header1_bis(
 # - _px_to_pt(px, dpi), _img_rgba(path), _trim_transparent(img)
 # - fmt_eur_dot(x), (optionnel) fmt_pct_1(x)
 # - matplotlib.ticker as ticker
-
-import textwrap
-import matplotlib.ticker as ticker
 
 BODY1_CFG = {
     # --- Marges / colonnes ---
@@ -1336,7 +1274,7 @@ def _fit_justified_paragraph_to_height(
 
 
 # =========================
-# BODY — FC/BC MEDIO (ultimi 6 mesi) vs N-1 + testo giustificato
+# 9.4) CORPS — SYNTHESE FOOD / BEVERAGE COST
 # =========================
 BODY_FC_BC_SUMMARY_CFG = {
     # colonnes (comme page 1)
@@ -2217,7 +2155,7 @@ def _measure_body1_metrics(
 
 
 # =========================
-# BODY PAGE 2 — FOOD & BEVERAGE COST (2 colonnes)
+# 9.5) CORPS — PAGE 2 / FOOD & BEVERAGE COST
 # =========================
 BODY_PAGE_2_CFG = {
     # mêmes colonnes que page 1
@@ -2458,7 +2396,7 @@ def _draw_body_page_2_food_beverage_cost(
 
 
 # =========================
-# BODY PAGE 3 — INCIDENZA STAFF
+# 9.6) CORPS — PAGE 3 / INCIDENZA STAFF
 # =========================
 BODY_PAGE_3_CFG = {
     # mêmes marges / logique que les autres pages
@@ -2506,28 +2444,6 @@ def _fmt_pct_no_sign(x, decimals=0):
     if decimals == 0:
         return f"{int(round(float(x)))}%"
     return f"{float(x):.{decimals}f}%"
-
-
-def _month_year_label_from_dt(dt, fallback_year: int) -> str:
-    months_it = {
-        1: "Gennaio",
-        2: "Febbraio",
-        3: "Marzo",
-        4: "Aprile",
-        5: "Maggio",
-        6: "Giugno",
-        7: "Luglio",
-        8: "Agosto",
-        9: "Settembre",
-        10: "Ottobre",
-        11: "Novembre",
-        12: "Dicembre",
-    }
-    if hasattr(dt, "month") and hasattr(dt, "year"):
-        return f"{months_it.get(dt.month, str(dt))} {dt.year}"
-    if hasattr(dt, "month"):
-        return f"{months_it.get(dt.month, str(dt))} {fallback_year}"
-    return str(dt)
 
 
 def _draw_staff_gauge_in_page_3(
@@ -2890,7 +2806,7 @@ def _draw_body_page_3_staff(
 
 
 # =========================
-# FOOTER 1 — MODULAIRE (px-accurate)
+# 9.7) FOOTER COMMUN
 # =========================
 
 FOOTER1_CFG = {
@@ -2991,52 +2907,6 @@ def _measure_footer1_height_px(ax, W_PX, H_PX, d, dpi: int, cfg=None) -> float:
         + cfg["gap_label_to_value_px"]
         + hv
     )
-
-
-def _measure_footer1_visual_bottom_px(ax, W_PX, H_PX, d, dpi: int, cfg=None) -> float:
-    """
-    Mesure le vrai bas visuel des valeurs du footer page 1
-    pour un top_px donné, sans rien dessiner de visible.
-    """
-    cfg = {**FOOTER1_CFG, **(cfg or {})}
-
-    title_fp = globals()[cfg["title_fontprops"]]
-    label_fp = globals()[cfg["label_fontprops"]]
-    value_fp = globals()[cfg["value_fontprops"]]
-
-    y_line = float(cfg["top_px"])
-    y = y_line + cfg["gap_after_line_px"]
-
-    # Titres
-    _, h_t1 = _measure_text_px(
-        ax, "Ricavi - Costi", cfg["title_font_px"], title_fp, dpi
-    )
-    _, h_t2 = _measure_text_px(
-        ax, "Margine % su ricavi", cfg["title_font_px"], title_fp, dpi
-    )
-    y += max(h_t1, h_t2) + cfg["gap_after_titles_px"]
-
-    # Labels
-    label_left = d["full_date_n"]
-    label_right = f"vs {d['year_n_1']}"
-
-    _, hl1 = _measure_text_px(ax, label_left, cfg["label_font_px"], label_fp, dpi)
-    _, hl2 = _measure_text_px(ax, label_right, cfg["label_font_px"], label_fp, dpi)
-
-    y_vals = y + max(hl1, hl2) + cfg["gap_label_to_value_px"]
-
-    # Valeurs
-    ric_n = fmt_eur_dot(d["ric_cost_n"])
-    ric_p = fmt_eur_dot(d["ric_cost_n_1"])
-    marg_n = _fmt_pct(d["marg_n"], decimals=cfg["marg_decimals"])
-    marg_p = _fmt_pct(d["marg_n_1"], decimals=cfg["marg_decimals"])
-
-    _, hv1 = _measure_text_px(ax, ric_n, cfg["value_font_px"], value_fp, dpi)
-    _, hv2 = _measure_text_px(ax, ric_p, cfg["value_font_px"], value_fp, dpi)
-    _, hv3 = _measure_text_px(ax, marg_n, cfg["value_font_px"], value_fp, dpi)
-    _, hv4 = _measure_text_px(ax, marg_p, cfg["value_font_px"], value_fp, dpi)
-
-    return float(y_vals + max(hv1, hv2, hv3, hv4))
 
 
 def _draw_footer1(ax, W_PX, H_PX, d, dpi: int, cfg=None):
@@ -3272,7 +3142,7 @@ def _draw_footer1(ax, W_PX, H_PX, d, dpi: int, cfg=None):
 
 
 # =========================
-# CREATION PAGE1 (layout) — SQUELETTE (avec header + body + footer, mais sans contenu dynamique)
+# 10) CONSTRUCTION DE LA PAGE 1
 # =========================
 
 
@@ -3402,7 +3272,7 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
 
 
 # =========================
-# CREATION PAGE2 (layout) — SQUELETTE (avec header + footer, mais body vide pour l'instant)
+# 11) CONSTRUCTION DE LA PAGE 2
 # =========================
 
 
@@ -3446,19 +3316,6 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         cfg={"header_line_y_px": int(header_line_y_px)},
     )
 
-    # Reproduit la cote basse RÉELLE du footer page 1, sans changer son rendu
-    footer_h = _measure_footer1_height_px(ax, W_PX, H_PX, d, dpi)
-    footer_line_y_px = int(H_PX - PAGE_TOKENS["pad_bottom_px"] - footer_h)
-
-    page1_footer_visual_bottom_px = _measure_footer1_visual_bottom_px(
-        ax,
-        W_PX,
-        H_PX,
-        d,
-        dpi,
-        cfg={"top_px": int(footer_line_y_px)},
-    )
-
     _draw_body_fc_bc_summary(
         ax,
         W_PX,
@@ -3478,7 +3335,7 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
 
 
 # =========================
-# CREATION PAGE3 (layout) — SQUELETTE
+# 12) CONSTRUCTION DE LA PAGE 3
 # =========================
 def _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name: str):
     ax.set_axis_off()
@@ -3515,30 +3372,7 @@ def _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name: str):
 # Pas de footer en page 3 ✅
 
 # =========================
-# CONFIG GLOBALE DES PAGES (pour page 1 + page 2)
-# =========================
-
-# ✅ Taille cible en pixels (ton nouveau "format")
-PAGE_W_PX = 800
-PAGE_H_PX = 1000
-
-# ✅ DPI de référence : fixe la taille physique du PDF
-BASE_DPI = 100
-
-# ✅ Taille “physique” (inches) qui correspond à 800x1000 px à BASE_DPI
-PAGE_SIZE_INCH = (PAGE_W_PX / BASE_DPI, PAGE_H_PX / BASE_DPI)
-# --- Page 2 : on garde exactement la même “grille” que la page 1 (pour l'instant) ---
-PAGE_2_W_PX = PAGE_W_PX
-PAGE_2_H_PX = PAGE_H_PX
-PAGE_2_SIZE_INCH = PAGE_SIZE_INCH
-
-# =========================
-# GENERATION PDF/PNG (pages 1 & 2)
-# =========================
-
-
-# =========================
-# CONFIG GLOBALE DES PAGES (pour page 1 + page 2 + page 3)
+# 13) CONFIGURATION GLOBALE DES PAGES
 # =========================
 
 # ✅ Taille cible en pixels (ton nouveau "format")
@@ -3562,7 +3396,7 @@ PAGE_3_H_PX = PAGE_H_PX
 PAGE_3_SIZE_INCH = PAGE_SIZE_INCH
 
 # =========================
-# GENERATION PDF/PNG (pages 1, 2 & 3)
+# 14) GENERATION PDF ET PNG
 # =========================
 
 
@@ -3719,8 +3553,8 @@ def build_a4_page_3_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes
     return buf.getvalue()
 
 
-# ==# =========================
-# 10) UI
+# =========================
+# 15) INTERFACE STREAMLIT
 # =========================
 st.title("Report Fizzy Automatizzazione ⚡️")
 
