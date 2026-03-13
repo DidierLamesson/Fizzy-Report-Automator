@@ -2797,7 +2797,7 @@ def _draw_staff_gauge_in_page_3(
 
 
 def _draw_body_page_3_staff(
-    ax, W_PX, H_PX, d, restaurant_name: str, dpi: int, cfg=None
+    ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str, dpi: int, cfg=None
 ):
     cfg = {**BODY_PAGE_3_CFG, **(cfg or {})}
 
@@ -3025,15 +3025,7 @@ def _draw_body_page_3_staff(
     )
 
     # --- Texte justifié pleine largeur (hors marges) ---
-    lorem = (
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-        "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
-        "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi "
-        "ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit "
-        "in voluptate velit esse cillum dolore eu fugiat nulla pariatur. "
-        "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia "
-        "deserunt mollit anim id est laborum."
-    )
+    analysis_text = (analysis_text or "").strip()
 
     para_top_px = vs_top_px + max(h_vs_0, h_vs_1) + cfg["para_gap_after_vs_px"]
 
@@ -3062,7 +3054,7 @@ def _draw_body_page_3_staff(
 
     text_wrapped = _fit_justified_paragraph_to_height(
         ax,
-        lorem,
+        analysis_text,
         width_px=col_px_render,
         font_px=cfg["para_font_px"],
         fontprops=epilogue_regular,
@@ -3564,7 +3556,7 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
 # =========================
 
 
-def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
+def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str = ""):
     ax.set_axis_off()
     ax.set_aspect("auto")
     ax.set_xlim(0, 1)
@@ -3585,14 +3577,6 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         or 0
     )
 
-    # Texte (plus tard: celui des box Streamlit)
-    lorem = (
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-        "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
-        "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. "
-        "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. "
-    ) * 3
-
     # charts_bottom_px = vrai bas rendu des charts (ticks inclus)
     charts_bottom_px = _draw_body_page_2_food_beverage_cost(
         ax,
@@ -3610,7 +3594,7 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
         H_PX,
         d,
         restaurant_name,
-        lorem,
+        analysis_text,
         dpi,
         cfg={
             "top_px": int(charts_bottom_px + 20),
@@ -3625,7 +3609,7 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str):
 # =========================
 # 12) CONSTRUCTION DE LA PAGE 3
 # =========================
-def _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name: str):
+def _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str = ""):
     ax.set_axis_off()
     ax.set_aspect("auto")
     ax.set_xlim(0, 1)
@@ -3652,6 +3636,7 @@ def _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name: str):
         H_PX,
         d,
         restaurant_name,
+        analysis_text,
         dpi,
         cfg={"header_line_y_px": int(header_line_y_px)},
     )
@@ -3743,7 +3728,9 @@ def build_a4_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes:
     return buf.getvalue()
 
 
-def build_a4_page_2_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
+def build_a4_page_2_pdf_bytes(
+    d, restaurant_name: str, analysis_text: str = "", dpi=300
+) -> bytes:
     """
     PDF PAGE 2 : même verrouillage de format que page 1 (800x1000 via PAGE_2_SIZE_INCH + BASE_DPI).
     Le param `dpi` est gardé uniquement pour compat, mais n'influence pas la taille physique.
@@ -3753,7 +3740,7 @@ def build_a4_page_2_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
 
     W_PX, H_PX = PAGE_2_W_PX, PAGE_2_H_PX
-    _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name)
+    _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name, analysis_text=analysis_text)
 
     buf = BytesIO()
     fig.savefig(
@@ -3769,14 +3756,16 @@ def build_a4_page_2_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
     return buf.getvalue()
 
 
-def build_a4_page_2_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes:
+def build_a4_page_2_png_preview_bytes(
+    d, restaurant_name: str, analysis_text: str = "", dpi=150
+) -> bytes:
     """PNG PAGE 2 : `dpi` ne joue que sur la netteté de l'aperçu."""
     fig = plt.figure(figsize=PAGE_2_SIZE_INCH, dpi=dpi, facecolor=COLORS["bg"])
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
 
     W_PX, H_PX = PAGE_2_W_PX, PAGE_2_H_PX
-    _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name)
+    _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name, analysis_text=analysis_text)
 
     buf = BytesIO()
     fig.savefig(
@@ -3792,7 +3781,9 @@ def build_a4_page_2_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes
     return buf.getvalue()
 
 
-def build_a4_page_3_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
+def build_a4_page_3_pdf_bytes(
+    d, restaurant_name: str, analysis_text: str = "", dpi=300
+) -> bytes:
     """
     PDF PAGE 3 : même verrouillage de format que pages 1 et 2.
     Le param `dpi` est gardé uniquement pour compat.
@@ -3802,7 +3793,7 @@ def build_a4_page_3_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
 
     W_PX, H_PX = PAGE_3_W_PX, PAGE_3_H_PX
-    _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name)
+    _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name, analysis_text=analysis_text)
 
     buf = BytesIO()
     fig.savefig(
@@ -3818,14 +3809,16 @@ def build_a4_page_3_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
     return buf.getvalue()
 
 
-def build_a4_page_3_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes:
+def build_a4_page_3_png_preview_bytes(
+    d, restaurant_name: str, analysis_text: str = "", dpi=150
+) -> bytes:
     """PNG PAGE 3 : `dpi` ne joue que sur la netteté de l'aperçu."""
     fig = plt.figure(figsize=PAGE_3_SIZE_INCH, dpi=dpi, facecolor=COLORS["bg"])
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
 
     W_PX, H_PX = PAGE_3_W_PX, PAGE_3_H_PX
-    _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name)
+    _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name, analysis_text=analysis_text)
 
     buf = BytesIO()
     fig.savefig(
@@ -3956,8 +3949,18 @@ if uploaded and restaurant_input:
 
     # --- UI : Export PDF ---
     pdf_bytes_page_1 = build_a4_pdf_bytes(data, restaurant_input, dpi=300)
-    pdf_bytes_page_2 = build_a4_page_2_pdf_bytes(data, restaurant_input, dpi=300)
-    pdf_bytes_page_3 = build_a4_page_3_pdf_bytes(data, restaurant_input, dpi=300)
+    pdf_bytes_page_2 = build_a4_page_2_pdf_bytes(
+        data,
+        restaurant_input,
+        analysis_text=page2_analysis_text,
+        dpi=300,
+    )
+    pdf_bytes_page_3 = build_a4_page_3_pdf_bytes(
+        data,
+        restaurant_input,
+        analysis_text=page3_analysis_text,
+        dpi=300,
+    )
 
     png_bytes_page_1 = pdf_bytes_to_png_bytes(pdf_bytes_page_1, page_index=0, zoom=2.0)
     png_bytes_page_2 = pdf_bytes_to_png_bytes(pdf_bytes_page_2, page_index=0, zoom=2.0)
