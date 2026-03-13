@@ -3503,7 +3503,7 @@ if uploaded and restaurant_input:
     col_viz, col_edit = st.columns([1, 1])
 
     with col_viz:
-        st.subheader("📊 Fatturato Mensile (preview)")
+        st.subheader("📊 Fatturato mensile ")
         preview_fig = make_fatturato_fig(data, label=restaurant_input)
         st.pyplot(preview_fig)
 
@@ -3526,7 +3526,7 @@ if uploaded and restaurant_input:
     food_title_col_left, food_title_col_right = st.columns([1.2, 1], gap="large")
 
     with food_title_col_left:
-        st.subheader("📈 Food Cost (mensile)")
+        st.subheader("📈 Food cost (mensile)")
 
     with food_title_col_right:
         st.subheader("✍️ Analisa scritta (modificabile)")
@@ -3538,12 +3538,12 @@ if uploaded and restaurant_input:
         st.pyplot(food_fig)
 
     with food_col_text:
-        st.text_area("📝 Commento Food Cost", value="", height=280, key="food_comment")
+        st.text_area("📝 Commento Food cost", value="", height=280, key="food_comment")
 
     # =========================
     # BEVERAGE COST
     # =========================
-    st.subheader("📈 Beverage Cost (mensile)")
+    st.subheader("📈 Beverage cost (mensile)")
     bev_col_graph, bev_col_text = st.columns([1.2, 1], gap="large")
 
     with bev_col_graph:
@@ -3552,7 +3552,7 @@ if uploaded and restaurant_input:
 
     with bev_col_text:
         st.text_area(
-            "📝 Commento Beverage Cost", value="", height=280, key="beverage_comment"
+            "📝 Commento Beverage cost", value="", height=280, key="beverage_comment"
         )
 
     # --- UI : Download PDF ---
