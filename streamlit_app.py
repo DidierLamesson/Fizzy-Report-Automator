@@ -2291,8 +2291,8 @@ def _measure_body1_metrics(
 BODY_PAGE_2_CFG = {
     # mêmes colonnes que page 1
     "side_margin_px": BODY1_CFG["side_margin_px"],  # 80 (gauche)
-    "right_edge_margin_px": BODY1_CFG["right_edge_margin_px"],  # ✅ 40 (droite)
-    "col_gap_px": 40,  # ✅ espace entre les 2 charts (au lieu de 20)
+    "right_edge_margin_px": BODY1_CFG["right_edge_margin_px"],  # 40 (droite)
+    "col_gap_px": 40,  # espace entre les 2 charts
     "left_col_ratio": 0.5,
     "gap_after_header_px": BODY1_CFG["gap_after_header_px"],
     # --- Titre section (fixe) ---
@@ -2369,79 +2369,17 @@ def _plot_food_cost_axis(axc, d, label):
     return axc
 
 
-def _draw_food_cost_chart_in_page_2(fig, left, bottom, width, height, d, label, dpi):
-    axc = fig.add_axes([left, bottom, width, height], facecolor=COLORS["bg"])
-
-    x_labels = list(reversed(month_labels_from_graph_dates(d)))
-    y = list(reversed(d["food_cost_pctg_n"]))
-
-    axc.plot(
-        range(len(y)),
-        y,
-        marker="o",
-        linewidth=3,
-        markersize=10,
-        color=COLORS["graph1"],
-        zorder=3,
-    )
-
-    axc.set_title(
-        f"Andamento Food Cost Mensile {d['year_n']}",
-        color=COLORS["white"],
-        fontsize=16,
-        fontproperties=epilogue_semibold,
-        loc="left",
-        pad=10,
-    )
-
-    axc.plot([], [], marker="o", linestyle="None", color=COLORS["graph1"], label=label)
-    leg = axc.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.02),
-        frameon=False,
-        fontsize=10,
-        labelcolor=COLORS["white"],
-        handlelength=0,
-    )
-    for t in leg.get_texts():
-        t.set_fontproperties(epilogue_regular)
-
-    axc.set_xticks(range(len(x_labels)))
-    axc.set_xticklabels(
-        x_labels,
-        rotation=45,
-        ha="right",
-        color=COLORS["white"],
-        fontsize=9,
-        fontproperties=epilogue_regular,
-    )
-    axc.tick_params(axis="x", colors=COLORS["white"], labelsize=9, length=0)
-
-    axc.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
-    axc.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
-    axc.set_ylim(0, max(25, (max(y) if y else 0) + 5))
-
-    axc.grid(False)
-    for s in axc.spines.values():
-        s.set_visible(False)
-
-    return axc
-
-
-def _draw_food_cost_chart_in_page_2(fig, left, bottom, width, height, d, label, dpi):
-    axc = fig.add_axes([left, bottom, width, height], facecolor=COLORS["bg"])
-    return _plot_food_cost_axis(axc, d=d, label=label)
-
-
-def _draw_beverage_cost_chart_in_page_2(
-    fig, left, bottom, width, height, d, label, dpi
-):
-    axc = fig.add_axes([left, bottom, width, height], facecolor=COLORS["bg"])
-
+def _plot_beverage_cost_axis(axc, d, label):
+    """
+    Style unique du graphique Beverage Cost.
+    Utilisé à la fois par la preview Streamlit et par le rendu PDF.
+    """
     x_labels = list(reversed(month_labels_from_graph_dates(d)))
     y = list(reversed(d["beverage_cost_pctg_n"]))
 
-    BEV_COLOR = "#e74c3c"
+    bev_color = "#e74c3c"
+
+    axc.set_facecolor(COLORS["bg"])
 
     axc.plot(
         range(len(y)),
@@ -2449,7 +2387,7 @@ def _draw_beverage_cost_chart_in_page_2(
         marker="o",
         linewidth=3,
         markersize=10,
-        color=BEV_COLOR,
+        color=bev_color,
         zorder=3,
     )
 
@@ -2462,7 +2400,7 @@ def _draw_beverage_cost_chart_in_page_2(
         pad=10,
     )
 
-    axc.plot([], [], marker="o", linestyle="None", color=BEV_COLOR, label=label)
+    axc.plot([], [], marker="o", linestyle="None", color=bev_color, label=label)
     leg = axc.legend(
         loc="upper center",
         bbox_to_anchor=(0.5, 1.02),
@@ -2494,6 +2432,24 @@ def _draw_beverage_cost_chart_in_page_2(
         s.set_visible(False)
 
     return axc
+
+
+def _draw_food_cost_chart_in_page_2(fig, left, bottom, width, height, d, label, dpi):
+    """
+    Wrapper PDF du graphique Food Cost.
+    """
+    axc = fig.add_axes([left, bottom, width, height], facecolor=COLORS["bg"])
+    return _plot_food_cost_axis(axc, d=d, label=label)
+
+
+def _draw_beverage_cost_chart_in_page_2(
+    fig, left, bottom, width, height, d, label, dpi
+):
+    """
+    Wrapper PDF du graphique Beverage Cost.
+    """
+    axc = fig.add_axes([left, bottom, width, height], facecolor=COLORS["bg"])
+    return _plot_beverage_cost_axis(axc, d=d, label=label)
 
 
 def _draw_body_page_2_food_beverage_cost(
@@ -3763,7 +3719,7 @@ uploaded = st.sidebar.file_uploader("Caricare il Report (.xslx))", type="xlsx")
 if uploaded and restaurant_input:
     data = load_data(uploaded)
 
-    col_viz, col_edit = st.columns([1, 1])
+    col_viz, col_edit = st.columns([1.2, 1], gap="large")
 
     with col_viz:
         st.subheader("📊 Fatturato (mensile) ")
