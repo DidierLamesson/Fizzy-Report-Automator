@@ -503,33 +503,50 @@ def _make_report_text_signature(d, restaurant_name: str) -> str:
 
 def _ensure_report_text_state(d, restaurant_name: str):
     """
-    Initialise les suggestions et les textes finaux une seule fois par report.
-    Les suggestions sont recalculées quand le report change.
-    Les textes finaux sont remis à vide au changement de report.
+    Initialise les suggestions et les textes finaux.
+    - Si le report change : on réinitialise tout.
+    - Si le report ne change pas mais que certaines clés manquent : on les recrée.
     """
     signature = _make_report_text_signature(d, restaurant_name)
-
-    if st.session_state.get(REPORT_TEXT_SIGNATURE_KEY) == signature:
-        return
 
     p1_default, p2_default = build_page1_suggestions(d)
     food_default, beverage_default = build_page2_suggestions(d)
     staff_default = build_page3_suggestion(d)
 
-    # Suggestions intelligentes (lecture seule dans l'UI)
-    st.session_state[SUGGESTION_TEXT_STATE_KEYS["page1_p1"]] = p1_default
-    st.session_state[SUGGESTION_TEXT_STATE_KEYS["page1_p2"]] = p2_default
-    st.session_state[SUGGESTION_TEXT_STATE_KEYS["page2_food"]] = food_default
-    st.session_state[SUGGESTION_TEXT_STATE_KEYS["page2_bev"]] = beverage_default
-    st.session_state[SUGGESTION_TEXT_STATE_KEYS["page3_staff"]] = staff_default
+    suggestion_defaults = {
+        SUGGESTION_TEXT_STATE_KEYS["page1_p1"]: p1_default,
+        SUGGESTION_TEXT_STATE_KEYS["page1_p2"]: p2_default,
+        SUGGESTION_TEXT_STATE_KEYS["page2_food"]: food_default,
+        SUGGESTION_TEXT_STATE_KEYS["page2_bev"]: beverage_default,
+        SUGGESTION_TEXT_STATE_KEYS["page3_staff"]: staff_default,
+    }
 
-    # Textes finaux utilisateur (future source du PDF)
-    st.session_state[FINAL_TEXT_STATE_KEYS["page1_final"]] = ""
-    st.session_state[FINAL_TEXT_STATE_KEYS["page2_food_final"]] = ""
-    st.session_state[FINAL_TEXT_STATE_KEYS["page2_bev_final"]] = ""
-    st.session_state[FINAL_TEXT_STATE_KEYS["page3_staff_final"]] = ""
+    final_defaults = {
+        FINAL_TEXT_STATE_KEYS["page1_final"]: "",
+        FINAL_TEXT_STATE_KEYS["page2_food_final"]: "",
+        FINAL_TEXT_STATE_KEYS["page2_bev_final"]: "",
+        FINAL_TEXT_STATE_KEYS["page3_staff_final"]: "",
+    }
 
-    st.session_state[REPORT_TEXT_SIGNATURE_KEY] = signature
+    signature_changed = st.session_state.get(REPORT_TEXT_SIGNATURE_KEY) != signature
+
+    # Si nouveau report : on réinitialise suggestions + textes finaux
+    if signature_changed:
+        for k, v in suggestion_defaults.items():
+            st.session_state[k] = v
+        for k, v in final_defaults.items():
+            st.session_state[k] = v
+        st.session_state[REPORT_TEXT_SIGNATURE_KEY] = signature
+        return
+
+    # Même report : on backfill uniquement les clés manquantes
+    for k, v in suggestion_defaults.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
+
+    for k, v in final_defaults.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
 
 
 def get_report_text_state():
