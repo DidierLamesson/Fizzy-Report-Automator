@@ -2494,6 +2494,9 @@ BODY_PAGE_3_CFG = {
     "vs_label_font_px": 16,
     "vs_value_font_px": 18,
     "vs_row_gap_after_month_px": 16,
+    "para_font_px": BODY1_CFG["para_font_px"],
+    "para_linespacing": BODY1_CFG["para_linespacing"],
+    "para_gap_after_vs_px": 24,
 }
 
 
@@ -2787,7 +2790,7 @@ def _draw_body_page_3_staff(
         z=850,
     )
 
-    _draw_text_top_center_x_px(
+    h_vs_0 = _draw_text_top_center_x_px(
         ax,
         W_PX,
         y_from_top,
@@ -2800,6 +2803,7 @@ def _draw_body_page_3_staff(
         COLORS["accent"],
         z=850,
     )
+
     h_vs_1 = _draw_text_top_center_x_px(
         ax,
         W_PX,
@@ -2814,7 +2818,66 @@ def _draw_body_page_3_staff(
         z=850,
     )
 
-    return float(vs_top_px + h_vs_1)
+    # --- Texte justifié pleine largeur (hors marges) ---
+    lorem = (
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi "
+        "ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit "
+        "in voluptate velit esse cillum dolore eu fugiat nulla pariatur. "
+        "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia "
+        "deserunt mollit anim id est laborum."
+    )
+
+    para_top_px = vs_top_px + max(h_vs_0, h_vs_1) + cfg["para_gap_after_vs_px"]
+
+    para_left_px = cfg["side_margin_px"]
+    para_right_edge_px = W_PX - cfg.get("right_edge_margin_px", cfg["side_margin_px"])
+    col_px_layout = para_right_edge_px - para_left_px
+
+    ax.figure.canvas.draw()
+    r = ax.figure.canvas.get_renderer()
+    ax_bb = ax.get_window_extent(renderer=r)
+    ax_w_render = ax_bb.width
+    scale_y = ax_bb.height / H_PX
+
+    col_px_render = ax_w_render * (col_px_layout / W_PX)
+
+    # borne basse max = moitié de la page
+    para_max_bottom_px = float(H_PX / 2.0)
+    max_h_render = max(0.0, (para_max_bottom_px - para_top_px) * scale_y)
+
+    text_wrapped = _fit_justified_paragraph_to_height(
+        ax,
+        lorem,
+        width_px=col_px_render,
+        font_px=cfg["para_font_px"],
+        fontprops=epilogue_regular,
+        dpi=dpi,
+        linespacing=cfg["para_linespacing"],
+        max_height_render_px=max_h_render,
+    )
+
+    text_obj = ax.text(
+        para_left_px / W_PX,
+        y_from_top(para_top_px),
+        text_wrapped,
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        color=COLORS["white"],
+        fontsize=_px_to_pt(cfg["para_font_px"], dpi),
+        fontproperties=epilogue_regular,
+        linespacing=cfg["para_linespacing"],
+        zorder=850,
+    )
+
+    # bas réel du texte pour le return
+    ax.figure.canvas.draw()
+    bb = text_obj.get_window_extent(renderer=r)
+    text_bottom_from_top_px = (ax_bb.y1 - bb.y0) / scale_y
+
+    return float(text_bottom_from_top_px)
 
 
 # =========================
