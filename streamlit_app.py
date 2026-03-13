@@ -3951,7 +3951,12 @@ if uploaded and restaurant_input:
             height=150,
             disabled=True,
         )
-
+        st.text_area(
+            "📝 Testo finale (modificabile)",
+            height=300,
+            key=FINAL_TEXT_STATE_KEYS["page1_final"],
+            placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
+        )
         btn_spacer, btn_col = st.columns([2.4, 1])
         with btn_col:
             st.button(
@@ -3960,13 +3965,6 @@ if uploaded and restaurant_input:
                 on_click=_copy_page1_proposals_to_final,
                 width="stretch",
             )
-
-        st.text_area(
-            "📝 Testo finale (modificabile)",
-            height=300,
-            key=FINAL_TEXT_STATE_KEYS["page1_final"],
-            placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
-        )
 
     # --- Section graphs pleine largeur ---
     st.divider()
