@@ -510,6 +510,45 @@ def get_report_text_state():
     }
 
 
+def _join_text_blocks(*blocks):
+    """
+    Assemble proprement plusieurs blocs texte en supprimant les vides
+    et en les séparant par une ligne blanche.
+    """
+    cleaned = []
+    for block in blocks:
+        txt = (block or "").strip()
+        if txt:
+            cleaned.append(txt)
+    return "\n\n".join(cleaned)
+
+
+def build_report_text_payload(report_texts: dict):
+    """
+    Construit les textes finaux injectables dans les pages PDF / aperçus.
+    Source de vérité unique pour les 3 pages.
+    """
+    page1_text = _join_text_blocks(
+        report_texts.get("page1_p1", ""),
+        report_texts.get("page1_p2", ""),
+    )
+
+    page2_text = _join_text_blocks(
+        report_texts.get("page2_food", ""),
+        report_texts.get("page2_bev", ""),
+    )
+
+    page3_text = _join_text_blocks(
+        report_texts.get("page3_staff", ""),
+    )
+
+    return {
+        "page1_analysis_text": page1_text,
+        "page2_analysis_text": page2_text,
+        "page3_analysis_text": page3_text,
+    }
+
+
 # =========================
 # 8) PREVIEW DU GRAPHIQUE DE CHIFFRE D’AFFAIRES
 # =========================
@@ -3814,6 +3853,7 @@ if uploaded and restaurant_input:
     data = load_data(uploaded)
     _ensure_report_text_state(data, restaurant_input)
     report_texts = get_report_text_state()
+    report_payload = build_report_text_payload(report_texts)
 
     col_viz, col_edit = st.columns([1.2, 1], gap="large")
 
@@ -3836,10 +3876,9 @@ if uploaded and restaurant_input:
             key=REPORT_TEXT_STATE_KEYS["page1_p2"],
         )
 
-        analysis_text = (
-            f"{st.session_state[REPORT_TEXT_STATE_KEYS['page1_p1']]}\n\n"
-            f"{st.session_state[REPORT_TEXT_STATE_KEYS['page1_p2']]}"
-        )
+        analysis_text = report_payload["page1_analysis_text"]
+        page2_analysis_text = report_payload["page2_analysis_text"]
+        page3_analysis_text = report_payload["page3_analysis_text"]
 
     # --- Section graphs pleine largeur ---
     st.divider()
