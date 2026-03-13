@@ -562,6 +562,32 @@ def get_report_text_state():
     }
 
 
+def _copy_page1_proposals_to_final():
+    p1 = st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p1"], "").strip()
+    p2 = st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p2"], "").strip()
+
+    parts = [txt for txt in [p1, p2] if txt]
+    st.session_state[FINAL_TEXT_STATE_KEYS["page1_final"]] = "\n\n".join(parts)
+
+
+def _copy_food_proposal_to_final():
+    st.session_state[FINAL_TEXT_STATE_KEYS["page2_food_final"]] = st.session_state.get(
+        SUGGESTION_TEXT_STATE_KEYS["page2_food"], ""
+    ).strip()
+
+
+def _copy_beverage_proposal_to_final():
+    st.session_state[FINAL_TEXT_STATE_KEYS["page2_bev_final"]] = st.session_state.get(
+        SUGGESTION_TEXT_STATE_KEYS["page2_bev"], ""
+    ).strip()
+
+
+def _copy_staff_proposal_to_final():
+    st.session_state[FINAL_TEXT_STATE_KEYS["page3_staff_final"]] = st.session_state.get(
+        SUGGESTION_TEXT_STATE_KEYS["page3_staff"], ""
+    ).strip()
+
+
 def _join_text_blocks(*blocks):
     """
     Assemble proprement plusieurs blocs texte en supprimant les vides
@@ -3925,7 +3951,11 @@ if uploaded and restaurant_input:
                 height=150,
                 disabled=True,
             )
-
+            st.button(
+                "📥 Usa la proposte",
+                key="use_proposal_page1",
+                on_click=_copy_page1_proposals_to_final,
+            )
             st.text_area(
                 "📝 Testo finale (modificabile)",
                 height=150,
@@ -3962,7 +3992,11 @@ if uploaded and restaurant_input:
             key=SUGGESTION_TEXT_STATE_KEYS["page2_food"],
             disabled=True,
         )
-
+        st.button(
+            "📥 Usa la proposta",
+            key="use_proposal_food",
+            on_click=_copy_food_proposal_to_final,
+        )
         st.text_area(
             "📝 Testo finale (modificabile)",
             height=150,
@@ -3989,7 +4023,11 @@ if uploaded and restaurant_input:
             key=SUGGESTION_TEXT_STATE_KEYS["page2_bev"],
             disabled=True,
         )
-
+        st.button(
+            "📥 Usa la proposta",
+            key="use_proposal_bev",
+            on_click=_copy_beverage_proposal_to_final,
+        )
         st.text_area(
             "📝 Testo finale (modificabile)",
             height=150,
@@ -4026,7 +4064,11 @@ if uploaded and restaurant_input:
             key=SUGGESTION_TEXT_STATE_KEYS["page3_staff"],
             disabled=True,
         )
-
+        st.button(
+            "📥 Usa la proposta",
+            key="use_proposal_staff",
+            on_click=_copy_staff_proposal_to_final,
+        )
         st.text_area(
             "📝 Testo finale (modificabile)",
             height=150,
