@@ -466,12 +466,19 @@ def build_page3_suggestion(d):
     )
 
 
-REPORT_TEXT_STATE_KEYS = {
-    "page1_p1": "page1_paragraph_1",
-    "page1_p2": "page1_paragraph_2",
-    "page2_food": "food_comment",
-    "page2_bev": "beverage_comment",
-    "page3_staff": "staff_comment",
+SUGGESTION_TEXT_STATE_KEYS = {
+    "page1_p1": "page1_paragraph_1_suggestion",
+    "page1_p2": "page1_paragraph_2_suggestion",
+    "page2_food": "food_comment_suggestion",
+    "page2_bev": "beverage_comment_suggestion",
+    "page3_staff": "staff_comment_suggestion",
+}
+
+FINAL_TEXT_STATE_KEYS = {
+    "page1_final": "page1_final_text",
+    "page2_food_final": "page2_food_final_text",
+    "page2_bev_final": "page2_bev_final_text",
+    "page3_staff_final": "page3_staff_final_text",
 }
 
 REPORT_TEXT_SIGNATURE_KEY = "__report_text_signature__"
@@ -496,8 +503,9 @@ def _make_report_text_signature(d, restaurant_name: str) -> str:
 
 def _ensure_report_text_state(d, restaurant_name: str):
     """
-    Initialise les textes éditables une seule fois par report.
-    Ne réécrit pas la saisie utilisateur tant que le report ne change pas.
+    Initialise les suggestions et les textes finaux une seule fois par report.
+    Les suggestions sont régénérées quand le report change.
+    Les textes finaux sont initialisés vides au changement de report.
     """
     signature = _make_report_text_signature(d, restaurant_name)
 
@@ -508,25 +516,58 @@ def _ensure_report_text_state(d, restaurant_name: str):
     food_default, beverage_default = build_page2_suggestions(d)
     staff_default = build_page3_suggestion(d)
 
-    st.session_state[REPORT_TEXT_STATE_KEYS["page1_p1"]] = p1_default
-    st.session_state[REPORT_TEXT_STATE_KEYS["page1_p2"]] = p2_default
-    st.session_state[REPORT_TEXT_STATE_KEYS["page2_food"]] = food_default
-    st.session_state[REPORT_TEXT_STATE_KEYS["page2_bev"]] = beverage_default
-    st.session_state[REPORT_TEXT_STATE_KEYS["page3_staff"]] = staff_default
+    # Suggestions intelligentes (lecture seule dans la future UI)
+    st.session_state[SUGGESTION_TEXT_STATE_KEYS["page1_p1"]] = p1_default
+    st.session_state[SUGGESTION_TEXT_STATE_KEYS["page1_p2"]] = p2_default
+    st.session_state[SUGGESTION_TEXT_STATE_KEYS["page2_food"]] = food_default
+    st.session_state[SUGGESTION_TEXT_STATE_KEYS["page2_bev"]] = beverage_default
+    st.session_state[SUGGESTION_TEXT_STATE_KEYS["page3_staff"]] = staff_default
+
+    # Textes finaux éditables (future source du PDF)
+    st.session_state[FINAL_TEXT_STATE_KEYS["page1_final"]] = ""
+    st.session_state[FINAL_TEXT_STATE_KEYS["page2_food_final"]] = ""
+    st.session_state[FINAL_TEXT_STATE_KEYS["page2_bev_final"]] = ""
+    st.session_state[FINAL_TEXT_STATE_KEYS["page3_staff_final"]] = ""
 
     st.session_state[REPORT_TEXT_SIGNATURE_KEY] = signature
 
 
 def get_report_text_state():
     """
-    Accès centralisé aux textes du report courant.
+    Accès centralisé aux suggestions et aux textes finaux.
     """
     return {
-        "page1_p1": st.session_state.get(REPORT_TEXT_STATE_KEYS["page1_p1"], ""),
-        "page1_p2": st.session_state.get(REPORT_TEXT_STATE_KEYS["page1_p2"], ""),
-        "page2_food": st.session_state.get(REPORT_TEXT_STATE_KEYS["page2_food"], ""),
-        "page2_bev": st.session_state.get(REPORT_TEXT_STATE_KEYS["page2_bev"], ""),
-        "page3_staff": st.session_state.get(REPORT_TEXT_STATE_KEYS["page3_staff"], ""),
+        "suggestions": {
+            "page1_p1": st.session_state.get(
+                SUGGESTION_TEXT_STATE_KEYS["page1_p1"], ""
+            ),
+            "page1_p2": st.session_state.get(
+                SUGGESTION_TEXT_STATE_KEYS["page1_p2"], ""
+            ),
+            "page2_food": st.session_state.get(
+                SUGGESTION_TEXT_STATE_KEYS["page2_food"], ""
+            ),
+            "page2_bev": st.session_state.get(
+                SUGGESTION_TEXT_STATE_KEYS["page2_bev"], ""
+            ),
+            "page3_staff": st.session_state.get(
+                SUGGESTION_TEXT_STATE_KEYS["page3_staff"], ""
+            ),
+        },
+        "final_texts": {
+            "page1_final": st.session_state.get(
+                FINAL_TEXT_STATE_KEYS["page1_final"], ""
+            ),
+            "page2_food_final": st.session_state.get(
+                FINAL_TEXT_STATE_KEYS["page2_food_final"], ""
+            ),
+            "page2_bev_final": st.session_state.get(
+                FINAL_TEXT_STATE_KEYS["page2_bev_final"], ""
+            ),
+            "page3_staff_final": st.session_state.get(
+                FINAL_TEXT_STATE_KEYS["page3_staff_final"], ""
+            ),
+        },
     }
 
 
