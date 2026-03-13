@@ -3426,7 +3426,7 @@ def _draw_footer1(ax, W_PX, H_PX, d, dpi: int, cfg=None):
 # =========================
 
 
-def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
+def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str = ""):
     ax.set_axis_off()
     ax.set_aspect("auto")
     ax.set_xlim(0, 1)
@@ -3446,10 +3446,6 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
         )
         or 0
     )
-
-    # Texte d'analyse
-    p1, p2 = build_page1_suggestions(d)
-    page1_analysis_text = f"{p1}\n\n{p2}"
 
     # Footer ancré : bas des valeurs à 20px du bas
     footer_h = _measure_footer1_height_px(ax, W_PX, H_PX, d, dpi)
@@ -3484,7 +3480,7 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
     # On centre uniquement CE QUI EST SOUS "Fatturato"
     rest_h0 = max(0.0, body_h0 - section_bottom)
 
-    rest_start = region_start + section_bottom + 20.0  # ✅ "bas de Fatturato + 20px"
+    rest_start = region_start + section_bottom + 20.0  # bas de "Fatturato" + 20px
     rest_end = region_end
     rest_region_h = max(0.0, rest_end - rest_start)
 
@@ -3530,7 +3526,7 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
         analysis_text,
         dpi,
         cfg={
-            "top_px": int(region_start),  # ✅ "Fatturato" ancré ici
+            "top_px": int(region_start),
             "after_section_offset_px": float(after_section_offset),
             "stats_line_gap_after_px": int(round(chosen_gap)),
             **(
@@ -3673,19 +3669,26 @@ PAGE_3_SIZE_INCH = PAGE_SIZE_INCH
 # =========================
 
 
-def build_a4_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
+def build_a4_pdf_bytes(
+    d, restaurant_name: str, analysis_text: str = "", dpi=300
+) -> bytes:
     """
     PDF: on verrouille le format à 800x1000 via PAGE_SIZE_INCH + BASE_DPI.
     Le param `dpi` n'est plus utilisé ici pour éviter de changer la taille physique.
-    (garde la signature pour ne rien casser ailleurs)
     """
     fig = plt.figure(figsize=PAGE_SIZE_INCH, dpi=BASE_DPI, facecolor=COLORS["bg"])
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
 
-    # ✅ layout basé sur la "grille" 800x1000
     W_PX, H_PX = PAGE_W_PX, PAGE_H_PX
-    _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name)
+    _draw_a4_page(
+        ax,
+        W_PX,
+        H_PX,
+        d,
+        restaurant_name,
+        analysis_text=analysis_text,
+    )
 
     buf = BytesIO()
     fig.savefig(
@@ -3701,7 +3704,9 @@ def build_a4_pdf_bytes(d, restaurant_name: str, dpi=300) -> bytes:
     return buf.getvalue()
 
 
-def build_a4_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes:
+def build_a4_png_preview_bytes(
+    d, restaurant_name: str, analysis_text: str = "", dpi=150
+) -> bytes:
     """
     PNG: on peut utiliser `dpi` uniquement pour la netteté de l'aperçu,
     MAIS le layout reste basé sur 800x1000.
@@ -3710,9 +3715,15 @@ def build_a4_png_preview_bytes(d, restaurant_name: str, dpi=150) -> bytes:
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
 
-    # ✅ layout basé sur la "grille" 800x1000 (indépendant du dpi de rendu)
     W_PX, H_PX = PAGE_W_PX, PAGE_H_PX
-    _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name)
+    _draw_a4_page(
+        ax,
+        W_PX,
+        H_PX,
+        d,
+        restaurant_name,
+        analysis_text=analysis_text,
+    )
 
     buf = BytesIO()
     fig.savefig(
@@ -3847,6 +3858,9 @@ if uploaded and restaurant_input:
     _ensure_report_text_state(data, restaurant_input)
     report_texts = get_report_text_state()
     report_payload = build_report_text_payload(report_texts)
+    page1_analysis_text = report_payload["page1_analysis_text"]
+    page2_analysis_text = report_payload["page2_analysis_text"]
+    page3_analysis_text = report_payload["page3_analysis_text"]
 
     col_viz, col_edit = st.columns([1.2, 1], gap="large")
 
@@ -3868,10 +3882,6 @@ if uploaded and restaurant_input:
             height=160,
             key=REPORT_TEXT_STATE_KEYS["page1_p2"],
         )
-
-        page1_analysis_text = report_payload["page1_analysis_text"]
-        page2_analysis_text = report_payload["page2_analysis_text"]
-        page3_analysis_text = report_payload["page3_analysis_text"]
 
     # --- Section graphs pleine largeur ---
     st.divider()
@@ -3948,7 +3958,12 @@ if uploaded and restaurant_input:
     st.divider()
 
     # --- UI : Export PDF ---
-    pdf_bytes_page_1 = build_a4_pdf_bytes(data, restaurant_input, dpi=300)
+    pdf_bytes_page_1 = build_a4_pdf_bytes(
+        data,
+        restaurant_input,
+        analysis_text=page1_analysis_text,
+        dpi=300,
+    )
     pdf_bytes_page_2 = build_a4_page_2_pdf_bytes(
         data,
         restaurant_input,
