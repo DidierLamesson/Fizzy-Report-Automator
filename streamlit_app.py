@@ -123,6 +123,16 @@ def clean_val(val):
     return 0.0
 
 
+def _excel_pct_to_points(val):
+    """
+    Convertit une valeur Excel de pourcentage en points de pourcentage.
+    - 0.4345 -> 43.45
+    - 43.45 -> 43.45
+    """
+    v = clean_val(val)
+    return v * 100 if abs(v) <= 1.5 else v
+
+
 def fmt_eur_dot(x, decimals=0):
     # 507767 -> "507.767 €"
     if decimals == 0:
@@ -290,8 +300,8 @@ def load_data(file):
     food_cost_avg_n_1 = _safe_avg(food_cost_monthly_n_1)
     beverage_cost_avg_n = _safe_avg(beverage_cost_monthly_n)
     beverage_cost_avg_n_1 = _safe_avg(beverage_cost_monthly_n_1)
-    staff_cost_avg_n = _safe_avg(staff_monthly_n)
-    staff_cost_avg_n_1 = _safe_avg(staff_monthly_n_1)
+    staff_cost_avg_n = _excel_pct_to_points(df.iloc[46, 2])  # C47
+    staff_cost_avg_n_1 = _excel_pct_to_points(df.iloc[46, 3])  # D47
 
     # --- 8. Retour des données ---
     return {
