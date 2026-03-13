@@ -352,6 +352,8 @@ def load_data(file):
 # =========================
 # 7) TEXTES DYNAMIQUES — PAGE 1
 # =========================
+
+
 def build_page1_suggestions(d):
     fatt_n = d["fatturato_n"]
     fatt_p = d["fatturato_n_1"]
@@ -389,6 +391,34 @@ def build_page1_suggestions(d):
     return p1, p2
 
 
+def build_page2_suggestions(d):
+    """
+    Préremplissages intelligents de la page 2.
+    Base simple aujourd’hui, enrichissable plus tard sans toucher à l’UI.
+    """
+    fc_n = _avg_pct(d.get("food_cost_pctg_n"))
+    fc_n_1 = _avg_pct(d.get("food_cost_pctg_n_1"))
+    bc_n = _avg_pct(d.get("beverage_cost_pctg_n"))
+    bc_n_1 = _avg_pct(d.get("beverage_cost_pctg_n_1"))
+
+    food_trend = "in miglioramento" if fc_n <= fc_n_1 else "in peggioramento"
+    bev_trend = "in miglioramento" if bc_n <= bc_n_1 else "in peggioramento"
+
+    food_text = (
+        f"Nel periodo analizzato del {d['year_n']}, il Food Cost medio si attesta al "
+        f"{fc_n:.1f}% rispetto al {fc_n_1:.1f}% dello stesso periodo dell’anno "
+        f"precedente, mostrando un andamento {food_trend}."
+    )
+
+    beverage_text = (
+        f"Nel periodo Lug-Dic {d['year_n']}, il Beverage Cost medio si attesta al "
+        f"{bc_n:.1f}% rispetto al {bc_n_1:.1f}% dello stesso periodo dell’anno "
+        f"precedente, mostrando un andamento {bev_trend}."
+    )
+
+    return food_text, beverage_text
+
+
 def build_page3_suggestion(d):
     staff_n = list(d.get("staff_cost_pctg_n") or [])
     staff_n_1 = list(d.get("staff_cost_pctg_n_1") or [])
@@ -416,167 +446,68 @@ def build_page3_suggestion(d):
     )
 
 
-def make_staff_gauge_fig(d):
+REPORT_TEXT_STATE_KEYS = {
+    "page1_p1": "page1_paragraph_1",
+    "page1_p2": "page1_paragraph_2",
+    "page2_food": "food_comment",
+    "page2_bev": "beverage_comment",
+    "page3_staff": "staff_comment",
+}
+
+REPORT_TEXT_SIGNATURE_KEY = "__report_text_signature__"
+
+
+def _make_report_text_signature(d, restaurant_name: str) -> str:
     """
-    Preview Streamlit du bloc gauge de la page 3.
-    On réutilise la vraie fonction de gauge du PDF pour garder le même style.
+    Signature simple du report courant.
+    Si elle change, on réinitialise les textes par défaut.
     """
-    fig = plt.figure(figsize=(6, 3.6), facecolor=COLORS["bg"])
-    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
-    ax.set_axis_off()
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
+    parts = [
+        (restaurant_name or "").strip().upper(),
+        str(d.get("full_date_n", "")),
+        str(round(float(d.get("fatturato_n", 0.0)), 2)),
+        str(round(float(d.get("fatturato_n_1", 0.0)), 2)),
+        str(round(_avg_pct(d.get("food_cost_pctg_n")), 2)),
+        str(round(_avg_pct(d.get("beverage_cost_pctg_n")), 2)),
+        str(round(_avg_pct(d.get("staff_cost_pctg_n")), 2)),
+    ]
+    return "|".join(parts)
 
-    dpi = int(fig.dpi)
-    cfg = BODY_PAGE_3_CFG
 
-    staff_n = list(d.get("staff_cost_pctg_n") or [])
-    staff_n_1 = list(d.get("staff_cost_pctg_n_1") or [])
+def _ensure_report_text_state(d, restaurant_name: str):
+    """
+    Initialise les textes éditables une seule fois par report.
+    Ne réécrit pas la saisie utilisateur tant que le report ne change pas.
+    """
+    signature = _make_report_text_signature(d, restaurant_name)
 
-    if len(staff_n) < 2 or len(staff_n_1) < 2:
-        return fig
+    if st.session_state.get(REPORT_TEXT_SIGNATURE_KEY) == signature:
+        return
 
-    cur_pct = float(staff_n[0])
-    prev_month_pct = float(staff_n[1])
+    p1_default, p2_default = build_page1_suggestions(d)
+    food_default, beverage_default = build_page2_suggestions(d)
+    staff_default = build_page3_suggestion(d)
 
-    cur_vs_pct = float(staff_n_1[0])
-    prev_month_vs_pct = float(staff_n_1[1])
+    st.session_state[REPORT_TEXT_STATE_KEYS["page1_p1"]] = p1_default
+    st.session_state[REPORT_TEXT_STATE_KEYS["page1_p2"]] = p2_default
+    st.session_state[REPORT_TEXT_STATE_KEYS["page2_food"]] = food_default
+    st.session_state[REPORT_TEXT_STATE_KEYS["page2_bev"]] = beverage_default
+    st.session_state[REPORT_TEXT_STATE_KEYS["page3_staff"]] = staff_default
 
-    cur_label = d["full_date_n"]
-    prev_month_label = _prev_month_label_from_report_date(d.get("raw_date_n"))
+    st.session_state[REPORT_TEXT_SIGNATURE_KEY] = signature
 
-    # titre interne comme sur la page 3 PDF
-    ax.text(
-        0.0,
-        0.96,
-        cfg["chart_title_text"],
-        transform=ax.transAxes,
-        ha="left",
-        va="top",
-        color=COLORS["white"],
-        fontsize=16,
-        fontproperties=epilogue_semibold,
-    )
 
-    # gauges
-    _draw_staff_gauge_in_page_3(
-        fig,
-        left=0.10,
-        bottom=0.38,
-        width=0.30,
-        height=0.34,
-        value_pct=cur_pct,
-        dpi=dpi,
-        cfg=cfg,
-    )
-
-    _draw_staff_gauge_in_page_3(
-        fig,
-        left=0.60,
-        bottom=0.38,
-        width=0.30,
-        height=0.34,
-        value_pct=prev_month_pct,
-        dpi=dpi,
-        cfg=cfg,
-    )
-
-    # valeurs
-    ax.text(
-        0.25,
-        0.34,
-        _fmt_pct_no_sign(cur_pct, decimals=0),
-        transform=ax.transAxes,
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=18,
-        fontproperties=epilogue_regular,
-    )
-    ax.text(
-        0.75,
-        0.34,
-        _fmt_pct_no_sign(prev_month_pct, decimals=0),
-        transform=ax.transAxes,
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=18,
-        fontproperties=epilogue_regular,
-    )
-
-    # labels mois
-    ax.text(
-        0.25,
-        0.24,
-        cur_label,
-        transform=ax.transAxes,
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=10,
-        fontproperties=epilogue_semibold,
-    )
-    ax.text(
-        0.75,
-        0.24,
-        prev_month_label,
-        transform=ax.transAxes,
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=10,
-        fontproperties=epilogue_semibold,
-    )
-
-    # ligne vs N-1
-    ax.text(
-        0.25,
-        0.13,
-        f"vs {d['year_n_1']}",
-        transform=ax.transAxes,
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=10,
-        fontproperties=epilogue_regular,
-    )
-    ax.text(
-        0.75,
-        0.13,
-        f"vs {d['year_n_1']}",
-        transform=ax.transAxes,
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=10,
-        fontproperties=epilogue_regular,
-    )
-
-    ax.text(
-        0.25,
-        0.06,
-        _fmt_pct_no_sign(cur_vs_pct, decimals=0),
-        transform=ax.transAxes,
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=12,
-        fontproperties=epilogue_semibold,
-    )
-    ax.text(
-        0.75,
-        0.06,
-        _fmt_pct_no_sign(prev_month_vs_pct, decimals=0),
-        transform=ax.transAxes,
-        ha="center",
-        va="center",
-        color=COLORS["white"],
-        fontsize=12,
-        fontproperties=epilogue_semibold,
-    )
-
-    return fig
+def get_report_text_state():
+    """
+    Accès centralisé aux textes du report courant.
+    """
+    return {
+        "page1_p1": st.session_state.get(REPORT_TEXT_STATE_KEYS["page1_p1"], ""),
+        "page1_p2": st.session_state.get(REPORT_TEXT_STATE_KEYS["page1_p2"], ""),
+        "page2_food": st.session_state.get(REPORT_TEXT_STATE_KEYS["page2_food"], ""),
+        "page2_bev": st.session_state.get(REPORT_TEXT_STATE_KEYS["page2_bev"], ""),
+        "page3_staff": st.session_state.get(REPORT_TEXT_STATE_KEYS["page3_staff"], ""),
+    }
 
 
 # =========================
@@ -2595,6 +2526,169 @@ BODY_PAGE_3_CFG = {
 }
 
 
+def make_staff_gauge_fig(d):
+    """
+    Preview Streamlit du bloc gauge de la page 3.
+    On réutilise la vraie fonction de gauge du PDF pour garder le même style.
+    """
+    fig = plt.figure(figsize=(6, 3.6), facecolor=COLORS["bg"])
+    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
+    ax.set_axis_off()
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
+    dpi = int(fig.dpi)
+    cfg = BODY_PAGE_3_CFG
+
+    staff_n = list(d.get("staff_cost_pctg_n") or [])
+    staff_n_1 = list(d.get("staff_cost_pctg_n_1") or [])
+
+    if len(staff_n) < 2 or len(staff_n_1) < 2:
+        return fig
+
+    cur_pct = float(staff_n[0])
+    prev_month_pct = float(staff_n[1])
+
+    cur_vs_pct = float(staff_n_1[0])
+    prev_month_vs_pct = float(staff_n_1[1])
+
+    cur_label = d["full_date_n"]
+    prev_month_label = _prev_month_label_from_report_date(d.get("raw_date_n"))
+
+    # titre interne comme sur la page 3 PDF
+    ax.text(
+        0.0,
+        0.96,
+        cfg["chart_title_text"],
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        color=COLORS["white"],
+        fontsize=16,
+        fontproperties=epilogue_semibold,
+    )
+
+    # gauges
+    _draw_staff_gauge_in_page_3(
+        fig,
+        left=0.10,
+        bottom=0.38,
+        width=0.30,
+        height=0.34,
+        value_pct=cur_pct,
+        dpi=dpi,
+        cfg=cfg,
+    )
+
+    _draw_staff_gauge_in_page_3(
+        fig,
+        left=0.60,
+        bottom=0.38,
+        width=0.30,
+        height=0.34,
+        value_pct=prev_month_pct,
+        dpi=dpi,
+        cfg=cfg,
+    )
+
+    # valeurs
+    ax.text(
+        0.25,
+        0.34,
+        _fmt_pct_no_sign(cur_pct, decimals=0),
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=18,
+        fontproperties=epilogue_regular,
+    )
+    ax.text(
+        0.75,
+        0.34,
+        _fmt_pct_no_sign(prev_month_pct, decimals=0),
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=18,
+        fontproperties=epilogue_regular,
+    )
+
+    # labels mois
+    ax.text(
+        0.25,
+        0.24,
+        cur_label,
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=10,
+        fontproperties=epilogue_semibold,
+    )
+    ax.text(
+        0.75,
+        0.24,
+        prev_month_label,
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=10,
+        fontproperties=epilogue_semibold,
+    )
+
+    # ligne vs N-1
+    ax.text(
+        0.25,
+        0.13,
+        f"vs {d['year_n_1']}",
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=10,
+        fontproperties=epilogue_regular,
+    )
+    ax.text(
+        0.75,
+        0.13,
+        f"vs {d['year_n_1']}",
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=10,
+        fontproperties=epilogue_regular,
+    )
+
+    ax.text(
+        0.25,
+        0.06,
+        _fmt_pct_no_sign(cur_vs_pct, decimals=0),
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=12,
+        fontproperties=epilogue_semibold,
+    )
+    ax.text(
+        0.75,
+        0.06,
+        _fmt_pct_no_sign(prev_month_vs_pct, decimals=0),
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=12,
+        fontproperties=epilogue_semibold,
+    )
+
+    return fig
+
+
 def _fmt_pct_no_sign(x, decimals=0):
     if decimals == 0:
         return f"{int(round(float(x)))}%"
@@ -3718,6 +3812,8 @@ uploaded = st.sidebar.file_uploader("Caricare il Report (.xslx))", type="xlsx")
 
 if uploaded and restaurant_input:
     data = load_data(uploaded)
+    ensure_report_text_state(data, restaurant_input)
+    report_texts = get_report_text_state()
 
     col_viz, col_edit = st.columns([1.2, 1], gap="large")
 
@@ -3729,12 +3825,21 @@ if uploaded and restaurant_input:
     with col_edit:
         st.subheader("✍️ Analisa scritta (modificabile)")
 
-        p1_default, p2_default = build_page1_suggestions(data)
+        st.text_area(
+            "Paragrafo 1",
+            height=160,
+            key=REPORT_TEXT_STATE_KEYS["page1_p1"],
+        )
+        st.text_area(
+            "Paragrafo 2",
+            height=160,
+            key=REPORT_TEXT_STATE_KEYS["page1_p2"],
+        )
 
-        p1 = st.text_area("Paragrafo 1", value=p1_default, height=160)
-        p2 = st.text_area("Paragrafo 2", value=p2_default, height=160)
-
-        analysis_text = f"{p1}\n\n{p2}"
+        analysis_text = (
+            f"{st.session_state[REPORT_TEXT_STATE_KEYS['page1_p1']]}\n\n"
+            f"{st.session_state[REPORT_TEXT_STATE_KEYS['page1_p2']]}"
+        )
 
     # --- Section graphs pleine largeur ---
     st.divider()
@@ -3757,7 +3862,11 @@ if uploaded and restaurant_input:
         st.pyplot(food_fig)
 
     with food_col_text:
-        st.text_area("📝 Commento Food cost", value="", height=280, key="food_comment")
+        st.text_area(
+            "📝 Commento Food Cost",
+            height=280,
+            key=REPORT_TEXT_STATE_KEYS["page2_food"],
+        )
 
     # =========================
     # BEVERAGE COST
@@ -3771,7 +3880,9 @@ if uploaded and restaurant_input:
 
     with bev_col_text:
         st.text_area(
-            "📝 Commento Beverage cost", value="", height=280, key="beverage_comment"
+            "📝 Commento Beverage Cost",
+            height=280,
+            key=REPORT_TEXT_STATE_KEYS["page2_bev"],
         )
 
     # --- Section staff ---
@@ -3795,12 +3906,10 @@ if uploaded and restaurant_input:
         st.pyplot(staff_fig)
 
     with staff_col_text:
-        staff_default = build_page3_suggestion(data)
         st.text_area(
             "📝 Commento Incidenza Staff",
-            value=staff_default,
             height=280,
-            key="staff_comment",
+            key=REPORT_TEXT_STATE_KEYS["page3_staff"],
         )
 
     # --- Section export PDF ---
