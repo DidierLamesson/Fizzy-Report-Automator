@@ -3913,15 +3913,14 @@ if uploaded and restaurant_input:
         with col_edit:
             st.subheader("✍️ Analisa scritta")
 
-            st.caption("💡 Proposte di testo")
             st.text_area(
-                "Proposta paragrafo 1",
+                "💡 Proposta paragrafo 1",
                 value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p1"], ""),
                 height=120,
                 disabled=True,
             )
             st.text_area(
-                "Proposta paragrafo 2",
+                "💡 Proposta paragrafo 2",
                 value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p2"], ""),
                 height=120,
                 disabled=True,
@@ -3955,9 +3954,9 @@ if uploaded and restaurant_input:
         st.pyplot(food_fig)
 
     with food_col_text:
-        st.caption("💡 Proposta di testo")
+
         st.text_area(
-            "Proposta Food Cost",
+            "💡 Proposta Food Cost",
             value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_food"], ""),
             height=120,
             key=SUGGESTION_TEXT_STATE_KEYS["page2_food"],
@@ -3982,9 +3981,9 @@ if uploaded and restaurant_input:
         st.pyplot(bev_fig)
 
     with bev_col_text:
-        st.caption("💡 Proposta di testo")
+
         st.text_area(
-            "Proposta Beverage Cost",
+            "💡 Proposta Beverage Cost",
             value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_bev"], ""),
             height=120,
             key=SUGGESTION_TEXT_STATE_KEYS["page2_bev"],
@@ -4019,9 +4018,9 @@ if uploaded and restaurant_input:
         st.pyplot(staff_fig)
 
     with staff_col_text:
-        st.caption("💡 Proposta di testo")
+
         st.text_area(
-            "Proposta Incidenza Staff",
+            "💡 Proposta Incidenza Staff",
             value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page3_staff"], ""),
             height=120,
             key=SUGGESTION_TEXT_STATE_KEYS["page3_staff"],
