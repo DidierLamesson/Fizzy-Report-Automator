@@ -3531,7 +3531,8 @@ if uploaded and restaurant_input:
         st.pyplot(food_fig)
 
     with food_col_text:
-        st.text_area("📝 Commento Food Cost", value="", height=280, key="food_comment")
+        st.subheader("✍️ Analisa scritta (modificabile)")
+        st.text_area("📝 Commento Food Cost", value="", height=230, key="food_comment")
 
     # =========================
     # BEVERAGE COST
