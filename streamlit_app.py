@@ -530,7 +530,6 @@ def _ensure_report_text_state(d, restaurant_name: str):
 
     signature_changed = st.session_state.get(REPORT_TEXT_SIGNATURE_KEY) != signature
 
-    # Si nouveau report : on réinitialise suggestions + textes finaux
     if signature_changed:
         for k, v in suggestion_defaults.items():
             st.session_state[k] = v
@@ -539,7 +538,6 @@ def _ensure_report_text_state(d, restaurant_name: str):
         st.session_state[REPORT_TEXT_SIGNATURE_KEY] = signature
         return
 
-    # Même report : on backfill uniquement les clés manquantes
     for k, v in suggestion_defaults.items():
         if k not in st.session_state:
             st.session_state[k] = v
@@ -550,11 +548,6 @@ def _ensure_report_text_state(d, restaurant_name: str):
 
 
 def get_report_text_state():
-    """
-    Patch 3 :
-    retourne maintenant les textes finaux utilisateur,
-    qui deviennent la source unique du PDF / PNG.
-    """
     return {
         "page1_final": st.session_state.get(FINAL_TEXT_STATE_KEYS["page1_final"], ""),
         "page2_food_final": st.session_state.get(
@@ -583,10 +576,6 @@ def _join_text_blocks(*blocks):
 
 
 def build_report_text_payload(report_texts: dict):
-    """
-    Construit les textes finaux injectables dans les pages PDF / aperçus.
-    Source de vérité unique pour les 3 pages.
-    """
     page1_text = _join_text_blocks(
         report_texts.get("page1_final", ""),
     )
@@ -3921,30 +3910,30 @@ if uploaded and restaurant_input:
         preview_fig = make_fatturato_fig(data, label=restaurant_input)
         st.pyplot(preview_fig)
 
-    with col_edit:
-        st.subheader("✍️ Analisa scritta")
+        with col_edit:
+            st.subheader("✍️ Analisa scritta")
 
-        st.caption("💡 Proposte di testo")
-        st.text_area(
-            "Proposta paragrafo 1",
-            height=120,
-            key=SUGGESTION_TEXT_STATE_KEYS["page1_p1"],
-            disabled=True,
-        )
-        st.text_area(
-            "Proposta paragrafo 2",
-            height=120,
-            key=SUGGESTION_TEXT_STATE_KEYS["page1_p2"],
-            disabled=True,
-        )
+            st.caption("💡 Proposte di testo")
+            st.text_area(
+                "Proposta paragrafo 1",
+                height=120,
+                key=SUGGESTION_TEXT_STATE_KEYS["page1_p1"],
+                disabled=True,
+            )
+            st.text_area(
+                "Proposta paragrafo 2",
+                height=120,
+                key=SUGGESTION_TEXT_STATE_KEYS["page1_p2"],
+                disabled=True,
+            )
 
-        st.caption("📝 Testo finale (modificabile)")
-        st.text_area(
-            "Testo finale Fatturato",
-            height=150,
-            key=FINAL_TEXT_STATE_KEYS["page1_final"],
-            placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
-        )
+            st.caption("📝 Testo finale (modificabile)")
+            st.text_area(
+                "Testo finale Fatturato",
+                height=150,
+                key=FINAL_TEXT_STATE_KEYS["page1_final"],
+                placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
+            )
 
     # --- Section graphs pleine largeur ---
     st.divider()
