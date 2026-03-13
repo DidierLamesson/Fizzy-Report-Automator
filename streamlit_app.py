@@ -504,8 +504,8 @@ def _make_report_text_signature(d, restaurant_name: str) -> str:
 def _ensure_report_text_state(d, restaurant_name: str):
     """
     Initialise les suggestions et les textes finaux une seule fois par report.
-    Les suggestions sont régénérées quand le report change.
-    Les textes finaux sont initialisés vides au changement de report.
+    Les suggestions sont recalculées quand le report change.
+    Les textes finaux sont remis à vide au changement de report.
     """
     signature = _make_report_text_signature(d, restaurant_name)
 
@@ -516,14 +516,14 @@ def _ensure_report_text_state(d, restaurant_name: str):
     food_default, beverage_default = build_page2_suggestions(d)
     staff_default = build_page3_suggestion(d)
 
-    # Suggestions intelligentes (lecture seule dans la future UI)
+    # Suggestions intelligentes (lecture seule dans l'UI)
     st.session_state[SUGGESTION_TEXT_STATE_KEYS["page1_p1"]] = p1_default
     st.session_state[SUGGESTION_TEXT_STATE_KEYS["page1_p2"]] = p2_default
     st.session_state[SUGGESTION_TEXT_STATE_KEYS["page2_food"]] = food_default
     st.session_state[SUGGESTION_TEXT_STATE_KEYS["page2_bev"]] = beverage_default
     st.session_state[SUGGESTION_TEXT_STATE_KEYS["page3_staff"]] = staff_default
 
-    # Textes finaux éditables (future source du PDF)
+    # Textes finaux utilisateur (future source du PDF)
     st.session_state[FINAL_TEXT_STATE_KEYS["page1_final"]] = ""
     st.session_state[FINAL_TEXT_STATE_KEYS["page2_food_final"]] = ""
     st.session_state[FINAL_TEXT_STATE_KEYS["page2_bev_final"]] = ""
@@ -534,40 +534,19 @@ def _ensure_report_text_state(d, restaurant_name: str):
 
 def get_report_text_state():
     """
-    Accès centralisé aux suggestions et aux textes finaux.
+    Patch 2 : le payload continue temporairement à lire les suggestions,
+    en attendant le patch 3.
     """
     return {
-        "suggestions": {
-            "page1_p1": st.session_state.get(
-                SUGGESTION_TEXT_STATE_KEYS["page1_p1"], ""
-            ),
-            "page1_p2": st.session_state.get(
-                SUGGESTION_TEXT_STATE_KEYS["page1_p2"], ""
-            ),
-            "page2_food": st.session_state.get(
-                SUGGESTION_TEXT_STATE_KEYS["page2_food"], ""
-            ),
-            "page2_bev": st.session_state.get(
-                SUGGESTION_TEXT_STATE_KEYS["page2_bev"], ""
-            ),
-            "page3_staff": st.session_state.get(
-                SUGGESTION_TEXT_STATE_KEYS["page3_staff"], ""
-            ),
-        },
-        "final_texts": {
-            "page1_final": st.session_state.get(
-                FINAL_TEXT_STATE_KEYS["page1_final"], ""
-            ),
-            "page2_food_final": st.session_state.get(
-                FINAL_TEXT_STATE_KEYS["page2_food_final"], ""
-            ),
-            "page2_bev_final": st.session_state.get(
-                FINAL_TEXT_STATE_KEYS["page2_bev_final"], ""
-            ),
-            "page3_staff_final": st.session_state.get(
-                FINAL_TEXT_STATE_KEYS["page3_staff_final"], ""
-            ),
-        },
+        "page1_p1": st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p1"], ""),
+        "page1_p2": st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p2"], ""),
+        "page2_food": st.session_state.get(
+            SUGGESTION_TEXT_STATE_KEYS["page2_food"], ""
+        ),
+        "page2_bev": st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_bev"], ""),
+        "page3_staff": st.session_state.get(
+            SUGGESTION_TEXT_STATE_KEYS["page3_staff"], ""
+        ),
     }
 
 
@@ -3924,19 +3903,30 @@ if uploaded and restaurant_input:
         preview_fig = make_fatturato_fig(data, label=restaurant_input)
         st.pyplot(preview_fig)
 
-    with col_edit:
-        st.subheader("✍️ Analisa scritta (modificabile)")
+with col_edit:
+    st.subheader("✍️ Analisa scritta")
 
-        st.text_area(
-            "Paragrafo 1",
-            height=160,
-            key=REPORT_TEXT_STATE_KEYS["page1_p1"],
-        )
-        st.text_area(
-            "Paragrafo 2",
-            height=160,
-            key=REPORT_TEXT_STATE_KEYS["page1_p2"],
-        )
+    st.caption("💡 Proposte di testo")
+    st.text_area(
+        "Proposta paragrafo 1",
+        height=120,
+        key=SUGGESTION_TEXT_STATE_KEYS["page1_p1"],
+        disabled=True,
+    )
+    st.text_area(
+        "Proposta paragrafo 2",
+        height=120,
+        key=SUGGESTION_TEXT_STATE_KEYS["page1_p2"],
+        disabled=True,
+    )
+
+    st.caption("📝 Testo finale (modificabile)")
+    st.text_area(
+        "Testo finale Fatturato",
+        height=150,
+        key=FINAL_TEXT_STATE_KEYS["page1_final"],
+        placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
+    )
 
     # --- Section graphs pleine largeur ---
     st.divider()
@@ -3959,10 +3949,20 @@ if uploaded and restaurant_input:
         st.pyplot(food_fig)
 
     with food_col_text:
+        st.caption("💡 Proposta di testo")
         st.text_area(
-            "📝 Commento Food Cost",
-            height=280,
-            key=REPORT_TEXT_STATE_KEYS["page2_food"],
+            "Proposta Food Cost",
+            height=120,
+            key=SUGGESTION_TEXT_STATE_KEYS["page2_food"],
+            disabled=True,
+        )
+
+        st.caption("📝 Testo finale (modificabile)")
+        st.text_area(
+            "Testo finale Food Cost",
+            height=140,
+            key=FINAL_TEXT_STATE_KEYS["page2_food_final"],
+            placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
         )
 
     # =========================
@@ -3976,10 +3976,20 @@ if uploaded and restaurant_input:
         st.pyplot(bev_fig)
 
     with bev_col_text:
+        st.caption("💡 Proposta di testo")
         st.text_area(
-            "📝 Commento Beverage Cost",
-            height=280,
-            key=REPORT_TEXT_STATE_KEYS["page2_bev"],
+            "Proposta Beverage Cost",
+            height=120,
+            key=SUGGESTION_TEXT_STATE_KEYS["page2_bev"],
+            disabled=True,
+        )
+
+        st.caption("📝 Testo finale (modificabile)")
+        st.text_area(
+            "Testo finale Beverage Cost",
+            height=140,
+            key=FINAL_TEXT_STATE_KEYS["page2_bev_final"],
+            placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
         )
 
     # --- Section staff ---
@@ -4003,10 +4013,20 @@ if uploaded and restaurant_input:
         st.pyplot(staff_fig)
 
     with staff_col_text:
+        st.caption("💡 Proposta di testo")
         st.text_area(
-            "📝 Commento Incidenza Staff",
-            height=280,
-            key=REPORT_TEXT_STATE_KEYS["page3_staff"],
+            "Proposta Incidenza Staff",
+            height=120,
+            key=SUGGESTION_TEXT_STATE_KEYS["page3_staff"],
+            disabled=True,
+        )
+
+        st.caption("📝 Testo finale (modificabile)")
+        st.text_area(
+            "Testo finale Incidenza Staff",
+            height=140,
+            key=FINAL_TEXT_STATE_KEYS["page3_staff_final"],
+            placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
         )
 
     # --- Section export PDF ---
