@@ -3523,7 +3523,14 @@ if uploaded and restaurant_input:
     # =========================
     # FOOD COST
     # =========================
-    st.subheader("📈 Food Cost (mensile)")
+    food_title_col_left, food_title_col_right = st.columns([1.2, 1], gap="large")
+
+    with food_title_col_left:
+        st.subheader("📈 Food Cost (mensile)")
+
+    with food_title_col_right:
+        st.subheader("✍️ Analisa scritta (modificabile)")
+
     food_col_graph, food_col_text = st.columns([1.2, 1], gap="large")
 
     with food_col_graph:
@@ -3531,8 +3538,7 @@ if uploaded and restaurant_input:
         st.pyplot(food_fig)
 
     with food_col_text:
-        st.subheader("✍️ Analisa scritta (modificabile)")
-        st.text_area("📝 Commento Food Cost", value="", height=200, key="food_comment")
+        st.text_area("📝 Commento Food Cost", value="", height=280, key="food_comment")
 
     # =========================
     # BEVERAGE COST
