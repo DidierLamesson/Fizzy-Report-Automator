@@ -158,6 +158,29 @@ def month_labels_from_graph_dates(d):
     return labels
 
 
+def _prev_month_label_from_report_date(raw_date):
+    months_it = {
+        1: "Gennaio",
+        2: "Febbraio",
+        3: "Marzo",
+        4: "Aprile",
+        5: "Maggio",
+        6: "Giugno",
+        7: "Luglio",
+        8: "Agosto",
+        9: "Settembre",
+        10: "Ottobre",
+        11: "Novembre",
+        12: "Dicembre",
+    }
+
+    if raw_date is None or not hasattr(raw_date, "month"):
+        return ""
+
+    prev_dt = pd.Timestamp(raw_date) - pd.DateOffset(months=1)
+    return f"{months_it[prev_dt.month]} {prev_dt.year}"
+
+
 def pdf_bytes_to_png_bytes(
     pdf_bytes: bytes, page_index: int = 0, zoom: float = 2.0
 ) -> bytes:
@@ -331,6 +354,7 @@ def load_data(file):
         "year_n_1": anno_n - 1,
         "full_date_n": f"{mes_it} {anno_n}",
         "full_date_n_1": f"{mes_it} {anno_n - 1}",
+        "raw_date_n": raw_date,
         "fatturato_n": fatturato_n,
         "fatturato_n_1": fatturato_n_1,
         "diff_fatturato": diff_fatturato,
@@ -2624,11 +2648,6 @@ def _draw_body_page_3_staff(
         return float(y)
 
     # On aligne les dates sur la longueur réelle des données staff
-    if raw_dates:
-        raw_dates = raw_dates[-len(staff_n) :]
-
-    idx_cur = len(staff_n) - 1
-    idx_prev_month = max(0, len(staff_n) - 2)
 
     if len(staff_n) < 2 or len(staff_n_1) < 2:
         return float(y)
@@ -2639,13 +2658,8 @@ def _draw_body_page_3_staff(
     cur_vs_pct = float(staff_n_1[0])  # même mois en N-1
     prev_month_vs_pct = float(staff_n_1[1])  # mois m-1 en N-1
 
-    cur_label = d.get("full_date_n", f"{d['month_name']} {d['year_n']}")
-    if raw_dates and idx_prev_month < len(raw_dates):
-        prev_month_label = _month_year_label_from_dt(
-            raw_dates[idx_prev_month], d["year_n"]
-        )
-    else:
-        prev_month_label = d.get("full_date_n", f"{d['month_name']} {d['year_n']}")
+    cur_label = d["full_date_n"]
+    prev_month_label = _prev_month_label_from_report_date(d.get("raw_date_n"))
 
     # --- Zone gauges centrée ---
     gauge_w = int(cfg["gauge_w_px"])
