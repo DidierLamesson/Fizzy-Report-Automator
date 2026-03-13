@@ -3903,7 +3903,7 @@ if uploaded and restaurant_input:
         preview_fig = make_fatturato_fig(data, label=restaurant_input)
         st.pyplot(preview_fig)
 
-with col_edit:
+    @with col_edit:
     st.subheader("✍️ Analisa scritta")
 
     st.caption("💡 Proposte di testo")
