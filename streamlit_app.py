@@ -3818,9 +3818,15 @@ if uploaded and restaurant_input:
     export_col_preview, export_col_action = st.columns([1.2, 1], gap="large")
 
     with export_col_preview:
-        st.image(png_bytes_page_1, caption="Aperçu p1 (rendu PDF)", width=580)
-        st.image(png_bytes_page_2, caption="Aperçu p2 (rendu PDF)", width=580)
-        st.image(png_bytes_page_3, caption="Aperçu p3 (rendu PDF)", width=580)
+        st.image(
+            png_bytes_page_1, caption="Aperçu pagina 1 (rendu PDF)", width="stretch"
+        )
+        st.image(
+            png_bytes_page_2, caption="Aperçu pagina 2 (rendu PDF)", width="stretch"
+        )
+        st.image(
+            png_bytes_page_3, caption="Aperçu pagina 3 (rendu PDF)", width="stretch"
+        )
 
     with export_col_action:
         st.subheader("📄 Export PDF")
