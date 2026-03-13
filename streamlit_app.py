@@ -3811,15 +3811,11 @@ if uploaded and restaurant_input:
     pdf_bytes_page_2 = build_a4_page_2_pdf_bytes(data, restaurant_input, dpi=300)
     pdf_bytes_page_3 = build_a4_page_3_pdf_bytes(data, restaurant_input, dpi=300)
 
-    png_bytes_page_1 = build_a4_png_preview_bytes(data, restaurant_input, dpi=300)
-    png_bytes_page_2 = build_a4_page_2_png_preview_bytes(
-        data, restaurant_input, dpi=300
-    )
-    png_bytes_page_3 = build_a4_page_3_png_preview_bytes(
-        data, restaurant_input, dpi=300
-    )
+    png_bytes_page_1 = pdf_bytes_to_png_bytes(pdf_bytes_page_1, page_index=0, zoom=2.0)
+    png_bytes_page_2 = pdf_bytes_to_png_bytes(pdf_bytes_page_2, page_index=0, zoom=2.0)
+    png_bytes_page_3 = pdf_bytes_to_png_bytes(pdf_bytes_page_3, page_index=0, zoom=2.0)
 
-    export_col_preview, export_col_action = st.columns([1.2, 1], gap="large")
+    export_col_preview, export_col_action = st.columns([1.5, 1], gap="large")
 
     with export_col_preview:
         st.image(png_bytes_page_1, caption="Aperçu p1 (rendu PDF)", width=580)
