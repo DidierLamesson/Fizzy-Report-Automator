@@ -2433,6 +2433,69 @@ def _draw_food_cost_chart_in_page_2(fig, left, bottom, width, height, d, label, 
     return _plot_food_cost_axis(axc, d=d, label=label)
 
 
+def _draw_beverage_cost_chart_in_page_2(
+    fig, left, bottom, width, height, d, label, dpi
+):
+    axc = fig.add_axes([left, bottom, width, height], facecolor=COLORS["bg"])
+
+    x_labels = list(reversed(month_labels_from_graph_dates(d)))
+    y = list(reversed(d["beverage_cost_pctg_n"]))
+
+    BEV_COLOR = "#e74c3c"
+
+    axc.plot(
+        range(len(y)),
+        y,
+        marker="o",
+        linewidth=3,
+        markersize=10,
+        color=BEV_COLOR,
+        zorder=3,
+    )
+
+    axc.set_title(
+        f"Andamento Beverage Cost Mensile {d['year_n']}",
+        color=COLORS["white"],
+        fontsize=16,
+        fontproperties=epilogue_semibold,
+        loc="left",
+        pad=10,
+    )
+
+    axc.plot([], [], marker="o", linestyle="None", color=BEV_COLOR, label=label)
+    leg = axc.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.02),
+        frameon=False,
+        fontsize=10,
+        labelcolor=COLORS["white"],
+        handlelength=0,
+    )
+    for t in leg.get_texts():
+        t.set_fontproperties(epilogue_regular)
+
+    axc.set_xticks(range(len(x_labels)))
+    axc.set_xticklabels(
+        x_labels,
+        rotation=45,
+        ha="right",
+        color=COLORS["white"],
+        fontsize=9,
+        fontproperties=epilogue_regular,
+    )
+    axc.tick_params(axis="x", colors=COLORS["white"], labelsize=9, length=0)
+
+    axc.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
+    axc.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
+    axc.set_ylim(0, max(12, (max(y) if y else 0) + 2))
+
+    axc.grid(False)
+    for s in axc.spines.values():
+        s.set_visible(False)
+
+    return axc
+
+
 def _draw_body_page_2_food_beverage_cost(
     ax, W_PX, H_PX, d, restaurant_name: str, dpi: int, cfg=None
 ):
