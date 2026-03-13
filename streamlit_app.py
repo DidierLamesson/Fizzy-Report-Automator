@@ -3745,6 +3745,8 @@ if uploaded and restaurant_input:
             "📝 Commento Beverage cost", value="", height=280, key="beverage_comment"
         )
 
+    # --- Section staff ---
+    st.divider()
     # =========================
     # INCIDENZA STAFF
     # =========================
