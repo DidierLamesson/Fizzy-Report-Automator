@@ -3812,7 +3812,7 @@ uploaded = st.sidebar.file_uploader("Caricare il Report (.xslx))", type="xlsx")
 
 if uploaded and restaurant_input:
     data = load_data(uploaded)
-    ensure_report_text_state(data, restaurant_input)
+    _ensure_report_text_state(data, restaurant_input)
     report_texts = get_report_text_state()
 
     col_viz, col_edit = st.columns([1.2, 1], gap="large")
