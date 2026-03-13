@@ -3975,7 +3975,7 @@ if uploaded and restaurant_input:
         st.subheader("📈 Food cost (mensile)")
 
     with food_title_col_right:
-        st.subheader("✍️ Analisa scritta (modificabile)")
+        st.subheader("✍️ Analisa scritta")
 
     food_col_graph, food_col_text = st.columns([1.2, 1], gap="large")
 
@@ -4047,7 +4047,7 @@ if uploaded and restaurant_input:
         st.subheader("📉 Incidenza Staff")
 
     with staff_title_col_right:
-        st.subheader("✍️ Analisa scritta (modificabile)")
+        st.subheader("✍️ Analisa scritta")
 
     staff_col_graph, staff_col_text = st.columns([1.2, 1], gap="large")
 
