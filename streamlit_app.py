@@ -2497,6 +2497,7 @@ BODY_PAGE_3_CFG = {
     "para_font_px": BODY1_CFG["para_font_px"],
     "para_linespacing": BODY1_CFG["para_linespacing"],
     "para_gap_after_vs_px": 24,
+    "para_max_lines": 10,
 }
 
 
@@ -2844,8 +2845,15 @@ def _draw_body_page_3_staff(
     col_px_render = ax_w_render * (col_px_layout / W_PX)
 
     # borne basse max = moitié de la page
-    para_max_bottom_px = float(H_PX / 2.0)
-    max_h_render = max(0.0, (para_max_bottom_px - para_top_px) * scale_y)
+    max_lines_sample = "\n".join(["Ag"] * int(cfg["para_max_lines"]))
+    max_h_render = _measure_multiline_h_render_px(
+        ax,
+        max_lines_sample,
+        cfg["para_font_px"],
+        epilogue_regular,
+        dpi,
+        cfg["para_linespacing"],
+    )
 
     text_wrapped = _fit_justified_paragraph_to_height(
         ax,
