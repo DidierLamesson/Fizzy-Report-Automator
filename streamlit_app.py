@@ -3965,10 +3965,10 @@ if uploaded and restaurant_input:
         )
 
         st.text_area(
-            "📝 Testo finale (modificabile)",
-            height=140,
-            key=FINAL_TEXT_STATE_KEYS["page2_food_final"],
-            placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
+            "💡 Proposta di testo",
+            value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_food"], ""),
+            height=120,
+            disabled=True,
         )
 
     # =========================
