@@ -3776,6 +3776,7 @@ if uploaded and restaurant_input:
 
     # --- Section staff ---
     st.divider()
+
     # =========================
     # INCIDENZA STAFF
     # =========================
@@ -3802,7 +3803,10 @@ if uploaded and restaurant_input:
             key="staff_comment",
         )
 
-        # --- UI : Export PDF ---
+    # --- Section export PDF ---
+    st.divider()
+
+    # --- UI : Export PDF ---
     pdf_bytes_page_1 = build_a4_pdf_bytes(data, restaurant_input, dpi=300)
     pdf_bytes_page_2 = build_a4_page_2_pdf_bytes(data, restaurant_input, dpi=300)
     pdf_bytes_page_3 = build_a4_page_3_pdf_bytes(data, restaurant_input, dpi=300)
