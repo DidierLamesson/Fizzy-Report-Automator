@@ -4030,17 +4030,20 @@ if uploaded and restaurant_input:
             key=SUGGESTION_TEXT_STATE_KEYS["page2_bev"],
             disabled=True,
         )
-        st.button(
-            "📥 Usa la proposta",
-            key="use_proposal_bev",
-            on_click=_copy_beverage_proposal_to_final,
-        )
         st.text_area(
             "📝 Testo finale (modificabile)",
             height=150,
             key=FINAL_TEXT_STATE_KEYS["page2_bev_final"],
             placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
         )
+        btn_spacer, btn_col = st.columns([2.4, 1])
+        with btn_col:
+            st.button(
+                "📥 Usa la proposta",
+                key="use_proposal_bev",
+                on_click=_copy_beverage_proposal_to_final,
+                width="stretch",
+            )
 
     # --- Section staff ---
     st.divider()
