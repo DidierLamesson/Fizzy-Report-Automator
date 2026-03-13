@@ -3936,32 +3936,37 @@ if uploaded and restaurant_input:
         preview_fig = make_fatturato_fig(data, label=restaurant_input)
         st.pyplot(preview_fig)
 
-        with col_edit:
-            st.subheader("✍️ Analisa scritta")
+    with col_edit:
+        st.subheader("✍️ Analisa scritta")
 
-            st.text_area(
-                "💡 Proposta paragrafo 1",
-                value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p1"], ""),
-                height=150,
-                disabled=True,
-            )
-            st.text_area(
-                "💡 Proposta paragrafo 2",
-                value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p2"], ""),
-                height=150,
-                disabled=True,
-            )
+        st.text_area(
+            "💡 Proposta paragrafo 1",
+            value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p1"], ""),
+            height=150,
+            disabled=True,
+        )
+        st.text_area(
+            "💡 Proposta paragrafo 2",
+            value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p2"], ""),
+            height=150,
+            disabled=True,
+        )
+
+        btn_spacer, btn_col = st.columns([1.4, 1])
+        with btn_col:
             st.button(
-                "📥 Usa la proposte",
+                "📥 Usa le proposte",
                 key="use_proposal_page1",
                 on_click=_copy_page1_proposals_to_final,
+                width="stretch",
             )
-            st.text_area(
-                "📝 Testo finale (modificabile)",
-                height=300,
-                key=FINAL_TEXT_STATE_KEYS["page1_final"],
-                placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
-            )
+
+        st.text_area(
+            "📝 Testo finale (modificabile)",
+            height=300,
+            key=FINAL_TEXT_STATE_KEYS["page1_final"],
+            placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
+        )
 
     # --- Section graphs pleine largeur ---
     st.divider()
