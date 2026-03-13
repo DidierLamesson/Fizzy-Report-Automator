@@ -3952,7 +3952,7 @@ if uploaded and restaurant_input:
             disabled=True,
         )
 
-        btn_spacer, btn_col = st.columns([2.5, 1])
+        btn_spacer, btn_col = st.columns([2.4, 1])
         with btn_col:
             st.button(
                 "📥 Usa le proposte",
