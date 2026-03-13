@@ -4085,6 +4085,14 @@ if uploaded and restaurant_input:
             key=FINAL_TEXT_STATE_KEYS["page3_staff_final"],
             placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
         )
+        btn_spacer, btn_col = st.columns([2.4, 1])
+        with btn_col:
+            st.button(
+                "📥 Usa la proposta",
+                key="use_proposal_staff",
+                on_click=_copy_staff_proposal_to_final,
+                width="stretch",
+            )
 
     # --- Section export PDF ---
     st.divider()
