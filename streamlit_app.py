@@ -3532,7 +3532,7 @@ if uploaded and restaurant_input:
 
     with food_col_text:
         st.subheader("✍️ Analisa scritta (modificabile)")
-        st.text_area("📝 Commento Food Cost", value="", height=280, key="food_comment")
+        st.text_area("📝 Commento Food Cost", value="", height=200, key="food_comment")
 
     # =========================
     # BEVERAGE COST
