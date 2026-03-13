@@ -3914,20 +3914,20 @@ if uploaded and restaurant_input:
             key=SUGGESTION_TEXT_STATE_KEYS["page1_p1"],
             disabled=True,
         )
-    st.text_area(
-        "Proposta paragrafo 2",
-        height=120,
-        key=SUGGESTION_TEXT_STATE_KEYS["page1_p2"],
-        disabled=True,
-    )
+        st.text_area(
+            "Proposta paragrafo 2",
+            height=120,
+            key=SUGGESTION_TEXT_STATE_KEYS["page1_p2"],
+            disabled=True,
+        )
 
-    st.caption("📝 Testo finale (modificabile)")
-    st.text_area(
-        "Testo finale Fatturato",
-        height=150,
-        key=FINAL_TEXT_STATE_KEYS["page1_final"],
-        placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
-    )
+        st.caption("📝 Testo finale (modificabile)")
+        st.text_area(
+            "Testo finale Fatturato",
+            height=150,
+            key=FINAL_TEXT_STATE_KEYS["page1_final"],
+            placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
+        )
 
     # --- Section graphs pleine largeur ---
     st.divider()
