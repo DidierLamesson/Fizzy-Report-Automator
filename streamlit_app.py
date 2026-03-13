@@ -498,65 +498,23 @@ def make_fatturato_fig(d, label):
 
 
 def make_food_cost_fig(d, label):
-    fig, ax = plt.subplots(figsize=(6, 3.6))
-    fig.patch.set_facecolor(COLORS["bg"])
-    ax.set_facecolor(COLORS["bg"])
+    """
+    Preview Streamlit du Food Cost.
+    Reprend exactement le même moteur de rendu que le PDF.
+    """
+    fig = plt.figure(figsize=(6, 3.6), facecolor=COLORS["bg"])
 
-    x_labels = month_labels_from_graph_dates(d)
-    y = d["food_cost_pctg_n"]  # année en cours (déjà en %)
-
-    ax.plot(
-        range(len(y)),
-        y,
-        marker="o",
-        linewidth=3,
-        markersize=10,
-        color=COLORS["graph1"],
-        zorder=3,
+    _draw_food_cost_chart_in_page_2(
+        fig,
+        left=0.08,
+        bottom=0.18,
+        width=0.88,
+        height=0.68,
+        d=d,
+        label=label,
+        dpi=int(fig.dpi),
     )
 
-    ax.set_title(
-        f"Andamento Food Cost Mensile {d['year_n']}",
-        color=COLORS["white"],
-        fontsize=16,
-        fontproperties=epilogue_semibold,
-        loc="left",
-        pad=10,
-    )
-
-    # Legend style "• Terrazza"
-    ax.plot([], [], marker="o", linestyle="None", color=COLORS["graph1"], label=label)
-    leg = ax.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.02),
-        frameon=False,
-        fontsize=10,
-        labelcolor=COLORS["white"],
-        handlelength=0,
-    )
-    for t in leg.get_texts():
-        t.set_fontproperties(epilogue_regular)
-
-    ax.set_xticks(range(len(x_labels)))
-    ax.set_xticklabels(
-        x_labels,
-        rotation=45,
-        ha="right",
-        color=COLORS["white"],
-        fontsize=9,
-        fontproperties=epilogue_regular,
-    )
-    ax.tick_params(axis="x", colors=COLORS["white"], labelsize=9, length=0)
-
-    ax.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
-    ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
-    ax.set_ylim(0, max(25, (max(y) if y else 0) + 5))
-
-    ax.grid(False)
-    for s in ax.spines.values():
-        s.set_visible(False)
-
-    plt.tight_layout()
     return fig
 
 
@@ -2148,6 +2106,69 @@ BODY_PAGE_2_CFG = {
 }
 
 
+def _plot_food_cost_axis(axc, d, label):
+    """
+    Style unique du graphique Food Cost.
+    Utilisé à la fois par la preview Streamlit et par le rendu PDF.
+    """
+    x_labels = list(reversed(month_labels_from_graph_dates(d)))
+    y = list(reversed(d["food_cost_pctg_n"]))
+
+    axc.set_facecolor(COLORS["bg"])
+
+    axc.plot(
+        range(len(y)),
+        y,
+        marker="o",
+        linewidth=3,
+        markersize=10,
+        color=COLORS["graph1"],
+        zorder=3,
+    )
+
+    axc.set_title(
+        f"Andamento Food Cost Mensile {d['year_n']}",
+        color=COLORS["white"],
+        fontsize=16,
+        fontproperties=epilogue_semibold,
+        loc="left",
+        pad=10,
+    )
+
+    axc.plot([], [], marker="o", linestyle="None", color=COLORS["graph1"], label=label)
+    leg = axc.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.02),
+        frameon=False,
+        fontsize=10,
+        labelcolor=COLORS["white"],
+        handlelength=0,
+    )
+    for t in leg.get_texts():
+        t.set_fontproperties(epilogue_regular)
+
+    axc.set_xticks(range(len(x_labels)))
+    axc.set_xticklabels(
+        x_labels,
+        rotation=45,
+        ha="right",
+        color=COLORS["white"],
+        fontsize=9,
+        fontproperties=epilogue_regular,
+    )
+    axc.tick_params(axis="x", colors=COLORS["white"], labelsize=9, length=0)
+
+    axc.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
+    axc.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
+    axc.set_ylim(0, max(25, (max(y) if y else 0) + 5))
+
+    axc.grid(False)
+    for s in axc.spines.values():
+        s.set_visible(False)
+
+    return axc
+
+
 def _draw_food_cost_chart_in_page_2(fig, left, bottom, width, height, d, label, dpi):
     axc = fig.add_axes([left, bottom, width, height], facecolor=COLORS["bg"])
 
@@ -2207,67 +2228,9 @@ def _draw_food_cost_chart_in_page_2(fig, left, bottom, width, height, d, label, 
     return axc
 
 
-def _draw_beverage_cost_chart_in_page_2(
-    fig, left, bottom, width, height, d, label, dpi
-):
+def _draw_food_cost_chart_in_page_2(fig, left, bottom, width, height, d, label, dpi):
     axc = fig.add_axes([left, bottom, width, height], facecolor=COLORS["bg"])
-
-    x_labels = list(reversed(month_labels_from_graph_dates(d)))
-    y = list(reversed(d["beverage_cost_pctg_n"]))
-
-    BEV_COLOR = "#e74c3c"
-
-    axc.plot(
-        range(len(y)),
-        y,
-        marker="o",
-        linewidth=3,
-        markersize=10,
-        color=BEV_COLOR,
-        zorder=3,
-    )
-
-    axc.set_title(
-        f"Andamento Beverage Cost Mensile {d['year_n']}",
-        color=COLORS["white"],
-        fontsize=16,
-        fontproperties=epilogue_semibold,
-        loc="left",
-        pad=10,
-    )
-
-    axc.plot([], [], marker="o", linestyle="None", color=BEV_COLOR, label=label)
-    leg = axc.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.02),
-        frameon=False,
-        fontsize=10,
-        labelcolor=COLORS["white"],
-        handlelength=0,
-    )
-    for t in leg.get_texts():
-        t.set_fontproperties(epilogue_regular)
-
-    axc.set_xticks(range(len(x_labels)))
-    axc.set_xticklabels(
-        x_labels,
-        rotation=45,
-        ha="right",
-        color=COLORS["white"],
-        fontsize=9,
-        fontproperties=epilogue_regular,
-    )
-    axc.tick_params(axis="x", colors=COLORS["white"], labelsize=9, length=0)
-
-    axc.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
-    axc.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
-    axc.set_ylim(0, max(12, (max(y) if y else 0) + 2))
-
-    axc.grid(False)
-    for s in axc.spines.values():
-        s.set_visible(False)
-
-    return axc
+    return _plot_food_cost_axis(axc, d=d, label=label)
 
 
 def _draw_body_page_2_food_beverage_cost(
