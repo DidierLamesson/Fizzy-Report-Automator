@@ -3916,20 +3916,19 @@ if uploaded and restaurant_input:
             st.caption("💡 Proposte di testo")
             st.text_area(
                 "Proposta paragrafo 1",
+                value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p1"], ""),
                 height=120,
-                key=SUGGESTION_TEXT_STATE_KEYS["page1_p1"],
                 disabled=True,
             )
             st.text_area(
                 "Proposta paragrafo 2",
+                value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p2"], ""),
                 height=120,
-                key=SUGGESTION_TEXT_STATE_KEYS["page1_p2"],
                 disabled=True,
             )
 
-            st.caption("📝 Testo finale (modificabile)")
             st.text_area(
-                "Testo finale Fatturato",
+                "📝 Testo finale (modificabile)",
                 height=150,
                 key=FINAL_TEXT_STATE_KEYS["page1_final"],
                 placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
@@ -3959,14 +3958,14 @@ if uploaded and restaurant_input:
         st.caption("💡 Proposta di testo")
         st.text_area(
             "Proposta Food Cost",
+            value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_food"], ""),
             height=120,
             key=SUGGESTION_TEXT_STATE_KEYS["page2_food"],
             disabled=True,
         )
 
-        st.caption("📝 Testo finale (modificabile)")
         st.text_area(
-            "Testo finale Food Cost",
+            "📝 Testo finale (modificabile)",
             height=140,
             key=FINAL_TEXT_STATE_KEYS["page2_food_final"],
             placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
@@ -3986,14 +3985,14 @@ if uploaded and restaurant_input:
         st.caption("💡 Proposta di testo")
         st.text_area(
             "Proposta Beverage Cost",
+            value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_bev"], ""),
             height=120,
             key=SUGGESTION_TEXT_STATE_KEYS["page2_bev"],
             disabled=True,
         )
 
-        st.caption("📝 Testo finale (modificabile)")
         st.text_area(
-            "Testo finale Beverage Cost",
+            "📝 Testo finale (modificabile)",
             height=140,
             key=FINAL_TEXT_STATE_KEYS["page2_bev_final"],
             placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
@@ -4023,14 +4022,14 @@ if uploaded and restaurant_input:
         st.caption("💡 Proposta di testo")
         st.text_area(
             "Proposta Incidenza Staff",
+            value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page3_staff"], ""),
             height=120,
             key=SUGGESTION_TEXT_STATE_KEYS["page3_staff"],
             disabled=True,
         )
 
-        st.caption("📝 Testo finale (modificabile)")
         st.text_area(
-            "Testo finale Incidenza Staff",
+            "📝 Testo finale (modificabile)",
             height=140,
             key=FINAL_TEXT_STATE_KEYS["page3_staff_final"],
             placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
