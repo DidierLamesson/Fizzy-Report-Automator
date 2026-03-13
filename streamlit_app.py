@@ -382,9 +382,20 @@ def build_page1_suggestions(d):
 # =========================
 # 8) PREVIEW DU GRAPHIQUE DE CHIFFRE D’AFFAIRES
 # =========================
-def make_fatturato_fig(d, label):
-    fig, ax = plt.subplots(figsize=(6, 6))
-    fig.patch.set_facecolor(COLORS["bg"])
+def _apply_fatturato_chart_style(
+    ax,
+    d,
+    label,
+    *,
+    value_fontsize,
+    label_fontsize,
+    tick_fontsize,
+    legend_fontsize,
+    legend_markersize,
+    legend_loc,
+    legend_anchor,
+):
+    """Applique exactement le style du graphique Fatturato utilisé dans le PDF."""
     ax.set_facecolor(COLORS["bg"])
 
     values = [d["fatturato_n"], d["fatturato_n_1"]]
@@ -400,17 +411,25 @@ def make_fatturato_fig(d, label):
             f"{int(round(v)):,}".replace(",", "."),
             ha="center",
             va="bottom",
-            fontsize=16,
+            fontsize=value_fontsize,
             color=COLORS["white"],
             fontproperties=epilogue_semibold,
         )
 
     ax.set_xticks([0.5])
     ax.set_xticklabels(
-        [label], color=COLORS["white"], fontsize=11, fontproperties=epilogue_regular
+        [label],
+        color=COLORS["white"],
+        fontsize=label_fontsize,
+        fontproperties=epilogue_regular,
     )
 
-    ax.tick_params(axis="y", colors=COLORS["white"], labelsize=11, length=0)
+    ax.tick_params(
+        axis="y",
+        colors=COLORS["white"],
+        labelsize=tick_fontsize,
+        length=0,
+    )
     ax.yaxis.set_major_formatter(
         ticker.FuncFormatter(lambda y, p: f"{int(y):,}".replace(",", "."))
     )
@@ -427,7 +446,9 @@ def make_fatturato_fig(d, label):
             marker="o",
             color="none",
             markerfacecolor=COLORS["graph1"],
-            markersize=10,
+            markeredgecolor="none",
+            markeredgewidth=0,
+            markersize=legend_markersize,
             label=f"Fatturato {d['year_n']} €",
         ),
         plt.Line2D(
@@ -436,21 +457,43 @@ def make_fatturato_fig(d, label):
             marker="o",
             color="none",
             markerfacecolor=COLORS["graph2"],
-            markersize=10,
+            markeredgecolor="none",
+            markeredgewidth=0,
+            markersize=legend_markersize,
             label=f"Fatturato {d['year_n_1']} €",
         ),
     ]
     ax.legend(
         handles=legend_handles,
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.12),
+        loc=legend_loc,
+        bbox_to_anchor=legend_anchor,
+        borderaxespad=0.0,
         ncol=2,
         frameon=False,
-        fontsize=10,
+        fontsize=legend_fontsize,
         labelcolor=COLORS["white"],
     )
 
-    plt.tight_layout()
+
+def make_fatturato_fig(d, label):
+    """Preview Streamlit alignée visuellement sur le graphique du PDF."""
+    fig = plt.figure(figsize=(6, 6), facecolor=COLORS["bg"])
+    ax = fig.add_axes([0.10, 0.12, 0.80, 0.74], facecolor=COLORS["bg"])
+    dpi = int(fig.dpi)
+
+    _apply_fatturato_chart_style(
+        ax,
+        d,
+        label,
+        value_fontsize=_px_to_pt(BODY1_CFG["chart_value_font_px"], dpi),
+        label_fontsize=_px_to_pt(BODY1_CFG["chart_label_font_px"], dpi),
+        tick_fontsize=_px_to_pt(BODY1_CFG["chart_tick_font_px"], dpi),
+        legend_fontsize=_px_to_pt(BODY1_CFG["chart_legend_font_px"], dpi),
+        legend_markersize=8,
+        legend_loc="lower center",
+        legend_anchor=(0.5, 0.95),
+    )
+
     return fig
 
 
@@ -1641,92 +1684,22 @@ def _place_img_px(ax, img, W_PX, H_PX, left_px, top_px, width_px, z=1000):
 
 def _draw_fatturato_chart_in_page(fig, left, bottom, width, height, d, label, cfg, dpi):
     """
-    Reproduit ton make_fatturato_fig mais directement dans la page (vector, pas raster).
+    Reproduit le graphique Fatturato directement dans la page PDF.
     left/bottom/width/height sont en coords figure (0..1).
     """
     axc = fig.add_axes([left, bottom, width, height], facecolor=COLORS["bg"])
-    axc.set_facecolor(COLORS["bg"])
 
-    values = [d["fatturato_n"], d["fatturato_n_1"]]
-    x = [0, 1]
-
-    axc.bar(x, values, width=0.95, color=[COLORS["graph1"], COLORS["graph2"]], zorder=3)
-    axc.set_xlim(-0.55, 1.55)
-
-    for i, v in enumerate(values):
-        axc.text(
-            i,
-            v + max(values) * 0.02,
-            f"{int(round(v)):,}".replace(",", "."),
-            ha="center",
-            va="bottom",
-            fontsize=_px_to_pt(cfg["chart_value_font_px"], dpi),
-            color=COLORS["white"],
-            fontproperties=epilogue_semibold,
-        )
-
-    axc.set_xticks([0.5])
-    axc.set_xticklabels(
-        [label],
-        color=COLORS["white"],
-        fontsize=_px_to_pt(cfg["chart_label_font_px"], dpi),
-        fontproperties=epilogue_regular,
-    )
-
-    axc.tick_params(
-        axis="y",
-        colors=COLORS["white"],
-        labelsize=_px_to_pt(cfg["chart_tick_font_px"], dpi),
-        length=0,
-    )
-    axc.yaxis.set_major_formatter(
-        ticker.FuncFormatter(lambda y, p: f"{int(y):,}".replace(",", "."))
-    )
-    axc.set_ylim(0, max(values) * 1.2)
-
-    axc.grid(axis="y", linestyle="-", alpha=0.15, color=COLORS["white"], zorder=0)
-    for s in axc.spines.values():
-        s.set_visible(False)
-
-    # Légende (on la place dans le haut de la zone chart, sans sortir)
-    legend_handles = [
-        plt.Line2D(
-            [0],
-            [0],
-            marker="o",
-            color="none",
-            markerfacecolor=COLORS["graph1"],
-            markeredgecolor="none",  # ✅ pas de bordure
-            markeredgewidth=0,  # ✅ pas de bordure
-            markersize=8,
-            label=f"Fatturato {d['year_n']} €",
-        ),
-        plt.Line2D(
-            [0],
-            [0],
-            marker="o",
-            color="none",
-            markerfacecolor=COLORS["graph2"],
-            markeredgecolor="none",  # ✅ pas de bordure
-            markeredgewidth=0,  # ✅ pas de bordure
-            markersize=8,
-            label=f"Fatturato {d['year_n_1']} €",
-        ),
-    ]
-    axc.legend(  # ou ax.legend dans make_fatturato_fig
-        handles=legend_handles,
-        loc="lower center",  # ✅ le bas de la légende sert d’ancre
-        bbox_to_anchor=(
-            0.5,
-            0.95,
-        ),  # ✅ juste au-dessus de l'axe -> jamais sur les barres
-        borderaxespad=0.0,
-        ncol=2,
-        frameon=False,
-        fontsize=_px_to_pt(
-            cfg["chart_legend_font_px"], dpi
-        ),  # ou fontsize=10 dans make_fatturato_fig
-        labelcolor=COLORS["white"],
+    _apply_fatturato_chart_style(
+        axc,
+        d,
+        label,
+        value_fontsize=_px_to_pt(cfg["chart_value_font_px"], dpi),
+        label_fontsize=_px_to_pt(cfg["chart_label_font_px"], dpi),
+        tick_fontsize=_px_to_pt(cfg["chart_tick_font_px"], dpi),
+        legend_fontsize=_px_to_pt(cfg["chart_legend_font_px"], dpi),
+        legend_markersize=8,
+        legend_loc="lower center",
+        legend_anchor=(0.5, 0.95),
     )
     return axc
 
