@@ -3819,7 +3819,7 @@ if uploaded and restaurant_input:
         data, restaurant_input, dpi=150
     )
 
-    export_col_preview, export_col_action = st.columns([1.5, 1], gap="large")
+    export_col_preview, export_col_action = st.columns([1.2, 1], gap="large")
 
     with export_col_preview:
         st.image(png_bytes_page_1, caption="Aperçu p1 (rendu PDF)", width=580)
