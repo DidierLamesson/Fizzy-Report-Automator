@@ -3802,57 +3802,32 @@ if uploaded and restaurant_input:
             key="staff_comment",
         )
 
-    # --- UI : Download PDF ---
-    st.divider()
+        # --- UI : Export PDF ---
+    pdf_bytes_page_1 = build_a4_pdf_bytes(data, restaurant_input, dpi=300)
+    pdf_bytes_page_2 = build_a4_page_2_pdf_bytes(data, restaurant_input, dpi=300)
+    pdf_bytes_page_3 = build_a4_page_3_pdf_bytes(data, restaurant_input, dpi=300)
 
-    pdf_bytes = build_a4_pdf_bytes(data, restaurant_input, dpi=300)
-    png_bytes = pdf_bytes_to_png_bytes(pdf_bytes, page_index=0, zoom=2.0)
+    png_bytes_page_1 = build_a4_png_preview_bytes(data, restaurant_input, dpi=150)
+    png_bytes_page_2 = build_a4_page_2_png_preview_bytes(
+        data, restaurant_input, dpi=150
+    )
+    png_bytes_page_3 = build_a4_page_3_png_preview_bytes(
+        data, restaurant_input, dpi=150
+    )
 
-    c1, c2 = st.columns([1.5, 1], gap="large")
-    with c1:
-        st.image(png_bytes, caption="Aperçu (rendu PDF)", width=580)
-    with c2:
+    export_col_preview, export_col_action = st.columns([1.5, 1], gap="large")
+
+    with export_col_preview:
+        st.image(png_bytes_page_1, caption="Aperçu p1 (rendu PDF)", width=580)
+        st.image(png_bytes_page_2, caption="Aperçu p2 (rendu PDF)", width=580)
+        st.image(png_bytes_page_3, caption="Aperçu p3 (rendu PDF)", width=580)
+
+    with export_col_action:
         st.subheader("📄 Export PDF")
         st.download_button(
             label="⬇️ Scarica PDF",
-            data=pdf_bytes,
+            data=pdf_bytes_page_1,  # remplacé au patch 7 par le PDF final fusionné 3 pages
             file_name=f"Report_{restaurant_input}.pdf",
-            mime="application/pdf",
-        )
-
-    # --- UI : Download PDF (PAGE 2) ---
-    st.divider()
-
-    pdf_bytes_page_2 = build_a4_page_2_pdf_bytes(data, restaurant_input, dpi=300)
-    png_bytes_page_2 = pdf_bytes_to_png_bytes(pdf_bytes_page_2, page_index=0, zoom=2.0)
-
-    c1, c2 = st.columns([1.5, 1], gap="large")
-    with c1:
-        st.image(png_bytes_page_2, caption="Aperçu (rendu PDF) — Page 2", width=580)
-    with c2:
-        st.subheader("📄 Export PDF — Page 2")
-        st.download_button(
-            label="⬇️ Scarica PDF (Page 2)",
-            data=pdf_bytes_page_2,
-            file_name=f"Report_{restaurant_input}_page_2.pdf",
-            mime="application/pdf",
-        )
-
-    # --- UI : Download PDF (PAGE 3) ---
-    st.divider()
-
-    pdf_bytes_page_3 = build_a4_page_3_pdf_bytes(data, restaurant_input, dpi=300)
-    png_bytes_page_3 = pdf_bytes_to_png_bytes(pdf_bytes_page_3, page_index=0, zoom=2.0)
-
-    c1, c2 = st.columns([1.5, 1], gap="large")
-    with c1:
-        st.image(png_bytes_page_3, caption="Aperçu (rendu PDF) — Page 3", width=580)
-    with c2:
-        st.subheader("📄 Export PDF — Page 3")
-        st.download_button(
-            label="⬇️ Scarica PDF (Page 3)",
-            data=pdf_bytes_page_3,
-            file_name=f"Report_{restaurant_input}_page_3.pdf",
             mime="application/pdf",
         )
 
