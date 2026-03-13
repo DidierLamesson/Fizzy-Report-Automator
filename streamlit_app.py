@@ -3457,7 +3457,7 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str):
 
     # Texte d'analyse
     p1, p2 = build_page1_suggestions(d)
-    analysis_text = f"{p1}\n\n{p2}"
+    page1_analysis_text = f"{p1}\n\n{p2}"
 
     # Footer ancré : bas des valeurs à 20px du bas
     footer_h = _measure_footer1_height_px(ax, W_PX, H_PX, d, dpi)
@@ -3876,7 +3876,7 @@ if uploaded and restaurant_input:
             key=REPORT_TEXT_STATE_KEYS["page1_p2"],
         )
 
-        analysis_text = report_payload["page1_analysis_text"]
+        page1_analysis_text = report_payload["page1_analysis_text"]
         page2_analysis_text = report_payload["page2_analysis_text"]
         page3_analysis_text = report_payload["page3_analysis_text"]
 
