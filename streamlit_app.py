@@ -379,6 +379,196 @@ def build_page1_suggestions(d):
     return p1, p2
 
 
+def build_page3_suggestion(d):
+    staff_n = list(d.get("staff_cost_pctg_n") or [])
+    staff_n_1 = list(d.get("staff_cost_pctg_n_1") or [])
+
+    if len(staff_n) < 2 or len(staff_n_1) < 1:
+        return ""
+
+    cur_pct = float(staff_n[0])
+    prev_month_pct = float(staff_n[1])
+    cur_vs_pct = float(staff_n_1[0])
+    avg_6m = float(d.get("staff_cost_avg_n", 0.0))
+
+    trend_prev = "in miglioramento" if cur_pct <= prev_month_pct else "in peggioramento"
+    trend_vs_last_year = "inferiore" if cur_pct <= cur_vs_pct else "superiore"
+    target_text = "al di sotto" if cur_pct < 30 else "in prossimità"
+
+    return (
+        f"Il labour cost di {d['month_name']} {d['year_n']} si attesta al {cur_pct:.0f}%, "
+        f"{trend_prev} rispetto al mese precedente ({prev_month_pct:.0f}%) e "
+        f"{trend_vs_last_year} rispetto a {d['month_name']} {d['year_n_1']} "
+        f"({cur_vs_pct:.0f}%). "
+        f"Il valore medio degli ultimi sei mesi è pari al {avg_6m:.0f}%. "
+        f"L’obiettivo è il mantenimento del labour cost {target_text} "
+        f"della soglia del 30%."
+    )
+
+
+def make_staff_gauge_fig(d):
+    """
+    Preview Streamlit du bloc gauge de la page 3.
+    On réutilise la vraie fonction de gauge du PDF pour garder le même style.
+    """
+    fig = plt.figure(figsize=(6, 3.6), facecolor=COLORS["bg"])
+    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
+    ax.set_axis_off()
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
+    dpi = int(fig.dpi)
+    cfg = BODY_PAGE_3_CFG
+
+    staff_n = list(d.get("staff_cost_pctg_n") or [])
+    staff_n_1 = list(d.get("staff_cost_pctg_n_1") or [])
+
+    if len(staff_n) < 2 or len(staff_n_1) < 2:
+        return fig
+
+    cur_pct = float(staff_n[0])
+    prev_month_pct = float(staff_n[1])
+
+    cur_vs_pct = float(staff_n_1[0])
+    prev_month_vs_pct = float(staff_n_1[1])
+
+    cur_label = d["full_date_n"]
+    prev_month_label = _prev_month_label_from_report_date(d.get("raw_date_n"))
+
+    # titre interne comme sur la page 3 PDF
+    ax.text(
+        0.0,
+        0.96,
+        cfg["chart_title_text"],
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        color=COLORS["white"],
+        fontsize=16,
+        fontproperties=epilogue_semibold,
+    )
+
+    # gauges
+    _draw_staff_gauge_in_page_3(
+        fig,
+        left=0.10,
+        bottom=0.38,
+        width=0.30,
+        height=0.34,
+        value_pct=cur_pct,
+        dpi=dpi,
+        cfg=cfg,
+    )
+
+    _draw_staff_gauge_in_page_3(
+        fig,
+        left=0.60,
+        bottom=0.38,
+        width=0.30,
+        height=0.34,
+        value_pct=prev_month_pct,
+        dpi=dpi,
+        cfg=cfg,
+    )
+
+    # valeurs
+    ax.text(
+        0.25,
+        0.34,
+        _fmt_pct_no_sign(cur_pct, decimals=0),
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=18,
+        fontproperties=epilogue_regular,
+    )
+    ax.text(
+        0.75,
+        0.34,
+        _fmt_pct_no_sign(prev_month_pct, decimals=0),
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=18,
+        fontproperties=epilogue_regular,
+    )
+
+    # labels mois
+    ax.text(
+        0.25,
+        0.24,
+        cur_label,
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=10,
+        fontproperties=epilogue_semibold,
+    )
+    ax.text(
+        0.75,
+        0.24,
+        prev_month_label,
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=10,
+        fontproperties=epilogue_semibold,
+    )
+
+    # ligne vs N-1
+    ax.text(
+        0.25,
+        0.13,
+        f"vs {d['year_n_1']}",
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=10,
+        fontproperties=epilogue_regular,
+    )
+    ax.text(
+        0.75,
+        0.13,
+        f"vs {d['year_n_1']}",
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=10,
+        fontproperties=epilogue_regular,
+    )
+
+    ax.text(
+        0.25,
+        0.06,
+        _fmt_pct_no_sign(cur_vs_pct, decimals=0),
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=12,
+        fontproperties=epilogue_semibold,
+    )
+    ax.text(
+        0.75,
+        0.06,
+        _fmt_pct_no_sign(prev_month_vs_pct, decimals=0),
+        transform=ax.transAxes,
+        ha="center",
+        va="center",
+        color=COLORS["white"],
+        fontsize=12,
+        fontproperties=epilogue_semibold,
+    )
+
+    return fig
+
+
 # =========================
 # 8) PREVIEW DU GRAPHIQUE DE CHIFFRE D’AFFAIRES
 # =========================
@@ -3503,7 +3693,7 @@ if uploaded and restaurant_input:
     col_viz, col_edit = st.columns([1, 1])
 
     with col_viz:
-        st.subheader("📊 Fatturato mensile ")
+        st.subheader("📊 Fatturato (mensile) ")
         preview_fig = make_fatturato_fig(data, label=restaurant_input)
         st.pyplot(preview_fig)
 
@@ -3553,6 +3743,32 @@ if uploaded and restaurant_input:
     with bev_col_text:
         st.text_area(
             "📝 Commento Beverage cost", value="", height=280, key="beverage_comment"
+        )
+
+    # =========================
+    # INCIDENZA STAFF
+    # =========================
+    staff_title_col_left, staff_title_col_right = st.columns([1.2, 1], gap="large")
+
+    with staff_title_col_left:
+        st.subheader("📉 Incidenza Staff")
+
+    with staff_title_col_right:
+        st.subheader("✍️ Analisa scritta (modificabile)")
+
+    staff_col_graph, staff_col_text = st.columns([1.2, 1], gap="large")
+
+    with staff_col_graph:
+        staff_fig = make_staff_gauge_fig(data)
+        st.pyplot(staff_fig)
+
+    with staff_col_text:
+        staff_default = build_page3_suggestion(data)
+        st.text_area(
+            "📝 Commento Incidenza Staff",
+            value=staff_default,
+            height=280,
+            key="staff_comment",
         )
 
     # --- UI : Download PDF ---
