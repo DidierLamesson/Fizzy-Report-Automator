@@ -4074,11 +4074,6 @@ if uploaded and restaurant_input:
             key=SUGGESTION_TEXT_STATE_KEYS["page3_staff"],
             disabled=True,
         )
-        st.button(
-            "📥 Usa la proposta",
-            key="use_proposal_staff",
-            on_click=_copy_staff_proposal_to_final,
-        )
         st.text_area(
             "📝 Testo finale (modificabile)",
             height=150,
