@@ -190,6 +190,26 @@ def pdf_bytes_to_png_bytes(
     return pix.tobytes("png")
 
 
+def merge_pdf_bytes(*pdf_chunks: bytes) -> bytes:
+    """
+    Fusionne plusieurs PDFs (bytes) en un seul document PDF.
+    Ignore les chunks vides.
+    """
+    out_doc = fitz.open()
+
+    for chunk in pdf_chunks:
+        if not chunk:
+            continue
+
+        src = fitz.open(stream=chunk, filetype="pdf")
+        out_doc.insert_pdf(src)
+        src.close()
+
+    merged = out_doc.tobytes()
+    out_doc.close()
+    return merged
+
+
 def _compute_ratio_pct_series(costs, revenues):
     pct_series = []
     for cost, revenue in zip(costs, revenues):
@@ -3971,6 +3991,12 @@ if uploaded and restaurant_input:
         dpi=300,
     )
 
+    merged_pdf_bytes = merge_pdf_bytes(
+        pdf_bytes_page_1,
+        pdf_bytes_page_2,
+        pdf_bytes_page_3,
+    )
+
     png_bytes_page_1 = pdf_bytes_to_png_bytes(pdf_bytes_page_1, page_index=0, zoom=2.0)
     png_bytes_page_2 = pdf_bytes_to_png_bytes(pdf_bytes_page_2, page_index=0, zoom=2.0)
     png_bytes_page_3 = pdf_bytes_to_png_bytes(pdf_bytes_page_3, page_index=0, zoom=2.0)
@@ -3992,7 +4018,7 @@ if uploaded and restaurant_input:
         st.subheader("📄 Export PDF")
         st.download_button(
             label="⬇️ Scarica PDF",
-            data=pdf_bytes_page_1,  # remplacé au patch 7 par le PDF final fusionné 3 pages
+            data=merged_pdf_bytes,
             file_name=f"Report_{restaurant_input}.pdf",
             mime="application/pdf",
         )
