@@ -3452,12 +3452,8 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str = 
     footer_line_y_px = int(H_PX - PAGE_TOKENS["pad_bottom_px"] - footer_h)
 
     # Zone utile (footer déjà ancré)
-    region_start = float(
-        header_line_y_px + BODY1_CFG["gap_after_header_px"]
-    )  # top FIXE de "Fatturato"
-    region_end = float(
-        footer_line_y_px - PAGE_TOKENS["gap_body_to_footer_min_px"]
-    )  # garde min paragraphe->footer
+    region_start = float(header_line_y_px + BODY1_CFG["gap_after_header_px"])
+    region_end = float(footer_line_y_px - PAGE_TOKENS["gap_body_to_footer_min_px"])
     region_h = max(0.0, region_end - region_start)
 
     gap_default = float(BODY1_CFG["stats_line_gap_after_px"])
@@ -3480,14 +3476,14 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str = 
     # On centre uniquement CE QUI EST SOUS "Fatturato"
     rest_h0 = max(0.0, body_h0 - section_bottom)
 
-    rest_start = region_start + section_bottom + 20.0  # bas de "Fatturato" + 20px
+    rest_start = region_start + section_bottom + 20.0
     rest_end = region_end
     rest_region_h = max(0.0, rest_end - rest_start)
 
     chosen_gap = gap_default
     m = m0
 
-    # Compression du gap stats->paragraphe si nécessaire (sur la zone "rest")
+    # Compression du gap stats->paragraphe si nécessaire
     if rest_h0 > rest_region_h and gap_default > gap_min:
         overflow = rest_h0 - rest_region_h
         chosen_gap = max(gap_min, gap_default - overflow)
@@ -3508,15 +3504,13 @@ def _draw_a4_page(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str = 
 
     rest_h = max(0.0, body_h - section_bottom)
 
-    # Offset appliqué uniquement sous "Fatturato"
     if rest_h <= rest_region_h:
         after_section_offset = (rest_region_h - rest_h) / 2.0
         para_max_bottom_px = None
     else:
         after_section_offset = 0.0
-        para_max_bottom_px = rest_end  # on tronque si besoin
+        para_max_bottom_px = rest_end
 
-    # Dessin body : top_px fixe, et on décale le reste via after_section_offset_px
     _draw_body1_fatturato(
         ax,
         W_PX,
