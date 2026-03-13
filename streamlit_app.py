@@ -2498,6 +2498,7 @@ BODY_PAGE_3_CFG = {
     "para_linespacing": BODY1_CFG["para_linespacing"],
     "para_gap_after_vs_px": 24,
     "para_max_lines": 10,
+    "para_left_px": HEADER1_CFG["line_side_margin_px"],
 }
 
 
@@ -2832,7 +2833,7 @@ def _draw_body_page_3_staff(
 
     para_top_px = vs_top_px + max(h_vs_0, h_vs_1) + cfg["para_gap_after_vs_px"]
 
-    para_left_px = cfg["side_margin_px"]
+    para_left_px = cfg.get("para_left_px", HEADER1_CFG["line_side_margin_px"])
     para_right_edge_px = W_PX - cfg.get("right_edge_margin_px", cfg["side_margin_px"])
     col_px_layout = para_right_edge_px - para_left_px
 
