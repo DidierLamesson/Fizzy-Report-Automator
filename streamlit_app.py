@@ -117,17 +117,16 @@ def inject_brand_css():
         font-family: "Epilogue", sans-serif;
     }
 
-    /* Fond général dégradé */
     .stApp {
-        background:
-            linear-gradient(
-                0deg,
-                rgba(17, 50, 79, 0.18) 0%,
-                rgba(40, 80, 77, 0.14) 45%,
-                rgba(117, 141, 90, 0.18) 100%
-            ),
-            var(--soda-bg) !important;
-        color: var(--soda-text) !important;
+    background:
+        linear-gradient(
+            180deg,
+            rgba(17, 50, 79, 0.22) 0%,
+            rgba(40, 80, 77, 0.18) 55%,
+            rgba(117, 141, 90, 0.20) 100%
+        ),
+        var(--soda-bg) !important;
+    color: var(--soda-text) !important;
     }
 
     .main .block-container {
