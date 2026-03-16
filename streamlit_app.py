@@ -181,119 +181,119 @@ def inject_brand_css():
         filter: brightness(0.98);
     }
 
-/* ===== INPUT "Nome clienti" ===== */
+    /* ===== INPUT "Nome clienti" ===== */
 
-/* Conteneur BaseWeb du text input */
-div[data-baseweb="input"] {
-    background: transparent !important;
-}
+    /* Conteneur BaseWeb du text input */
+    div[data-baseweb="input"] {
+        background: transparent !important;
+    }
 
-div[data-baseweb="input"] > div {
-    background: var(--soda-white) !important;
-    border: 1px solid rgba(17, 50, 79, 0.18) !important;
-    border-radius: 24px !important;
-    box-shadow: none !important;
-    min-height: 56px !important;
-}
+    div[data-baseweb="input"] > div {
+        background: var(--soda-white) !important;
+        border: 1px solid rgba(17, 50, 79, 0.18) !important;
+        border-radius: 24px !important;
+        box-shadow: none !important;
+        min-height: 56px !important;
+    }
 
-/* Champ texte */
-div[data-baseweb="input"] input {
-    color: var(--soda-blue) !important;
-    font-family: "Epilogue", sans-serif !important;
-    font-weight: 500 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-}
+    /* Champ texte */
+    div[data-baseweb="input"] input {
+        color: var(--soda-blue) !important;
+        font-family: "Epilogue", sans-serif !important;
+        font-weight: 500 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
 
-/* Focus : on enlève les halos moches */
-div[data-baseweb="input"] > div:focus-within {
-    border: 1px solid rgba(17, 50, 79, 0.28) !important;
-    box-shadow: none !important;
-}
+    /* Focus : on enlève les halos moches */
+    div[data-baseweb="input"] > div:focus-within {
+        border: 1px solid rgba(17, 50, 79, 0.28) !important;
+        box-shadow: none !important;
+    }
 
-/* Textarea */
-.stTextArea textarea,
-div[data-baseweb="textarea"] textarea {
-    background: var(--soda-white) !important;
-    color: var(--soda-blue) !important;
-    border: 1px solid rgba(17, 50, 79, 0.18) !important;
-    border-radius: 24px !important;
-    box-shadow: none !important;
-}
+    /* Textarea */
+    .stTextArea textarea,
+    div[data-baseweb="textarea"] textarea {
+        background: var(--soda-white) !important;
+        color: var(--soda-blue) !important;
+        border: 1px solid rgba(17, 50, 79, 0.18) !important;
+        border-radius: 24px !important;
+        box-shadow: none !important;
+    }
 
-/* Selectbox */
-div[data-baseweb="select"] > div {
-    background: var(--soda-white) !important;
-    color: var(--soda-blue) !important;
-    border: 1px solid rgba(17, 50, 79, 0.18) !important;
-    border-radius: 24px !important;
-    box-shadow: none !important;
-}
+    /* Selectbox */
+    div[data-baseweb="select"] > div {
+        background: var(--soda-white) !important;
+        color: var(--soda-blue) !important;
+        border: 1px solid rgba(17, 50, 79, 0.18) !important;
+        border-radius: 24px !important;
+        box-shadow: none !important;
+    }
 
- /* ===== FILE UPLOADER ===== */
+    /* ===== FILE UPLOADER ===== */
 
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
-}
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+    }
 
-/* Dropzone */
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] section {
-    background: var(--soda-white) !important;
-    border: 1px dashed rgba(17, 50, 79, 0.20) !important;
-    border-radius: 24px !important;
-    padding: 1.25rem !important;
-    box-shadow: none !important;
-}
+    /* Dropzone */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] section {
+        background: var(--soda-white) !important;
+        border: 1px dashed rgba(17, 50, 79, 0.20) !important;
+        border-radius: 24px !important;
+        padding: 1.25rem !important;
+        box-shadow: none !important;
+    }
 
-/* Texte dans la dropzone */
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] section * {
-    color: var(--soda-blue) !important;
-}
+    /* Texte dans la dropzone */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] section * {
+        color: var(--soda-blue) !important;
+    }
 
-/* Bouton Browse files */
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] section button {
-    background: var(--soda-white) !important;
-    color: var(--soda-blue) !important;
-    border: 1px solid rgba(17, 50, 79, 0.18) !important;
-    border-radius: 16px !important;
-    box-shadow: none !important;
-}
+    /* Bouton Browse files */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] section button {
+        background: var(--soda-white) !important;
+        color: var(--soda-blue) !important;
+        border: 1px solid rgba(17, 50, 79, 0.18) !important;
+        border-radius: 16px !important;
+        box-shadow: none !important;
+    }
 
-/* ===== Ligne du fichier uploadé ===== */
-/* On cible le dernier bloc du file uploader = la ligne avec icône, nom, taille, croix */
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child,
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child * {
-    color: #FFFFFF !important;
-}
+    /* ===== Ligne du fichier uploadé ===== */
+    /* On cible le dernier bloc du file uploader = la ligne avec icône, nom, taille, croix */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child,
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child * {
+        color: #FFFFFF !important;
+    }
 
-/* Icône fichier + croix */
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child svg,
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child svg * {
-    fill: #FFFFFF !important;
-    stroke: #FFFFFF !important;
-}
+    /* Icône fichier + croix */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child svg,
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child svg * {
+        fill: #FFFFFF !important;
+        stroke: #FFFFFF !important;
+    }
 
-/* Bouton croix : sans bulle */
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child button {
-    all: unset !important;
-    cursor: pointer !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    padding: 0 !important;
-}
+    /* Bouton croix : sans bulle */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child button {
+        all: unset !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+    }
 
-/* Hover croix */
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child button:hover {
-    background: transparent !important;
-    box-shadow: none !important;
-}
+    /* Hover croix */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child button:hover {
+        background: transparent !important;
+        box-shadow: none !important;
+    }
     
     </style>
     """
