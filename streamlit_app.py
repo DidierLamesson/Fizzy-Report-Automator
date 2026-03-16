@@ -260,9 +260,9 @@ div[data-baseweb="select"] > div {
         border-radius: 18px !important;
         border: 1px solid var(--soda-border) !important;
     }
-           /* ===== FIX champ "Nome clienti" ===== */
+           /* ===== FIX propre champ "Nome clienti" ===== */
 
-    /* Supprime la boîte externe ajoutée par Streamlit */
+    /* On neutralise les wrappers Streamlit */
     .stTextInput,
     .stTextInput > div,
     [data-testid="stTextInputRootElement"] {
@@ -272,22 +272,26 @@ div[data-baseweb="select"] > div {
         padding: 0 !important;
     }
 
-    /* Garde une seule vraie box propre */
-    div[data-baseweb="input"] {
+    /* Vrai conteneur BaseWeb */
+    [data-testid="stTextInputRootElement"] div[data-baseweb="base-input"] {
         background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
     }
 
-    div[data-baseweb="input"] > div {
+    /* La box visible */
+    [data-testid="stTextInputRootElement"] div[data-baseweb="base-input"] > div {
         background: var(--soda-white) !important;
         border: 1px solid rgba(17, 50, 79, 0.18) !important;
-        border-radius: 24px !important;
-        box-shadow: none !important;
+        border-radius: 22px !important;
         min-height: 56px !important;
-        overflow: hidden !important;
+        padding-left: 0.8rem !important;
+        padding-right: 0.8rem !important;
+        box-shadow: none !important;
     }
 
-    /* Champ texte */
-    div[data-baseweb="input"] input {
+    /* Le champ texte lui-même */
+    [data-testid="stTextInputRootElement"] input {
         color: var(--soda-blue) !important;
         font-family: "Epilogue", sans-serif !important;
         font-weight: 500 !important;
@@ -297,8 +301,8 @@ div[data-baseweb="select"] > div {
         box-shadow: none !important;
     }
 
-    /* Focus propre */
-    div[data-baseweb="input"] > div:focus-within {
+    /* Focus */
+    [data-testid="stTextInputRootElement"] div[data-baseweb="base-input"] > div:focus-within {
         border: 1px solid rgba(17, 50, 79, 0.28) !important;
         box-shadow: none !important;
     }
