@@ -58,7 +58,6 @@ FONT_IVY = FONTS_DIR / "fonnts.com-Ivy-Presto-Display-Light.otf"
 LOGO_PATH = IMG_DIR / "Logo Fizzy.png"
 ARROW_UP_PATH = IMG_DIR / "Arrow_up.png"
 ARROW_DOWN_PATH = IMG_DIR / "Arrow_down.png"
-SODA_LOGO_PATH = IMG_DIR / "logo_soda_white.png"
 
 
 # =========================
@@ -108,7 +107,7 @@ def _img_to_data_uri(path: Path) -> str:
 
 
 def inject_brand_logo():
-    soda_logo_uri = _img_to_data_uri(SODA_LOGO_PATH)
+    soda_logo_uri = _img_to_data_uri(LOGO_PATH)
     if not soda_logo_uri:
         return
 
@@ -4346,7 +4345,7 @@ def build_a4_page_3_png_preview_bytes(
 # =========================
 st.title("Report Fizzy Automatizzazione ⚡️")
 
-soda_logo_uri = _img_to_data_uri(SODA_LOGO_PATH)
+soda_logo_uri = _img_to_data_uri(LOGO_PATH)
 
 if soda_logo_uri:
     st.sidebar.markdown(
