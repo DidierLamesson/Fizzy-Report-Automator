@@ -175,25 +175,63 @@ def inject_brand_css():
         filter: brightness(0.98);
     }
 
-    /* Inputs classiques */
-    .stTextInput input,
-    .stTextArea textarea,
-    div[data-baseweb="select"] > div {
-        background: var(--soda-white) !important;
-        color: var(--soda-text) !important;
-        border: 1px solid var(--soda-border) !important;
-        border-radius: 16px !important;
-        box-shadow: none !important;
-    }
+/* ===== INPUT "Nome clienti" ===== */
 
-    /* Enlève la grosse boîte externe de l'uploader */
+/* Conteneur BaseWeb du text input */
+div[data-baseweb="input"] {
+    background: transparent !important;
+}
+
+div[data-baseweb="input"] > div {
+    background: var(--soda-white) !important;
+    border: 1px solid rgba(17, 50, 79, 0.18) !important;
+    border-radius: 24px !important;
+    box-shadow: none !important;
+    min-height: 56px !important;
+}
+
+/* Champ texte */
+div[data-baseweb="input"] input {
+    color: var(--soda-blue) !important;
+    font-family: "Epilogue", sans-serif !important;
+    font-weight: 500 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Focus : on enlève les halos moches */
+div[data-baseweb="input"] > div:focus-within {
+    border: 1px solid rgba(17, 50, 79, 0.28) !important;
+    box-shadow: none !important;
+}
+
+/* Textarea */
+.stTextArea textarea,
+div[data-baseweb="textarea"] textarea {
+    background: var(--soda-white) !important;
+    color: var(--soda-blue) !important;
+    border: 1px solid rgba(17, 50, 79, 0.18) !important;
+    border-radius: 24px !important;
+    box-shadow: none !important;
+}
+
+/* Selectbox */
+div[data-baseweb="select"] > div {
+    background: var(--soda-white) !important;
+    color: var(--soda-blue) !important;
+    border: 1px solid rgba(17, 50, 79, 0.18) !important;
+    border-radius: 24px !important;
+    box-shadow: none !important;
+}
+
+    /* ===== FILE UPLOADER ===== */
+
     [data-testid="stFileUploader"] {
         background: transparent !important;
         border: none !important;
         padding: 0 !important;
     }
 
-    /* Garde une seule vraie dropzone propre */
     [data-testid="stFileUploader"] section {
         background: var(--soda-white) !important;
         border: 1px dashed rgba(17, 50, 79, 0.20) !important;
@@ -202,9 +240,19 @@ def inject_brand_css():
         box-shadow: none !important;
     }
 
-    /* Texte du file uploader */
-    [data-testid="stFileUploader"] * {
-        color: var(--soda-text) !important;
+    /* Tout le texte de la zone d'upload en bleu SODA */
+    [data-testid="stFileUploader"] section * {
+        color: var(--soda-blue) !important;
+    }
+
+    /* Bouton dans la dropzone */
+    [data-testid="stFileUploader"] button {
+        background: var(--soda-white) !important;
+        color: var(--soda-blue) !important;
+        border: 1px solid rgba(17, 50, 79, 0.18) !important;
+        border-radius: 16px !important;
+        box-shadow: none !important;
+    }
     }
 
     /* Alertes / messages */
