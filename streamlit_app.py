@@ -285,6 +285,35 @@ def inject_brand_css():
         color: currentColor !important;
     }
     
+    /* ===== FIX FINAL - Nome clienti uniquement ===== */
+    /* Neutralise la box interne parasite sans toucher au reste */
+
+    section[data-testid="stSidebar"] .stTextInput [data-baseweb="input"] [data-baseweb="input"],
+    section[data-testid="stSidebar"] .stTextInput [data-baseweb="input"] [data-baseweb="base-input"],
+    section[data-testid="stSidebar"] .stTextInput [data-baseweb="base-input"] [data-baseweb="input"],
+    section[data-testid="stSidebar"] .stTextInput [data-baseweb="base-input"] [data-baseweb="base-input"] {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+    }
+
+    section[data-testid="stSidebar"] .stTextInput [data-baseweb="input"] [data-baseweb="input"] > div,
+    section[data-testid="stSidebar"] .stTextInput [data-baseweb="input"] [data-baseweb="base-input"] > div,
+    section[data-testid="stSidebar"] .stTextInput [data-baseweb="base-input"] [data-baseweb="input"] > div,
+    section[data-testid="stSidebar"] .stTextInput [data-baseweb="base-input"] [data-baseweb="base-input"] > div {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+    section[data-testid="stSidebar"] .stTextInput input {
+    position: relative;
+    z-index: 2;
+    }
+    
     </style>
     """
     )
