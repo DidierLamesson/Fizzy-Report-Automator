@@ -121,7 +121,7 @@ def inject_brand_css():
     .stApp {
         background:
             linear-gradient(
-                135deg,
+                90deg,
                 rgba(17, 50, 79, 0.18) 0%,
                 rgba(40, 80, 77, 0.14) 45%,
                 rgba(117, 141, 90, 0.18) 100%
