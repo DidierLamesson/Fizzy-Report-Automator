@@ -517,7 +517,7 @@ def inject_brand_css():
         /* ===== Logo sidebar : placement propre ===== */
 
         section[data-testid="stSidebar"] .block-container {
-            padding-top: 0.9rem !important;
+            padding-top: 0.55rem !important;
         }
 
         section[data-testid="stSidebar"] .soda-sidebar-brand {
@@ -530,8 +530,8 @@ def inject_brand_css():
 
         section[data-testid="stSidebar"] .soda-sidebar-brand img {
             display: block;
-            width: 112px;
-            max-width: 112px;
+            width: 150px;
+            max-width: 150px;
             height: auto;
             object-fit: contain;
             margin: 0 !important;
