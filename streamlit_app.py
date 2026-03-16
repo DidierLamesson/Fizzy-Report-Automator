@@ -530,7 +530,7 @@ def inject_brand_css():
         section[data-testid="stSidebar"] .element-container:has(.soda-sidebar-brand) {
             position: absolute !important;
             top: 0.90rem !important;
-            left: 1rem !important;
+            left: 0.5rem !important;
             right: 1rem !important;
             width: auto !important;
             margin: 0 !important;
