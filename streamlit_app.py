@@ -514,34 +514,46 @@ def inject_brand_css():
             height: auto;
             display: block;
         }
-        /* ===== LOGO SIDEBAR - version propre en flux normal ===== */
+        /* ===== LOGO SIDEBAR - patch haut / gauche / plus grand ===== */
 
-        /* Vrai conteneur du contenu sidebar */
-        section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
-            padding-top: 0.15rem !important;
+        /* La sidebar devient le repère de positionnement du logo */
+        section[data-testid="stSidebar"] {
+            position: relative !important;
         }
 
-        /* Wrapper Streamlit du logo */
+        /* On réserve de la place pour éviter que Nome clienti remonte sous le logo */
+        section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
+            padding-top: 7.25rem !important;
+        }
+
+        /* Wrapper Streamlit du logo : sorti du flux et collé en haut à gauche */
         section[data-testid="stSidebar"] .element-container:has(.soda-sidebar-brand) {
+            position: absolute !important;
+            top: 0.90rem !important;
+            left: 1rem !important;
+            right: 1rem !important;
+            width: auto !important;
             margin: 0 !important;
             padding: 0 !important;
+            z-index: 60 !important;
         }
 
         /* Bloc logo */
         section[data-testid="stSidebar"] .soda-sidebar-brand {
             display: flex !important;
             justify-content: flex-start !important;
-            align-items: center !important;
-            margin: 0 0 0.45rem 0 !important;
-            padding: 0 0 0 0.15rem !important;
+            align-items: flex-start !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
             line-height: 0 !important;
         }
 
-        /* Image */
+        /* Image : beaucoup plus grande et alignée sur la marge gauche de Nome clienti */
         section[data-testid="stSidebar"] .soda-sidebar-brand img {
             display: block !important;
-            width: 108px !important;
-            max-width: 108px !important;
+            width: 168px !important;
+            max-width: none !important;
             height: auto !important;
             object-fit: contain !important;
             margin: 0 !important;
@@ -557,7 +569,7 @@ def inject_brand_css():
         section[data-testid="stSidebar"] .stTextInput {
             margin-top: 0 !important;
         }
-        
+
         </style>
         """
     )
