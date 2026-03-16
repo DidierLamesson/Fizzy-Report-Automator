@@ -544,7 +544,7 @@ def inject_brand_css():
 
         /* Le premier champ remonte un peu */
         section[data-testid="stSidebar"] .stTextInput {
-            margin-top: 0.15rem !important;
+            margin-top: -0,15rem !important;
         }
         
         </style>
