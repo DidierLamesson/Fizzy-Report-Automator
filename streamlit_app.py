@@ -533,7 +533,7 @@ def inject_brand_css():
             justify-content: flex-start !important;
             align-items: center !important;
             margin: 0 0 0.45rem 0 !important;
-            padding: 0 0 0 0.15rem !important;
+            padding: 0 0 0 0.05rem !important;
             line-height: 0 !important;
         }
 
