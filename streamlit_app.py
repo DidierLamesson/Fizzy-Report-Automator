@@ -260,6 +260,48 @@ div[data-baseweb="select"] > div {
         border-radius: 18px !important;
         border: 1px solid var(--soda-border) !important;
     }
+           /* ===== FIX champ "Nome clienti" ===== */
+
+    /* Supprime la boîte externe ajoutée par Streamlit */
+    .stTextInput,
+    .stTextInput > div,
+    [data-testid="stTextInputRootElement"] {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+
+    /* Garde une seule vraie box propre */
+    div[data-baseweb="input"] {
+        background: transparent !important;
+    }
+
+    div[data-baseweb="input"] > div {
+        background: var(--soda-white) !important;
+        border: 1px solid rgba(17, 50, 79, 0.18) !important;
+        border-radius: 24px !important;
+        box-shadow: none !important;
+        min-height: 56px !important;
+        overflow: hidden !important;
+    }
+
+    /* Champ texte */
+    div[data-baseweb="input"] input {
+        color: var(--soda-blue) !important;
+        font-family: "Epilogue", sans-serif !important;
+        font-weight: 500 !important;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Focus propre */
+    div[data-baseweb="input"] > div:focus-within {
+        border: 1px solid rgba(17, 50, 79, 0.28) !important;
+        box-shadow: none !important;
+    }
     </style>
     """
     )
