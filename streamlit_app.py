@@ -260,51 +260,35 @@ div[data-baseweb="select"] > div {
         border-radius: 18px !important;
         border: 1px solid var(--soda-border) !important;
     }
-           /* ===== FIX propre champ "Nome clienti" ===== */
+    /* ===== CHAMP "Nome clienti" - version simple et propre ===== */
 
-    /* On neutralise les wrappers Streamlit */
-    .stTextInput,
+    /* On neutralise les wrappers */
     .stTextInput > div,
-    [data-testid="stTextInputRootElement"] {
+    .stTextInput div[data-baseweb="base-input"],
+    .stTextInput div[data-baseweb="input"] {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         padding: 0 !important;
     }
 
-    /* Vrai conteneur BaseWeb */
-    [data-testid="stTextInputRootElement"] div[data-baseweb="base-input"] {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
-
-    /* La box visible */
-    [data-testid="stTextInputRootElement"] div[data-baseweb="base-input"] > div {
+    /* On stylise directement le champ visible */
+    .stTextInput input {
         background: var(--soda-white) !important;
+        color: var(--soda-blue) !important;
         border: 1px solid rgba(17, 50, 79, 0.18) !important;
         border-radius: 22px !important;
         min-height: 56px !important;
-        padding-left: 0.8rem !important;
-        padding-right: 0.8rem !important;
+        padding: 0 1rem !important;
         box-shadow: none !important;
-    }
-
-    /* Le champ texte lui-même */
-    [data-testid="stTextInputRootElement"] input {
-        color: var(--soda-blue) !important;
-        font-family: "Epilogue", sans-serif !important;
-        font-weight: 500 !important;
-        background: transparent !important;
-        border: none !important;
         outline: none !important;
-        box-shadow: none !important;
     }
 
     /* Focus */
-    [data-testid="stTextInputRootElement"] div[data-baseweb="base-input"] > div:focus-within {
+    .stTextInput input:focus {
         border: 1px solid rgba(17, 50, 79, 0.28) !important;
         box-shadow: none !important;
+        outline: none !important;
     }
     </style>
     """
