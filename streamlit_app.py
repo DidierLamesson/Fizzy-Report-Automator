@@ -244,6 +244,22 @@ def inject_brand_css():
             color: #FFFFFF !important;
         }
 
+        [data-testid="stSidebarCollapsedControl"] button,
+        section[data-testid="stSidebar"] button[kind="header"],
+        [data-testid="stSidebarCollapsedControl"] button:hover,
+        [data-testid="stSidebarCollapsedControl"] button:focus,
+        [data-testid="stSidebarCollapsedControl"] button:focus-visible,
+        [data-testid="stSidebarCollapsedControl"] button:active,
+        section[data-testid="stSidebar"] button[kind="header"]:hover,
+        section[data-testid="stSidebar"] button[kind="header"]:focus,
+        section[data-testid="stSidebar"] button[kind="header"]:focus-visible,
+        section[data-testid="stSidebar"] button[kind="header"]:active {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+
         /* =========================
            5) SIDEBAR - INPUT CLIENT
         ========================= */
@@ -498,9 +514,7 @@ def inject_brand_css():
             height: auto;
             display: block;
         }
-        /* =========================
-        LOGO SIDEBAR
-        ========================= */
+        /* ===== LOGO SIDEBAR - version propre en flux normal ===== */
 
         /* Vrai conteneur du contenu sidebar */
         section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
@@ -511,49 +525,39 @@ def inject_brand_css():
         section[data-testid="stSidebar"] .element-container:has(.soda-sidebar-brand) {
             margin: 0 !important;
             padding: 0 !important;
-            pointer-events: none !important;
         }
 
-        /* Bloc logo : bas-gauche + on récupère de la hauteur sous le logo */
+        /* Bloc logo */
         section[data-testid="stSidebar"] .soda-sidebar-brand {
             display: flex !important;
             justify-content: flex-start !important;
-            align-items: flex-end !important;
-            height: 124px !important;
-            margin: 0 0 -18px 0 !important;
+            align-items: center !important;
+            margin: 0 0 0.45rem 0 !important;
             padding: 0 0 0 0.15rem !important;
             line-height: 0 !important;
-            pointer-events: none !important;
         }
 
         /* Image */
         section[data-testid="stSidebar"] .soda-sidebar-brand img {
             display: block !important;
-            width: 150px !important;
-            max-width: 150px !important;
+            width: 108px !important;
+            max-width: 108px !important;
             height: auto !important;
             object-fit: contain !important;
             margin: 0 !important;
             padding: 0 !important;
-            pointer-events: none !important;
         }
 
-        /* Le bouton de collapse doit passer au-dessus de tout */
-        [data-testid="stSidebarCollapsedControl"],
-        [data-testid="stSidebarCollapsedControl"] button,
-        section[data-testid="stSidebar"] button[kind="header"] {
-            position: relative !important;
-            z-index: 99999 !important;
-            pointer-events: auto !important;
+        /* Premier vrai widget après le logo */
+        section[data-testid="stSidebar"] .soda-sidebar-brand + * {
+            margin-top: 0 !important;
         }
 
-        /* Hover visible pour vérifier que le bouton est bien récupéré */
-        [data-testid="stSidebarCollapsedControl"] button:hover,
-        section[data-testid="stSidebar"] button[kind="header"]:hover {
-            background: rgba(255, 255, 255, 0.10) !important;
-            border-radius: 10px !important;
+        /* On enlève l'air inutile avant Nome clienti */
+        section[data-testid="stSidebar"] .stTextInput {
+            margin-top: 0 !important;
         }
-
+        
         </style>
         """
     )
@@ -4386,6 +4390,13 @@ st.title("Report Fizzy Automatizzazione ⚡️")
 
 soda_logo_uri = _img_to_data_uri(LOGO_PATH)
 
+restaurant_input = st.sidebar.text_input(
+    "Nome clienti *", value="es: Ristorante Da Mario"
+)
+uploaded = st.sidebar.file_uploader("Caricare il Report (.xslx))", type="xlsx")
+
+# Logo déplacé en bas du flux de la sidebar pour ne plus interférer avec
+# le bouton de collapse en haut.
 if soda_logo_uri:
     st.sidebar.markdown(
         f"""
@@ -4395,11 +4406,6 @@ if soda_logo_uri:
         """,
         unsafe_allow_html=True,
     )
-
-restaurant_input = st.sidebar.text_input(
-    "Nome clienti *", value="es: Ristorante Da Mario"
-)
-uploaded = st.sidebar.file_uploader("Caricare il Report (.xlsx)", type="xlsx")
 
 if uploaded and restaurant_input:
     data = load_data(uploaded)
@@ -4626,4 +4632,4 @@ if uploaded and restaurant_input:
         )
 
 else:
-    st.info("Importa il Report e inserisci il nome del cliente per generare il PDF.")
+    st.info("Importe un fichier Excel et renseigne le nom client pour générer le PDF.")
