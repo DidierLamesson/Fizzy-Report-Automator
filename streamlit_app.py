@@ -97,6 +97,115 @@ st.set_page_config(
 )
 
 
+def inject_brand_css():
+    st.html(
+        """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700;800&display=swap');
+
+    :root {
+        --soda-blue: #11324F;
+        --soda-green: #758D5A;
+        --soda-acid: #F0FF6E;
+        --soda-text: #1B252E;
+        --soda-bg: #F5F3EE;
+        --soda-white: #FFFFFF;
+        --soda-border: rgba(17, 50, 79, 0.12);
+    }
+
+    html, body, [class*="css"] {
+        font-family: "Epilogue", sans-serif;
+    }
+
+    .stApp {
+        background: var(--soda-bg);
+        color: var(--soda-text);
+    }
+
+    .main .block-container {
+        max-width: 1400px;
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, var(--soda-blue) 0%, #28504D 100%);
+        border-right: 1px solid rgba(255,255,255,0.08);
+    }
+
+    section[data-testid="stSidebar"] * {
+        color: white !important;
+    }
+
+    /* Titre principal */
+    h1, h2, h3 {
+        font-family: "Epilogue", sans-serif !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.03em;
+        color: var(--soda-blue);
+    }
+
+    /* Séparateurs */
+    hr {
+        border-color: rgba(17, 50, 79, 0.12) !important;
+    }
+
+    /* Boutons */
+    .stButton > button,
+    .stDownloadButton > button {
+        background: var(--soda-acid) !important;
+        color: var(--soda-blue) !important;
+        border: none !important;
+        border-radius: 999px !important;
+        font-family: "Epilogue", sans-serif !important;
+        font-weight: 700 !important;
+        padding: 0.72rem 1.1rem !important;
+        box-shadow: none !important;
+    }
+
+    .stButton > button:hover,
+    .stDownloadButton > button:hover {
+        transform: translateY(-1px);
+        filter: brightness(0.98);
+    }
+
+    /* Inputs */
+    .stTextInput input,
+    .stTextArea textarea,
+    div[data-baseweb="select"] > div,
+    [data-testid="stFileUploader"] section {
+        background: var(--soda-white) !important;
+        color: var(--soda-text) !important;
+        border: 1px solid var(--soda-border) !important;
+        border-radius: 18px !important;
+    }
+
+    /* Labels */
+    label, .stMarkdown, p {
+        font-family: "Epilogue", sans-serif !important;
+    }
+
+    /* File uploader */
+    [data-testid="stFileUploader"] {
+        background: rgba(255,255,255,0.5);
+        border-radius: 22px;
+        padding: 0.35rem;
+    }
+
+    /* Info box */
+    [data-testid="stAlert"] {
+        border-radius: 20px !important;
+        border: 1px solid var(--soda-border) !important;
+    }
+    </style>
+    """
+    )
+
+
+inject_brand_css()
+
+
 # =========================
 # 5) HELPERS DE FORMATAGE ET DE CALCUL
 # =========================
