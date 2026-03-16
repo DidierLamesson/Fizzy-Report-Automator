@@ -121,9 +121,9 @@ def inject_brand_css():
     background:
         linear-gradient(
             180deg,
-            rgba(17, 50, 79, 0.80) 0%,
-            rgba(40, 80, 77, 0.80) 55%,
-            rgba(117, 141, 90, 0.80) 100%
+            rgba(17, 50, 79, 0.90) 0%,
+            rgba(40, 80, 77, 0.90) 55%,
+            rgba(117, 141, 90, 0.90) 100%
         ),
         var(--soda-bg) !important;
     color: var(--soda-text) !important;
