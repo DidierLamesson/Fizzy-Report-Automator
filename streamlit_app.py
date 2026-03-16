@@ -523,7 +523,7 @@ def inject_brand_css():
         section[data-testid="stSidebar"] .soda-sidebar-brand {
             display: flex;
             justify-content: flex-start;
-            align-items: center;
+            align-items: left;
             margin: 0 0 0.55rem 0 !important;
             padding: 0 !important;
         }
