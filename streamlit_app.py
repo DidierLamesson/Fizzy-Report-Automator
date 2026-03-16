@@ -523,7 +523,7 @@ def inject_brand_css():
 
         /* Le contenu garde sa hauteur normale, avec une réserve en bas pour le logo */
         section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
-            padding-top: 0.15rem !important;
+            padding-top: 0.9rem !important;
             padding-bottom: 11.5rem !important;
         }
 
