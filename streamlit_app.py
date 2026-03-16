@@ -470,12 +470,16 @@ def inject_brand_css():
 
     /* Textareas et champs de la zone principale */
     [data-testid="stAppViewContainer"] > .main .stTextArea textarea,
+    [data-testid="stAppViewContainer"] > .main .stTextArea textarea:disabled,
+    [data-testid="stAppViewContainer"] > .main .stTextArea textarea[disabled],
     [data-testid="stAppViewContainer"] > .main .stTextInput input,
     [data-testid="stAppViewContainer"] > .main div[data-baseweb="select"] > div {
         background: rgba(255, 255, 255, 0.88) !important;
         color: #11324F !important;
+        -webkit-text-fill-color: #11324F !important;
         border: 1px solid rgba(17, 50, 79, 0.10) !important;
         box-shadow: none !important;
+        opacity: 1 !important;
     }
 
     /* Alertes / blocs info */
