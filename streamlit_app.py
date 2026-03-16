@@ -484,7 +484,29 @@ def inject_brand_css():
         border: 1px solid rgba(17, 50, 79, 0.08) !important;
     }
     
+    /* ===== Texte des box disabled en bleu SODA ===== */
 
+    [data-testid="stAppViewContainer"] > .main .stTextArea textarea,
+    [data-testid="stAppViewContainer"] > .main .stTextArea textarea:disabled,
+    [data-testid="stAppViewContainer"] > .main .stTextArea textarea[disabled],
+    [data-testid="stAppViewContainer"] > .main div[data-baseweb="textarea"] textarea,
+    [data-testid="stAppViewContainer"] > .main div[data-baseweb="textarea"] textarea:disabled,
+    [data-testid="stAppViewContainer"] > .main div[data-baseweb="textarea"] textarea[disabled] {
+        color: #11324F !important;
+        -webkit-text-fill-color: #11324F !important;
+        opacity: 1 !important;
+        caret-color: #11324F !important;
+    }
+
+    /* Placeholder plus doux */
+    [data-testid="stAppViewContainer"] > .main .stTextArea textarea::placeholder,
+    [data-testid="stAppViewContainer"] > .main .stTextArea textarea:disabled::placeholder,
+    [data-testid="stAppViewContainer"] > .main div[data-baseweb="textarea"] textarea::placeholder,
+    [data-testid="stAppViewContainer"] > .main div[data-baseweb="textarea"] textarea:disabled::placeholder {
+        color: rgba(17, 50, 79, 0.55) !important;
+        -webkit-text-fill-color: rgba(17, 50, 79, 0.55) !important;
+        opacity: 1 !important;
+    }
 
     </style>
     """
