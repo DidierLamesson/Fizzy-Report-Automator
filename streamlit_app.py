@@ -423,6 +423,66 @@ def inject_brand_css():
         box-shadow: none !important;
         outline: none !important;
     }
+    
+    /* ===== HARMONISATION FOND + TYPO ZONE PRINCIPALE ===== */
+
+    /* Fond principal de l'app */
+    .stApp {
+        background: #F4F3EE !important;
+    }
+
+    /* Zone principale hors sidebar */
+    [data-testid="stAppViewContainer"] > .main {
+        background:
+            radial-gradient(circle at top left, rgba(17, 50, 79, 0.07) 0%, transparent 32%),
+            radial-gradient(circle at bottom right, rgba(117, 141, 90, 0.10) 0%, transparent 36%),
+            linear-gradient(180deg, #F7F5F0 0%, #EEF1E8 100%) !important;
+    }
+
+    /* Conteneur principal */
+    .main .block-container {
+        background: rgba(255, 255, 255, 0.24);
+        border: 1px solid rgba(17, 50, 79, 0.07);
+        border-radius: 28px;
+        padding: 2rem 2.2rem 2.4rem 2.2rem !important;
+    }
+
+    /* Titres dans la zone principale */
+    [data-testid="stAppViewContainer"] > .main h1,
+    [data-testid="stAppViewContainer"] > .main h2,
+    [data-testid="stAppViewContainer"] > .main h3 {
+        color: #11324F !important;
+    }
+
+    /* Texte courant dans la zone principale */
+    [data-testid="stAppViewContainer"] > .main p,
+    [data-testid="stAppViewContainer"] > .main label,
+    [data-testid="stAppViewContainer"] > .main .stMarkdown,
+    [data-testid="stAppViewContainer"] > .main span,
+    [data-testid="stAppViewContainer"] > .main li {
+        color: #2C3E50 !important;
+    }
+
+    /* Sous-textes / aides */
+    [data-testid="stAppViewContainer"] > .main small {
+        color: rgba(44, 62, 80, 0.78) !important;
+    }
+
+    /* Textareas et champs de la zone principale */
+    [data-testid="stAppViewContainer"] > .main .stTextArea textarea,
+    [data-testid="stAppViewContainer"] > .main .stTextInput input,
+    [data-testid="stAppViewContainer"] > .main div[data-baseweb="select"] > div {
+        background: rgba(255, 255, 255, 0.88) !important;
+        color: #11324F !important;
+        border: 1px solid rgba(17, 50, 79, 0.10) !important;
+        box-shadow: none !important;
+    }
+
+    /* Alertes / blocs info */
+    [data-testid="stAppViewContainer"] > .main [data-testid="stAlert"] {
+        background: rgba(255, 255, 255, 0.72) !important;
+        border: 1px solid rgba(17, 50, 79, 0.08) !important;
+    }
     </style>
     """
     )
