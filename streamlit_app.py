@@ -514,53 +514,46 @@ def inject_brand_css():
             height: auto;
             display: block;
         }
-        /* ===== LOGO SIDEBAR - placement propre et haut ===== */
+        /* ===== LOGO SIDEBAR - version propre en flux normal ===== */
 
-        section[data-testid="stSidebar"] {
-            position: relative !important;
+        /* Vrai conteneur du contenu sidebar */
+        section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
+            padding-top: 0.35rem !important;
         }
 
-        /* On réserve juste l'espace nécessaire pour que Nome clienti ne remonte pas sur le logo */
-        section[data-testid="stSidebar"] {
-        position: relative !important;
-        }
-
-        /* On pousse le contenu plus bas pour laisser une vraie place au logo */
-        section[data-testid="stSidebar"] .block-container {
-            padding-top: 10rem !important;
-        }
-
-        /* Wrapper Streamlit réel du logo */
+        /* Wrapper Streamlit du logo */
         section[data-testid="stSidebar"] .element-container:has(.soda-sidebar-brand) {
-            position: absolute !important;
-            top: 0.45rem !important;
-            left: 0.55rem !important;
-            width: 150px !important;
             margin: 0 !important;
             padding: 0 !important;
-            z-index: 40 !important;
         }
 
         /* Bloc logo */
         section[data-testid="stSidebar"] .soda-sidebar-brand {
-            display: block !important;
-            margin: 0 !important;
-            padding: 0 !important;
+            display: flex !important;
+            justify-content: flex-start !important;
+            align-items: center !important;
+            margin: 0 0 0.45rem 0 !important;
+            padding: 0 0 0 0.15rem !important;
             line-height: 0 !important;
         }
 
-        /* Image logo */
+        /* Image */
         section[data-testid="stSidebar"] .soda-sidebar-brand img {
             display: block !important;
-            width: 150px !important;
-            max-width: 150px !important;
+            width: 108px !important;
+            max-width: 108px !important;
             height: auto !important;
             object-fit: contain !important;
             margin: 0 !important;
             padding: 0 !important;
         }
 
-        /* Petit reset du premier champ */
+        /* Premier vrai widget après le logo */
+        section[data-testid="stSidebar"] .soda-sidebar-brand + * {
+            margin-top: 0 !important;
+        }
+
+        /* On enlève l'air inutile avant Nome clienti */
         section[data-testid="stSidebar"] .stTextInput {
             margin-top: 0 !important;
         }
