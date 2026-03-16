@@ -529,6 +529,7 @@ def inject_brand_css():
             margin: 0 0 0.45rem 0 !important;
             padding: 0 0 0 0.15rem !important;
             line-height: 0 !important;
+            transform: translateY(-14px) !important;
         }
 
         section[data-testid="stSidebar"] .soda-sidebar-brand img {
