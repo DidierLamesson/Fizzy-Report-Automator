@@ -121,9 +121,9 @@ def inject_brand_css():
         background:
             linear-gradient(
                 180deg,
-                rgba(17, 50, 79, 0.22) 0%,
-                rgba(40, 80, 77, 0.18) 55%,
-                rgba(117, 141, 90, 0.20) 100%
+                rgba(17, 50, 79, 0.50) 0%,
+                rgba(40, 80, 77, 0.50) 55%,
+                rgba(117, 141, 90, 0.50) 100%
             ),
             var(--soda-bg) !important;
         color: var(--soda-text) !important;
@@ -389,6 +389,40 @@ def inject_brand_css():
     /* Si un sous-wrapper interne existe encore, on le rend invisible */
     section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"] > div,
     section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"] > div {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+    
+    /* ===== Barre du haut = bleu SODA ===== */
+
+    header[data-testid="stHeader"] {
+        background: #11324F !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+
+    /* Zone interne du header */
+    header[data-testid="stHeader"] > div {
+        background: transparent !important;
+    }
+
+    /* Texte / icônes du header en blanc */
+    header[data-testid="stHeader"] * {
+        color: #FFFFFF !important;
+    }
+
+    /* Icônes Material du header */
+    header[data-testid="stHeader"] [data-testid="stIconMaterial"] {
+        color: #FFFFFF !important;
+    }
+
+    /* Boutons du header sans fond parasite */
+    header[data-testid="stHeader"] button,
+    header[data-testid="stHeader"] button:hover,
+    header[data-testid="stHeader"] button:focus,
+    header[data-testid="stHeader"] button:focus-visible,
+    header[data-testid="stHeader"] button:active {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
