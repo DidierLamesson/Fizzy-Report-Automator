@@ -99,6 +99,28 @@ st.set_page_config(
 )
 
 
+def _img_to_data_uri(path: Path) -> str:
+    if not path.exists():
+        return ""
+    mime = "image/png"
+    encoded = base64.b64encode(path.read_bytes()).decode("utf-8")
+    return f"data:{mime};base64,{encoded}"
+
+
+def inject_brand_logo():
+    soda_logo_uri = _img_to_data_uri(SODA_LOGO_PATH)
+    if not soda_logo_uri:
+        return
+
+    st.html(
+        f"""
+        <div class="soda-header-logo">
+            <img src="{soda_logo_uri}" alt="We are Soda" />
+        </div>
+        """
+    )
+
+
 def inject_brand_css():
     st.html(
         """
@@ -495,28 +517,6 @@ def inject_brand_css():
         }
         
         </style>
-        """
-    )
-
-
-def _img_to_data_uri(path: Path) -> str:
-    if not path.exists():
-        return ""
-    mime = "image/png"
-    encoded = base64.b64encode(path.read_bytes()).decode("utf-8")
-    return f"data:{mime};base64,{encoded}"
-
-
-def inject_brand_logo():
-    soda_logo_uri = _img_to_data_uri(SODA_LOGO_PATH)
-    if not soda_logo_uri:
-        return
-
-    st.html(
-        f"""
-        <div class="soda-header-logo">
-            <img src="{soda_logo_uri}" alt="We are Soda" />
-        </div>
         """
     )
 
