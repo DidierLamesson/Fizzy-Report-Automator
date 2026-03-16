@@ -335,10 +335,12 @@ div[data-baseweb="select"] > div {
     }
 
     /* Croix en blanc */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div button svg,
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div button svg * {
-        fill: #FFFFFF !important;
-        stroke: #FFFFFF !important;
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div button {
+        all: unset !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
     /* Hover propre, sans capsule */
