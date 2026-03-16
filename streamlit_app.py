@@ -502,11 +502,9 @@ def inject_brand_css():
         LOGO SIDEBAR
         ========================= */
 
-        /* Contenu sidebar sous le bouton */
+        /* Vrai conteneur du contenu sidebar */
         section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
             padding-top: 0.15rem !important;
-            position: relative !important;
-            z-index: 1 !important;
         }
 
         /* Wrapper Streamlit du logo */
@@ -516,22 +514,19 @@ def inject_brand_css():
             pointer-events: none !important;
         }
 
-        /* Bloc logo */
-        section[data-testid="stSidebar"] .soda-sidebar-brand,
-        section[data-testid="stSidebar"] .soda-sidebar-brand * {
-            pointer-events: none !important;
-        }
-
+        /* Bloc logo : bas-gauche + on récupère de la hauteur sous le logo */
         section[data-testid="stSidebar"] .soda-sidebar-brand {
             display: flex !important;
             justify-content: flex-start !important;
-            align-items: center !important;
-            margin: 0 0 0.45rem 0 !important;
+            align-items: flex-end !important;
+            height: 124px !important;
+            margin: 0 0 -18px 0 !important;
             padding: 0 0 0 0.15rem !important;
             line-height: 0 !important;
-            transform: translateY(-14px) !important;
+            pointer-events: none !important;
         }
 
+        /* Image */
         section[data-testid="stSidebar"] .soda-sidebar-brand img {
             display: block !important;
             width: 150px !important;
@@ -540,6 +535,7 @@ def inject_brand_css():
             object-fit: contain !important;
             margin: 0 !important;
             padding: 0 !important;
+            pointer-events: none !important;
         }
 
         /* Le bouton de collapse doit passer au-dessus de tout */
