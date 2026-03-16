@@ -261,36 +261,41 @@ def inject_brand_css():
         box-shadow: none !important;
     }
 
-    /* ===== Ligne du fichier uploadé ===== */
-    /* On cible le dernier bloc du file uploader = la ligne avec icône, nom, taille, croix */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child,
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child * {
+    /* ===== Ligne du fichier uploadé : patch minimal et non destructif ===== */
+
+    /* Texte du nom de fichier + taille en blanc */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child span,
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child small,
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child p {
         color: #FFFFFF !important;
     }
 
-    /* Icône fichier + croix */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child svg,
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child svg * {
-        fill: #FFFFFF !important;
+    /* Icônes en blanc sans casser leur forme */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child svg {
+        color: #FFFFFF !important;
+    }
+
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child svg path,
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child svg line,
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child svg polyline {
         stroke: #FFFFFF !important;
     }
 
-    /* Bouton croix : sans bulle */
+    /* Bouton croix : on enlève juste la capsule */
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child button {
-        all: unset !important;
-        cursor: pointer !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         border-radius: 0 !important;
         padding: 0 !important;
+        min-width: 0 !important;
+        width: auto !important;
+        height: auto !important;
     }
 
-    /* Hover croix */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child button:hover {
+    /* Hover propre */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child button:hover,
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child button:focus {
         background: transparent !important;
         box-shadow: none !important;
     }
