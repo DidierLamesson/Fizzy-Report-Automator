@@ -4632,4 +4632,6 @@ if uploaded and restaurant_input:
         )
 
 else:
-    st.info("Importe un fichier Excel et renseigne le nom client pour générer le PDF.")
+    st.info(
+        "Importa un file Excel e inserisci il nome del cliente per generare il PDF."
+    )
