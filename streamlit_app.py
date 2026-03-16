@@ -7,6 +7,7 @@ import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
+import base64
 import streamlit as st
 from matplotlib.patches import Arc, FancyBboxPatch
 from PIL import Image
@@ -57,6 +58,7 @@ FONT_IVY = FONTS_DIR / "fonnts.com-Ivy-Presto-Display-Light.otf"
 LOGO_PATH = IMG_DIR / "Logo Fizzy.png"
 ARROW_UP_PATH = IMG_DIR / "Arrow_up.png"
 ARROW_DOWN_PATH = IMG_DIR / "Arrow_down.png"
+SODA_LOGO_PATH = IMG_DIR / "logo_soda_white.png"
 
 
 # =========================
@@ -456,13 +458,72 @@ def inject_brand_css():
             border: 1px solid rgba(17, 50, 79, 0.08) !important;
         }
         
+        /* ===== LOGO SODA ===== */
+
+        /* Logo dans le header, à gauche de la zone Deploy */
+        .soda-header-logo {
+            position: fixed;
+            top: 0.72rem;
+            right: 8.5rem;
+            z-index: 99999;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .soda-header-logo img {
+            height: 100%;
+            width: auto;
+            display: block;
+            object-fit: contain;
+        }
+
+        /* Logo en haut de sidebar */
+        .soda-sidebar-logo {
+            margin-top: 0.2rem;
+            margin-bottom: 1.2rem;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .soda-sidebar-logo img {
+            max-width: 170px;
+            width: 100%;
+            height: auto;
+            display: block;
+        }
         
         </style>
         """
     )
 
 
+def _img_to_data_uri(path: Path) -> str:
+    if not path.exists():
+        return ""
+    mime = "image/png"
+    encoded = base64.b64encode(path.read_bytes()).decode("utf-8")
+    return f"data:{mime};base64,{encoded}"
+
+
+def inject_brand_logo():
+    soda_logo_uri = _img_to_data_uri(SODA_LOGO_PATH)
+    if not soda_logo_uri:
+        return
+
+    st.html(
+        f"""
+        <div class="soda-header-logo">
+            <img src="{soda_logo_uri}" alt="We are Soda" />
+        </div>
+        """
+    )
+
+
 inject_brand_css()
+
+inject_brand_logo()
 
 
 # =========================
@@ -4285,7 +4346,21 @@ def build_a4_page_3_png_preview_bytes(
 # =========================
 st.title("Report Fizzy Automatizzazione ⚡️")
 
-restaurant_input = st.sidebar.text_input("Nome clienti *", value="LEITAO")
+soda_logo_uri = _img_to_data_uri(SODA_LOGO_PATH)
+
+if soda_logo_uri:
+    st.sidebar.markdown(
+        f"""
+        <div class="soda-sidebar-logo">
+            <img src="{soda_logo_uri}" alt="We are Soda" />
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+restaurant_input = st.sidebar.text_input(
+    "Nome clienti *", value="es: Ristorante Da Mario"
+)
 uploaded = st.sidebar.file_uploader("Caricare il Report (.xslx))", type="xlsx")
 
 if uploaded and restaurant_input:
