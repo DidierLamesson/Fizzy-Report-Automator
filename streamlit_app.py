@@ -110,16 +110,17 @@ def inject_brand_css():
         --soda-text: #1B252E;
         --soda-bg: #F5F3EE;
         --soda-white: #FFFFFF;
-        --soda-border: rgba(17, 50, 79, 0.12);
+        --soda-border: rgba(17, 50, 79, 0.16);
     }
 
     html, body, [class*="css"] {
         font-family: "Epilogue", sans-serif;
     }
 
+    /* Fond général clair */
     .stApp {
         background: var(--soda-bg);
-        color: var(--soda-text);
+        color: var(--soda-text) !important;
     }
 
     .main .block-container {
@@ -138,12 +139,17 @@ def inject_brand_css():
         color: white !important;
     }
 
-    /* Titre principal */
+    /* Titres */
     h1, h2, h3 {
         font-family: "Epilogue", sans-serif !important;
         font-weight: 700 !important;
         letter-spacing: -0.03em;
         color: var(--soda-blue);
+    }
+
+    /* Texte courant */
+    p, label, .stMarkdown {
+        color: var(--soda-text) !important;
     }
 
     /* Séparateurs */
@@ -166,36 +172,44 @@ def inject_brand_css():
 
     .stButton > button:hover,
     .stDownloadButton > button:hover {
-        transform: translateY(-1px);
         filter: brightness(0.98);
     }
 
-    /* Inputs */
+    /* Inputs classiques */
     .stTextInput input,
     .stTextArea textarea,
-    div[data-baseweb="select"] > div,
-    [data-testid="stFileUploader"] section {
+    div[data-baseweb="select"] > div {
         background: var(--soda-white) !important;
         color: var(--soda-text) !important;
         border: 1px solid var(--soda-border) !important;
-        border-radius: 18px !important;
+        border-radius: 16px !important;
+        box-shadow: none !important;
     }
 
-    /* Labels */
-    label, .stMarkdown, p {
-        font-family: "Epilogue", sans-serif !important;
-    }
-
-    /* File uploader */
+    /* Enlève la grosse boîte externe de l'uploader */
     [data-testid="stFileUploader"] {
-        background: rgba(255,255,255,0.5);
-        border-radius: 22px;
-        padding: 0.35rem;
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
     }
 
-    /* Info box */
+    /* Garde une seule vraie dropzone propre */
+    [data-testid="stFileUploader"] section {
+        background: var(--soda-white) !important;
+        border: 1px dashed rgba(17, 50, 79, 0.20) !important;
+        border-radius: 24px !important;
+        padding: 1.25rem !important;
+        box-shadow: none !important;
+    }
+
+    /* Texte du file uploader */
+    [data-testid="stFileUploader"] * {
+        color: var(--soda-text) !important;
+    }
+
+    /* Alertes / messages */
     [data-testid="stAlert"] {
-        border-radius: 20px !important;
+        border-radius: 18px !important;
         border: 1px solid var(--soda-border) !important;
     }
     </style>
