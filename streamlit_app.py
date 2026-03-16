@@ -118,15 +118,15 @@ def inject_brand_css():
     }
 
     .stApp {
-    background:
-        linear-gradient(
-            180deg,
-            rgba(17, 50, 79) 0%,
-            rgba(40, 80, 77) 55%,
-            rgba(117, 141, 90) 100%
-        ),
-        var(--soda-bg) !important;
-    color: var(--soda-text) !important;
+        background:
+            linear-gradient(
+                180deg,
+                rgba(17, 50, 79, 0.22) 0%,
+                rgba(40, 80, 77, 0.18) 55%,
+                rgba(117, 141, 90, 0.20) 100%
+            ),
+            var(--soda-bg) !important;
+        color: var(--soda-text) !important;
     }
 
     .main .block-container {
