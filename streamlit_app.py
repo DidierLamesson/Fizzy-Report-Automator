@@ -135,7 +135,13 @@ def inject_brand_css():
         border-right: 1px solid rgba(255,255,255,0.08);
     }
 
-    section[data-testid="stSidebar"] * {
+    section[data-testid="stSidebar"] .stMarkdown,
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] p,
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3,
+    section[data-testid="stSidebar"] small {
         color: white !important;
     }
 
@@ -260,36 +266,47 @@ div[data-baseweb="select"] > div {
         border-radius: 18px !important;
         border: 1px solid var(--soda-border) !important;
     }
-    /* ===== CHAMP "Nome clienti" - version simple et propre ===== */
+    /* ===== SIDEBAR - champ Nome clienti ===== */
 
-    /* On neutralise les wrappers */
-    .stTextInput > div,
-    .stTextInput div[data-baseweb="base-input"],
-    .stTextInput div[data-baseweb="input"] {
+    section[data-testid="stSidebar"] .stTextInput > div {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         padding: 0 !important;
     }
 
-    /* On stylise directement le champ visible */
-    .stTextInput input {
+    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"],
+    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"] {
         background: var(--soda-white) !important;
-        color: var(--soda-blue) !important;
         border: 1px solid rgba(17, 50, 79, 0.18) !important;
         border-radius: 22px !important;
         min-height: 56px !important;
-        padding: 0 1rem !important;
+        padding: 0 0.9rem !important;
         box-shadow: none !important;
-        outline: none !important;
+        display: flex !important;
+        align-items: center !important;
     }
 
-    /* Focus */
-    .stTextInput input:focus {
-        border: 1px solid rgba(17, 50, 79, 0.28) !important;
+    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"] > div,
+    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"] > div {
+        background: transparent !important;
+        border: none !important;
         box-shadow: none !important;
-        outline: none !important;
+        padding: 0 !important;
     }
+
+    section[data-testid="stSidebar"] .stTextInput input {
+        background: transparent !important;
+        color: var(--soda-blue) !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        font-family: "Epilogue", sans-serif !important;
+        font-weight: 500 !important;
+    }
+    
+    
     </style>
     """
     )
