@@ -244,22 +244,6 @@ def inject_brand_css():
             color: #FFFFFF !important;
         }
 
-        [data-testid="stSidebarCollapsedControl"] button,
-        section[data-testid="stSidebar"] button[kind="header"],
-        [data-testid="stSidebarCollapsedControl"] button:hover,
-        [data-testid="stSidebarCollapsedControl"] button:focus,
-        [data-testid="stSidebarCollapsedControl"] button:focus-visible,
-        [data-testid="stSidebarCollapsedControl"] button:active,
-        section[data-testid="stSidebar"] button[kind="header"]:hover,
-        section[data-testid="stSidebar"] button[kind="header"]:focus,
-        section[data-testid="stSidebar"] button[kind="header"]:focus-visible,
-        section[data-testid="stSidebar"] button[kind="header"]:active {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            outline: none !important;
-        }
-
         /* =========================
            5) SIDEBAR - INPUT CLIENT
         ========================= */
@@ -514,31 +498,30 @@ def inject_brand_css():
             height: auto;
             display: block;
         }
-        /* ===== LOGO SIDEBAR - patch haut / gauche / plus grand ===== */
+        /* =========================
+        LOGO SIDEBAR
+        ========================= */
 
-        /* La sidebar devient le repère de positionnement du logo */
-        section[data-testid="stSidebar"] {
-            position: relative !important;
-        }
-
-        /* On réserve de la place pour éviter que Nome clienti remonte sous le logo */
+        /* Contenu sidebar sous le bouton */
         section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
-            padding-top: 7.25rem !important;
+            padding-top: 0.15rem !important;
+            position: relative !important;
+            z-index: 1 !important;
         }
 
-        /* Wrapper Streamlit du logo : sorti du flux et collé en haut à gauche */
+        /* Wrapper Streamlit du logo */
         section[data-testid="stSidebar"] .element-container:has(.soda-sidebar-brand) {
-            position: absolute !important;
-            top: 0.90rem !important;
-            left: 0.75rem !important;
-            right: 1rem !important;
-            width: auto !important;
             margin: 0 !important;
             padding: 0 !important;
-            z-index: 60 !important;
+            pointer-events: none !important;
         }
-        
+
         /* Bloc logo */
+        section[data-testid="stSidebar"] .soda-sidebar-brand,
+        section[data-testid="stSidebar"] .soda-sidebar-brand * {
+            pointer-events: none !important;
+        }
+
         section[data-testid="stSidebar"] .soda-sidebar-brand {
             display: flex !important;
             justify-content: flex-start !important;
@@ -546,36 +529,32 @@ def inject_brand_css():
             margin: 0 0 0.45rem 0 !important;
             padding: 0 0 0 0.15rem !important;
             line-height: 0 !important;
-            pointer-events: none !important;
         }
 
-        /* Image */
         section[data-testid="stSidebar"] .soda-sidebar-brand img {
             display: block !important;
-            width: 168px !important;
-            max-width: 168px !important;
+            width: 150px !important;
+            max-width: 150px !important;
             height: auto !important;
             object-fit: contain !important;
             margin: 0 !important;
             padding: 0 !important;
-            pointer-events: none !important;
         }
 
-        /* Flèche toujours au-dessus */
-        section[data-testid="stSidebar"] button[kind="header"],
-        [data-testid="stSidebarCollapsedControl"] button {
+        /* Le bouton de collapse doit passer au-dessus de tout */
+        [data-testid="stSidebarCollapsedControl"],
+        [data-testid="stSidebarCollapsedControl"] button,
+        section[data-testid="stSidebar"] button[kind="header"] {
             position: relative !important;
-            z-index: 2000 !important;
+            z-index: 99999 !important;
+            pointer-events: auto !important;
         }
 
-        /* Premier vrai widget après le logo */
-        section[data-testid="stSidebar"] .soda-sidebar-brand + * {
-            margin-top: 0 !important;
-        }
-
-        /* On enlève l'air inutile avant Nome clienti */
-        section[data-testid="stSidebar"] .stTextInput {
-            margin-top: 0 !important;
+        /* Hover visible pour vérifier que le bouton est bien récupéré */
+        [data-testid="stSidebarCollapsedControl"] button:hover,
+        section[data-testid="stSidebar"] button[kind="header"]:hover {
+            background: rgba(255, 255, 255, 0.10) !important;
+            border-radius: 10px !important;
         }
 
         </style>
@@ -4650,4 +4629,4 @@ if uploaded and restaurant_input:
         )
 
 else:
-    st.info("Importe un fichier Excel et renseigne le nom client pour générer le PDF.")
+    st.info("Importa il Report e inserisci il nome del cliente per generare il PDF.")
