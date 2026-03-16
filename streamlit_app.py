@@ -314,6 +314,63 @@ def inject_brand_css():
     z-index: 2;
     }
     
+    /* ===== PATCH FINAL MINIMAL ===== */
+
+    /* 1) Flèche de collapse / expand de la sidebar en blanc */
+    section[data-testid="stSidebar"] button[kind="header"],
+    div[data-testid="stSidebarCollapsedControl"] button {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        color: #FFFFFF !important;
+    }
+
+    section[data-testid="stSidebar"] button[kind="header"] svg,
+    div[data-testid="stSidebarCollapsedControl"] button svg {
+        color: #FFFFFF !important;
+    }
+
+    section[data-testid="stSidebar"] button[kind="header"] svg path,
+    section[data-testid="stSidebar"] button[kind="header"] svg line,
+    section[data-testid="stSidebar"] button[kind="header"] svg polyline,
+    div[data-testid="stSidebarCollapsedControl"] button svg path,
+    div[data-testid="stSidebarCollapsedControl"] button svg line,
+    div[data-testid="stSidebarCollapsedControl"] button svg polyline {
+        stroke: #FFFFFF !important;
+    }
+
+    section[data-testid="stSidebar"] button[kind="header"]:hover,
+    section[data-testid="stSidebar"] button[kind="header"]:focus,
+    section[data-testid="stSidebar"] button[kind="header"]:focus-visible,
+    section[data-testid="stSidebar"] button[kind="header"]:active,
+    div[data-testid="stSidebarCollapsedControl"] button:hover,
+    div[data-testid="stSidebarCollapsedControl"] button:focus,
+    div[data-testid="stSidebarCollapsedControl"] button:focus-visible,
+    div[data-testid="stSidebarCollapsedControl"] button:active {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    /* 2) On enlève le rectangle quand le champ Nome clienti est cliqué */
+    section[data-testid="stSidebar"] .stTextInput input,
+    section[data-testid="stSidebar"] .stTextInput input:focus,
+    section[data-testid="stSidebar"] .stTextInput input:focus-visible,
+    section[data-testid="stSidebar"] .stTextInput input:active {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+
+    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"]:focus-within,
+    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"]:focus-within {
+        border: 1px solid rgba(17, 50, 79, 0.18) !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
     </style>
     """
     )
