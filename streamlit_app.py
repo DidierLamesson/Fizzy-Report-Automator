@@ -529,7 +529,7 @@ def inject_brand_css():
         section[data-testid="stSidebar"] .element-container:has(.soda-sidebar-brand) {
             position: absolute !important;
             top: 0.65rem !important;
-            left: 0.75rem !important;
+            left: 0.50rem !important;
             width: auto !important;
             margin: 0 !important;
             padding: 0 !important;
@@ -547,8 +547,8 @@ def inject_brand_css():
         /* L'image */
         section[data-testid="stSidebar"] .soda-sidebar-brand img {
             display: block !important;
-            width: 92px !important;
-            max-width: 92px !important;
+            width: 150px !important;
+            max-width: 150px !important;
             height: auto !important;
             object-fit: contain !important;
             margin: 0 !important;
@@ -557,7 +557,7 @@ def inject_brand_css():
 
         /* On évite une marge parasite sur le premier widget après le logo */
         section[data-testid="stSidebar"] .stTextInput {
-            margin-top: 0 !important;
+            margin-top: 0.25rem !important;
         }
         
         </style>
