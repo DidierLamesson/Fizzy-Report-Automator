@@ -456,38 +456,33 @@ def inject_brand_css():
             border: 1px solid rgba(17, 50, 79, 0.08) !important;
         }
         
-        /* ===== PATCH ULTRA CIBLÉ - textareas disabled "Proposta paragrafo" ===== */
+        /* ===== PATCH RÉEL pour les textareas disabled de la zone principale ===== */
 
-        /* Le texte réel des textareas disabled */
-        [data-testid="stAppViewContainer"] > .main textarea[disabled],
-        [data-testid="stAppViewContainer"] > .main textarea:disabled {
+        section[data-testid="stMain"] .stTextArea textarea[disabled],
+        section[data-testid="stMain"] .stTextArea textarea:disabled,
+        section[data-testid="stMain"] textarea[disabled][aria-label="💡 Proposta paragrafo 1"],
+        section[data-testid="stMain"] textarea[disabled][aria-label="💡 Proposta paragrafo 2"] {
             color: #11324F !important;
             -webkit-text-fill-color: #11324F !important;
+            opacity: 1 !important;
+            filter: none !important;
             caret-color: #11324F !important;
+        }
+
+        /* Wrapper du textarea : Streamlit/BaseWeb baisse parfois l'opacité ici */
+        section[data-testid="stMain"] .stTextArea div[data-baseweb="base-textarea"],
+        section[data-testid="stMain"] .stTextArea div[data-baseweb="textarea"],
+        section[data-testid="stMain"] .stTextArea div[data-baseweb="base-textarea"] *,
+        section[data-testid="stMain"] .stTextArea div[data-baseweb="textarea"] * {
             opacity: 1 !important;
             filter: none !important;
         }
 
-        /* Ciblage encore plus précis sur tes 2 champs propositions */
-        [data-testid="stAppViewContainer"] > .main textarea[disabled][aria-label="💡 Proposta paragrafo 1"],
-        [data-testid="stAppViewContainer"] > .main textarea[disabled][aria-label="💡 Proposta paragrafo 2"] {
-            color: #11324F !important;
-            -webkit-text-fill-color: #11324F !important;
-            opacity: 1 !important;
-            filter: none !important;
-        }
-
-        /* Si le parent applique une opacité de champ désactivé, on la neutralise */
-        [data-testid="stAppViewContainer"] > .main *:has(> textarea[disabled][aria-label="💡 Proposta paragrafo 1"]),
-        [data-testid="stAppViewContainer"] > .main *:has(> textarea[disabled][aria-label="💡 Proposta paragrafo 2"]) {
-            opacity: 1 !important;
-            filter: none !important;
-        }
-
-        /* Même chose pour le wrapper juste au-dessus si Streamlit en met un autre */
-        [data-testid="stAppViewContainer"] > .main *:has(textarea[disabled][aria-label="💡 Proposta paragrafo 1"]),
-        [data-testid="stAppViewContainer"] > .main *:has(textarea[disabled][aria-label="💡 Proposta paragrafo 2"]) {
-            opacity: 1 !important;
+        /* Fond + bordure conservés, mais texte forcé en bleu */
+        section[data-testid="stMain"] .stTextArea textarea[disabled],
+        section[data-testid="stMain"] .stTextArea textarea:disabled {
+            background: rgba(255, 255, 255, 0.88) !important;
+            border: 1px solid rgba(17, 50, 79, 0.10) !important;
         }
         </style>
         """
