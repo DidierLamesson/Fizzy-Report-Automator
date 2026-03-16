@@ -308,44 +308,44 @@ div[data-baseweb="select"] > div {
     
     /* ===== Fichier déjà uploadé dans la sidebar ===== */
 
-/* Texte + icône en blanc */
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div,
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div * {
-    color: #FFFFFF !important;
-    fill: #FFFFFF !important;
-}
+    /* Texte + icône en blanc */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div,
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div * {
+        color: #FFFFFF !important;
+        fill: #FFFFFF !important;
+    }
 
-/* Nom du fichier et taille */
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div small,
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div span,
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div p {
-    color: #FFFFFF !important;
-}
+    /* Nom du fichier et taille */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div small,
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div span,
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div p {
+        color: #FFFFFF !important;
+    }
 
-/* Bouton de suppression : enlève la bulle */
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div button {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    padding: 0 !important;
-    min-width: auto !important;
-    width: auto !important;
-    height: auto !important;
-}
+    /* Bouton de suppression : enlève la bulle */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div button {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        min-width: auto !important;
+        width: auto !important;
+        height: auto !important;
+    }
 
-/* Croix en blanc */
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div button svg,
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div button svg * {
-    fill: #FFFFFF !important;
-    stroke: #FFFFFF !important;
-}
+    /* Croix en blanc */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div button svg,
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div button svg * {
+        fill: #FFFFFF !important;
+        stroke: #FFFFFF !important;
+    }
 
-/* Hover propre, sans capsule */
-section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div button:hover {
-    background: transparent !important;
-    box-shadow: none !important;
-}
+    /* Hover propre, sans capsule */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div button:hover {
+        background: transparent !important;
+        box-shadow: none !important;
+    }
     
     </style>
     """
