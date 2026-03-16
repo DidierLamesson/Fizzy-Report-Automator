@@ -518,7 +518,7 @@ def inject_brand_css():
 
         /* Vrai conteneur du contenu sidebar */
         section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
-            padding-top: 0.35rem !important;
+            padding-top: 0.15rem !important;
         }
 
         /* Wrapper Streamlit du logo */
@@ -532,8 +532,8 @@ def inject_brand_css():
             display: flex !important;
             justify-content: flex-start !important;
             align-items: center !important;
-            margin: 0 0 0.05rem 0 !important;
-            padding: 0 0 0 0.05rem !important;
+            margin: 0 0 0.45rem 0 !important;
+            padding: 0 0 0 0.15rem !important;
             line-height: 0 !important;
         }
 
