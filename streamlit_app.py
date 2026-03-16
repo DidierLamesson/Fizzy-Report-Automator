@@ -484,23 +484,7 @@ def inject_brand_css():
         border: 1px solid rgba(17, 50, 79, 0.08) !important;
     }
     
-    /* ===== Texte bleu à l'intérieur des box de la zone principale ===== */
 
-    [data-testid="stAppViewContainer"] > .main .stTextArea textarea,
-    [data-testid="stAppViewContainer"] > .main .stTextInput input,
-    [data-testid="stAppViewContainer"] > .main div[data-baseweb="textarea"] textarea {
-        color: #11324F !important;
-        -webkit-text-fill-color: #11324F !important;
-        caret-color: #11324F !important;
-    }
-
-    /* Placeholder en bleu adouci */
-    [data-testid="stAppViewContainer"] > .main .stTextArea textarea::placeholder,
-    [data-testid="stAppViewContainer"] > .main .stTextInput input::placeholder,
-    [data-testid="stAppViewContainer"] > .main div[data-baseweb="textarea"] textarea::placeholder {
-        color: rgba(17, 50, 79, 0.55) !important;
-        -webkit-text-fill-color: rgba(17, 50, 79, 0.55) !important;
-    }
 
     </style>
     """
