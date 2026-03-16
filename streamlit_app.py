@@ -514,6 +514,38 @@ def inject_brand_css():
             height: auto;
             display: block;
         }
+        /* ===== Logo sidebar : placement propre ===== */
+
+        section[data-testid="stSidebar"] .block-container {
+            padding-top: 0.9rem !important;
+        }
+
+        section[data-testid="stSidebar"] .soda-sidebar-brand {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            margin: 0 0 0.55rem 0 !important;
+            padding: 0 !important;
+        }
+
+        section[data-testid="stSidebar"] .soda-sidebar-brand img {
+            display: block;
+            width: 112px;
+            max-width: 112px;
+            height: auto;
+            object-fit: contain;
+            margin: 0 !important;
+        }
+
+        /* Réduit l'espace juste après le logo */
+        section[data-testid="stSidebar"] .soda-sidebar-brand + div {
+            margin-top: 0 !important;
+        }
+
+        /* Le premier champ remonte un peu */
+        section[data-testid="stSidebar"] .stTextInput {
+            margin-top: 0.15rem !important;
+        }
         
         </style>
         """
@@ -4350,7 +4382,7 @@ soda_logo_uri = _img_to_data_uri(LOGO_PATH)
 if soda_logo_uri:
     st.sidebar.markdown(
         f"""
-        <div class="soda-sidebar-logo">
+        <div class="soda-sidebar-brand">
             <img src="{soda_logo_uri}" alt="We are Soda" />
         </div>
         """,
