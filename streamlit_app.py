@@ -527,7 +527,7 @@ def inject_brand_css():
 
         /* On pousse le contenu plus bas pour laisser une vraie place au logo */
         section[data-testid="stSidebar"] .block-container {
-            padding-top: 8.2rem !important;
+            padding-top: 10rem !important;
         }
 
         /* Wrapper Streamlit réel du logo */
