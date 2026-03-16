@@ -514,43 +514,52 @@ def inject_brand_css():
             height: auto;
             display: block;
         }
-        /* ===== LOGO SIDEBAR - version propre en flux normal ===== */
+        /* ===== LOGO SIDEBAR - ancré en bas de la sidebar visible ===== */
 
-        /* Vrai conteneur du contenu sidebar */
-        section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
-            padding-top: 0.15rem !important;
+        /* La sidebar devient le repère du logo fixé en bas */
+        section[data-testid="stSidebar"] {
+            position: relative !important;
         }
 
-        /* Wrapper Streamlit du logo */
+        /* Le contenu garde sa hauteur normale, avec une réserve en bas pour le logo */
+        section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] {
+            padding-top: 0.15rem !important;
+            padding-bottom: 11.5rem !important;
+        }
+
+        /* Wrapper Streamlit du logo : fixé au bas-gauche de la zone visible */
         section[data-testid="stSidebar"] .element-container:has(.soda-sidebar-brand) {
+            position: absolute !important;
+            left: 0.15rem !important;
+            right: auto !important;
+            bottom: 0.9rem !important;
             margin: 0 !important;
             padding: 0 !important;
+            z-index: 3 !important;
+            pointer-events: none !important;
         }
 
         /* Bloc logo */
         section[data-testid="stSidebar"] .soda-sidebar-brand {
             display: flex !important;
             justify-content: flex-start !important;
-            align-items: center !important;
-            margin: 0 0 0.45rem 0 !important;
-            padding: 0 0 0 0.15rem !important;
+            align-items: flex-end !important;
+            margin: 0 !important;
+            padding: 0 !important;
             line-height: 0 !important;
+            pointer-events: none !important;
         }
 
         /* Image */
         section[data-testid="stSidebar"] .soda-sidebar-brand img {
             display: block !important;
-            width: 108px !important;
-            max-width: 108px !important;
+            width: 150px !important;
+            max-width: 150px !important;
             height: auto !important;
             object-fit: contain !important;
             margin: 0 !important;
             padding: 0 !important;
-        }
-
-        /* Premier vrai widget après le logo */
-        section[data-testid="stSidebar"] .soda-sidebar-brand + * {
-            margin-top: 0 !important;
+            pointer-events: none !important;
         }
 
         /* On enlève l'air inutile avant Nome clienti */
@@ -4390,13 +4399,6 @@ st.title("Report Fizzy Automatizzazione ⚡️")
 
 soda_logo_uri = _img_to_data_uri(LOGO_PATH)
 
-restaurant_input = st.sidebar.text_input(
-    "Nome clienti *", value="es: Ristorante Da Mario"
-)
-uploaded = st.sidebar.file_uploader("Caricare il Report (.xslx))", type="xlsx")
-
-# Logo déplacé en bas du flux de la sidebar pour ne plus interférer avec
-# le bouton de collapse en haut.
 if soda_logo_uri:
     st.sidebar.markdown(
         f"""
@@ -4406,6 +4408,11 @@ if soda_logo_uri:
         """,
         unsafe_allow_html=True,
     )
+
+restaurant_input = st.sidebar.text_input(
+    "Nome clienti *", value="es: Ristorante Da Mario"
+)
+uploaded = st.sidebar.file_uploader("Caricare il Report (.xslx))", type="xlsx")
 
 if uploaded and restaurant_input:
     data = load_data(uploaded)
@@ -4633,5 +4640,5 @@ if uploaded and restaurant_input:
 
 else:
     st.info(
-        "Importa un file Excel e inserisci il nome del cliente per generare il PDF."
+        "Importa un file Excel e inserisci il nome del cliente per generare il PDF. 📄"
     )
