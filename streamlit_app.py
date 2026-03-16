@@ -230,124 +230,70 @@ div[data-baseweb="select"] > div {
     box-shadow: none !important;
 }
 
-    /* ===== FILE UPLOADER ===== */
+ /* ===== FILE UPLOADER ===== */
 
-    [data-testid="stFileUploader"] {
-        background: transparent !important;
-        border: none !important;
-        padding: 0 !important;
-    }
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+}
 
-    [data-testid="stFileUploader"] section {
-        background: var(--soda-white) !important;
-        border: 1px dashed rgba(17, 50, 79, 0.20) !important;
-        border-radius: 24px !important;
-        padding: 1.25rem !important;
-        box-shadow: none !important;
-    }
+/* Dropzone */
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] section {
+    background: var(--soda-white) !important;
+    border: 1px dashed rgba(17, 50, 79, 0.20) !important;
+    border-radius: 24px !important;
+    padding: 1.25rem !important;
+    box-shadow: none !important;
+}
 
-    /* Tout le texte de la zone d'upload en bleu SODA */
-    [data-testid="stFileUploader"] section * {
-        color: var(--soda-blue) !important;
-    }
+/* Texte dans la dropzone */
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] section * {
+    color: var(--soda-blue) !important;
+}
 
-    /* Bouton dans la dropzone */
-    [data-testid="stFileUploader"] button {
-        background: var(--soda-white) !important;
-        color: var(--soda-blue) !important;
-        border: 1px solid rgba(17, 50, 79, 0.18) !important;
-        border-radius: 16px !important;
-        box-shadow: none !important;
-    }
-    }
+/* Bouton Browse files */
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] section button {
+    background: var(--soda-white) !important;
+    color: var(--soda-blue) !important;
+    border: 1px solid rgba(17, 50, 79, 0.18) !important;
+    border-radius: 16px !important;
+    box-shadow: none !important;
+}
 
-    /* Alertes / messages */
-    [data-testid="stAlert"] {
-        border-radius: 18px !important;
-        border: 1px solid var(--soda-border) !important;
-    }
-    /* ===== SIDEBAR - champ Nome clienti ===== */
+/* ===== Ligne du fichier uploadé ===== */
+/* On cible le dernier bloc du file uploader = la ligne avec icône, nom, taille, croix */
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child,
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child * {
+    color: #FFFFFF !important;
+}
 
-    section[data-testid="stSidebar"] .stTextInput > div {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-    }
+/* Icône fichier + croix */
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child svg,
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child svg * {
+    fill: #FFFFFF !important;
+    stroke: #FFFFFF !important;
+}
 
-    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"],
-    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"] {
-        background: var(--soda-white) !important;
-        border: 1px solid rgba(17, 50, 79, 0.18) !important;
-        border-radius: 22px !important;
-        min-height: 56px !important;
-        padding: 0 0.9rem !important;
-        box-shadow: none !important;
-        display: flex !important;
-        align-items: center !important;
-    }
+/* Bouton croix : sans bulle */
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child button {
+    all: unset !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+}
 
-    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"] > div,
-    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"] > div {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-    }
-
-    section[data-testid="stSidebar"] .stTextInput input {
-        background: transparent !important;
-        color: var(--soda-blue) !important;
-        border: none !important;
-        outline: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        font-family: "Epilogue", sans-serif !important;
-        font-weight: 500 !important;
-    }
-    
-    /* ===== Fichier déjà uploadé dans la sidebar ===== */
-
-    /* Texte + icône en blanc */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div,
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div * {
-        color: #FFFFFF !important;
-        fill: #FFFFFF !important;
-    }
-
-    /* Nom du fichier et taille */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div small,
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div span,
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div p {
-        color: #FFFFFF !important;
-    }
-
-    /* Bouton de suppression : enlève la bulle */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div button {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        border-radius: 0 !important;
-        padding: 0 !important;
-        min-width: auto !important;
-        width: auto !important;
-        height: auto !important;
-    }
-
-    /* Croix en blanc */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div button {
-        all: unset !important;
-        cursor: pointer !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-
-    /* Hover propre, sans capsule */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] + div button:hover {
-        background: transparent !important;
-        box-shadow: none !important;
-    }
+/* Hover croix */
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child button:hover {
+    background: transparent !important;
+    box-shadow: none !important;
+}
     
     </style>
     """
