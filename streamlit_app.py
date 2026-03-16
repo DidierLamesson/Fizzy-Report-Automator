@@ -537,27 +537,35 @@ def inject_brand_css():
             padding: 0 !important;
             z-index: 60 !important;
         }
-
+        
         /* Bloc logo */
         section[data-testid="stSidebar"] .soda-sidebar-brand {
             display: flex !important;
             justify-content: flex-start !important;
-            align-items: flex-start !important;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
+            align-items: center !important;
+            margin: 0 0 0.45rem 0 !important;
+            padding: 0 0 0 0.15rem !important;
             line-height: 0 !important;
+            pointer-events: none !important;
         }
 
-        /* Image : beaucoup plus grande et alignée sur la marge gauche de Nome clienti */
+        /* Image */
         section[data-testid="stSidebar"] .soda-sidebar-brand img {
             display: block !important;
             width: 168px !important;
-            max-width: none !important;
+            max-width: 168px !important;
             height: auto !important;
             object-fit: contain !important;
             margin: 0 !important;
             padding: 0 !important;
+            pointer-events: none !important;
+        }
+
+        /* Flèche toujours au-dessus */
+        section[data-testid="stSidebar"] button[kind="header"],
+        [data-testid="stSidebarCollapsedControl"] button {
+            position: relative !important;
+            z-index: 2000 !important;
         }
 
         /* Premier vrai widget après le logo */
@@ -4415,7 +4423,7 @@ if soda_logo_uri:
 restaurant_input = st.sidebar.text_input(
     "Nome clienti *", value="es: Ristorante Da Mario"
 )
-uploaded = st.sidebar.file_uploader("Caricare il Report (.xslx))", type="xlsx")
+uploaded = st.sidebar.file_uploader("Caricare il Report (.xlsx)", type="xlsx")
 
 if uploaded and restaurant_input:
     data = load_data(uploaded)
