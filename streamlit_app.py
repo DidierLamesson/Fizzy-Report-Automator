@@ -181,56 +181,53 @@ def inject_brand_css():
         filter: brightness(0.98);
     }
 
-    /* ===== INPUT "Nome clienti" ===== */
+    /* ===== SIDEBAR - champ Nome clienti ===== */
 
-    /* Conteneur BaseWeb du text input */
-    div[data-baseweb="input"] {
+    section[data-testid="stSidebar"] .stTextInput > div {
         background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
     }
 
-    div[data-baseweb="input"] > div {
+    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"],
+    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"] {
         background: var(--soda-white) !important;
         border: 1px solid rgba(17, 50, 79, 0.18) !important;
-        border-radius: 24px !important;
-        box-shadow: none !important;
+        border-radius: 22px !important;
         min-height: 56px !important;
+        padding: 0 0.9rem !important;
+        box-shadow: none !important;
+        display: flex !important;
+        align-items: center !important;
     }
 
-    /* Champ texte */
-    div[data-baseweb="input"] input {
+    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"] > div,
+    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"] > div {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+
+    section[data-testid="stSidebar"] .stTextInput input {
+        background: transparent !important;
         color: var(--soda-blue) !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
         font-family: "Epilogue", sans-serif !important;
         font-weight: 500 !important;
-        background: transparent !important;
-        box-shadow: none !important;
     }
 
-    /* Focus : on enlève les halos moches */
-    div[data-baseweb="input"] > div:focus-within {
-        border: 1px solid rgba(17, 50, 79, 0.28) !important;
-        box-shadow: none !important;
-    }
-
-    /* Textarea */
-    .stTextArea textarea,
-    div[data-baseweb="textarea"] textarea {
-        background: var(--soda-white) !important;
-        color: var(--soda-blue) !important;
+    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"]:focus-within,
+    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"]:focus-within {
         border: 1px solid rgba(17, 50, 79, 0.18) !important;
-        border-radius: 24px !important;
         box-shadow: none !important;
     }
 
-    /* Selectbox */
-    div[data-baseweb="select"] > div {
-        background: var(--soda-white) !important;
-        color: var(--soda-blue) !important;
-        border: 1px solid rgba(17, 50, 79, 0.18) !important;
-        border-radius: 24px !important;
-        box-shadow: none !important;
-    }
-
-    /* ===== FILE UPLOADER ===== */
+    /* ===== FILE UPLOADER SIDEBAR - version conservative ===== */
 
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
         background: transparent !important;
@@ -238,7 +235,13 @@ def inject_brand_css():
         padding: 0 !important;
     }
 
-    /* Dropzone */
+    /* Par défaut, tout le widget uploader est blanc */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"],
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] * {
+        color: #FFFFFF !important;
+    }
+
+    /* La dropzone reste blanche avec texte bleu */
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] section {
         background: var(--soda-white) !important;
         border: 1px dashed rgba(17, 50, 79, 0.20) !important;
@@ -247,45 +250,29 @@ def inject_brand_css():
         box-shadow: none !important;
     }
 
-    /* Texte dans la dropzone */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] section,
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] section * {
         color: var(--soda-blue) !important;
     }
 
-    /* Bouton Browse files */
+    /* Bouton Browse files restauré proprement */
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] section button {
         background: var(--soda-white) !important;
         color: var(--soda-blue) !important;
         border: 1px solid rgba(17, 50, 79, 0.18) !important;
         border-radius: 16px !important;
         box-shadow: none !important;
+        padding: 0.5rem 0.9rem !important;
     }
 
-    /* ===== Ligne du fichier uploadé : patch minimal et non destructif ===== */
-
-    /* Texte du nom de fichier + taille en blanc */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child span,
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child small,
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child p {
-        color: #FFFFFF !important;
-    }
-
-    /* Icônes en blanc sans casser leur forme */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child svg {
-        color: #FFFFFF !important;
-    }
-
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child svg path,
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child svg line,
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child svg polyline {
-        stroke: #FFFFFF !important;
-    }
-
-    /* Bouton croix : on enlève juste la capsule */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child button {
+    /* Ligne du fichier uploadé : pas de capsule sur le bouton croix */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
         background: transparent !important;
-        border: none !important;
         box-shadow: none !important;
+    }
+
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button:not(section button) {
+        border: none !important;
         border-radius: 0 !important;
         padding: 0 !important;
         min-width: 0 !important;
@@ -293,11 +280,9 @@ def inject_brand_css():
         height: auto !important;
     }
 
-    /* Hover propre */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child button:hover,
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > div:last-child button:focus {
-        background: transparent !important;
-        box-shadow: none !important;
+    /* Icônes héritent de la couleur courante */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] svg {
+        color: currentColor !important;
     }
     
     </style>
