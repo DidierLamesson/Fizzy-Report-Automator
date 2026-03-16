@@ -514,37 +514,50 @@ def inject_brand_css():
             height: auto;
             display: block;
         }
-        /* ===== Logo sidebar : placement propre ===== */
+        /* ===== LOGO SIDEBAR - placement propre et haut ===== */
 
-        section[data-testid="stSidebar"] .block-container {
-            padding-top: 0.1rem !important;
+        section[data-testid="stSidebar"] {
+            position: relative !important;
         }
 
+        /* On réserve juste l'espace nécessaire pour que Nome clienti ne remonte pas sur le logo */
+        section[data-testid="stSidebar"] .block-container {
+            padding-top: 5.2rem !important;
+        }
+
+        /* On positionne le VRAI wrapper Streamlit du logo */
+        section[data-testid="stSidebar"] .element-container:has(.soda-sidebar-brand) {
+            position: absolute !important;
+            top: 0.65rem !important;
+            left: 0.75rem !important;
+            width: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            z-index: 40 !important;
+        }
+
+        /* Le bloc logo lui-même */
         section[data-testid="stSidebar"] .soda-sidebar-brand {
-            display: flex;
-            justify-content: flex-start;
-            align-items: left;
-            margin: 0 0 0.55rem 0 !important;
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: 0 !important;
+        }
+
+        /* L'image */
+        section[data-testid="stSidebar"] .soda-sidebar-brand img {
+            display: block !important;
+            width: 92px !important;
+            max-width: 92px !important;
+            height: auto !important;
+            object-fit: contain !important;
+            margin: 0 !important;
             padding: 0 !important;
         }
 
-        section[data-testid="stSidebar"] .soda-sidebar-brand img {
-            display: block;
-            width: 150px;
-            max-width: 150px;
-            height: auto;
-            object-fit: contain;
-            margin: 0 !important;
-        }
-
-        /* Réduit l'espace juste après le logo */
-        section[data-testid="stSidebar"] .soda-sidebar-brand + div {
-            margin-top: 0 !important;
-        }
-
-        /* Le premier champ remonte un peu */
+        /* On évite une marge parasite sur le premier widget après le logo */
         section[data-testid="stSidebar"] .stTextInput {
-            margin-top: -0,15rem !important;
+            margin-top: 0 !important;
         }
         
         </style>
