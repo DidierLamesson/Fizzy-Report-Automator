@@ -100,420 +100,363 @@ st.set_page_config(
 def inject_brand_css():
     st.html(
         """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700;800&display=swap');
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700;800&display=swap');
 
-    :root {
-        --soda-blue: #11324F;
-        --soda-green: #758D5A;
-        --soda-acid: #F0FF6E;
-        --soda-text: #1B252E;
-        --soda-bg: #F5F3EE;
-        --soda-white: #FFFFFF;
-        --soda-border: rgba(17, 50, 79, 0.16);
-    }
+        /* =========================
+           1) TOKENS
+        ========================= */
+        :root {
+            --soda-blue: #11324F;
+            --soda-blue-dark: #28504D;
+            --soda-green: #758D5A;
+            --soda-acid: #F0FF6E;
+            --soda-text: #1B252E;
+            --soda-text-soft: #2C3E50;
+            --soda-bg: #F5F3EE;
+            --soda-white: #FFFFFF;
+            --soda-border: rgba(17, 50, 79, 0.16);
+            --soda-border-soft: rgba(17, 50, 79, 0.10);
+            --soda-sidebar-grad: linear-gradient(180deg, var(--soda-blue) 0%, var(--soda-blue-dark) 100%);
+            --soda-main-grad:
+                radial-gradient(circle at top left, rgba(17, 50, 79, 0.07) 0%, transparent 32%),
+                radial-gradient(circle at bottom right, rgba(117, 141, 90, 0.10) 0%, transparent 36%),
+                linear-gradient(180deg, #F7F5F0 0%, #EEF1E8 100%);
+        }
 
-    html, body, [class*="css"] {
-        font-family: "Epilogue", sans-serif;
-    }
+        /* =========================
+           2) BASE GLOBALE
+        ========================= */
+        html, body, [class*="css"] {
+            font-family: "Epilogue", sans-serif;
+        }
 
-    .stApp {
-        background:
-            linear-gradient(180deg, var(--soda-blue) 0%, #28504D 100%),
-            var(--soda-bg) !important;
-        color: var(--soda-text) !important;
-    }
+        .stApp {
+            background: #F4F3EE !important;
+            color: var(--soda-text) !important;
+        }
 
-    .main .block-container {
-        max-width: 1400px;
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
+        hr {
+            border-color: rgba(17, 50, 79, 0.12) !important;
+        }
 
-    /* Sidebar */
-    section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, var(--soda-blue) 0%, #28504D 100%);
-        border-right: 1px solid rgba(255,255,255,0.08);
-    }
+        h1, h2, h3 {
+            font-family: "Epilogue", sans-serif !important;
+            font-weight: 700 !important;
+            letter-spacing: -0.03em;
+            color: var(--soda-blue);
+        }
 
-    section[data-testid="stSidebar"] .stMarkdown,
-    section[data-testid="stSidebar"] label,
-    section[data-testid="stSidebar"] p,
-    section[data-testid="stSidebar"] h1,
-    section[data-testid="stSidebar"] h2,
-    section[data-testid="stSidebar"] h3,
-    section[data-testid="stSidebar"] small {
-        color: white !important;
-    }
+        p, label, .stMarkdown {
+            color: var(--soda-text) !important;
+        }
 
-    /* Titres */
-    h1, h2, h3 {
-        font-family: "Epilogue", sans-serif !important;
-        font-weight: 700 !important;
-        letter-spacing: -0.03em;
-        color: var(--soda-blue);
-    }
+        /* Boutons globaux */
+        .stButton > button,
+        .stDownloadButton > button {
+            background: var(--soda-acid) !important;
+            color: var(--soda-blue) !important;
+            border: none !important;
+            border-radius: 999px !important;
+            font-family: "Epilogue", sans-serif !important;
+            font-weight: 700 !important;
+            padding: 0.72rem 1.1rem !important;
+            box-shadow: none !important;
+        }
 
-    /* Texte courant */
-    p, label, .stMarkdown {
-        color: var(--soda-text) !important;
-    }
+        .stButton > button:hover,
+        .stDownloadButton > button:hover {
+            filter: brightness(0.98);
+        }
 
-    /* Séparateurs */
-    hr {
-        border-color: rgba(17, 50, 79, 0.12) !important;
-    }
+        /* =========================
+           3) HEADER
+        ========================= */
+        header[data-testid="stHeader"] {
+            background: var(--soda-blue) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
 
-    /* Boutons */
-    .stButton > button,
-    .stDownloadButton > button {
-        background: var(--soda-acid) !important;
-        color: var(--soda-blue) !important;
-        border: none !important;
-        border-radius: 999px !important;
-        font-family: "Epilogue", sans-serif !important;
-        font-weight: 700 !important;
-        padding: 0.72rem 1.1rem !important;
-        box-shadow: none !important;
-    }
+        header[data-testid="stHeader"] > div {
+            background: transparent !important;
+        }
 
-    .stButton > button:hover,
-    .stDownloadButton > button:hover {
-        filter: brightness(0.98);
-    }
+        header[data-testid="stHeader"] *,
+        header[data-testid="stHeader"] [data-testid="stIconMaterial"] {
+            color: #FFFFFF !important;
+        }
 
-    /* ===== SIDEBAR - champ Nome clienti ===== */
+        header[data-testid="stHeader"] button,
+        header[data-testid="stHeader"] button:hover,
+        header[data-testid="stHeader"] button:focus,
+        header[data-testid="stHeader"] button:focus-visible,
+        header[data-testid="stHeader"] button:active {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
 
-    section[data-testid="stSidebar"] .stTextInput > div {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-    }
+        /* =========================
+           4) SIDEBAR
+        ========================= */
+        section[data-testid="stSidebar"] {
+            background: var(--soda-sidebar-grad);
+            border-right: 1px solid rgba(255,255,255,0.08);
+        }
 
-    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"],
-    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"] {
-        background: var(--soda-white) !important;
-        border: 1px solid rgba(17, 50, 79, 0.18) !important;
-        border-radius: 22px !important;
-        min-height: 56px !important;
-        padding: 0 0.9rem !important;
-        box-shadow: none !important;
-        display: flex !important;
-        align-items: center !important;
-    }
+        section[data-testid="stSidebar"] .stMarkdown,
+        section[data-testid="stSidebar"] label,
+        section[data-testid="stSidebar"] p,
+        section[data-testid="stSidebar"] h1,
+        section[data-testid="stSidebar"] h2,
+        section[data-testid="stSidebar"] h3,
+        section[data-testid="stSidebar"] small {
+            color: #FFFFFF !important;
+        }
 
-    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"] > div,
-    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"] > div {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-    }
+        /* Flèche collapse / expand */
+        [data-testid="stSidebarCollapsedControl"] [data-testid="stIconMaterial"],
+        section[data-testid="stSidebar"] [data-testid="stIconMaterial"] {
+            color: #FFFFFF !important;
+        }
 
-    section[data-testid="stSidebar"] .stTextInput input {
-        background: transparent !important;
-        color: var(--soda-blue) !important;
-        border: none !important;
-        outline: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        font-family: "Epilogue", sans-serif !important;
-        font-weight: 500 !important;
-    }
+        [data-testid="stSidebarCollapsedControl"] button,
+        section[data-testid="stSidebar"] button[kind="header"],
+        [data-testid="stSidebarCollapsedControl"] button:hover,
+        [data-testid="stSidebarCollapsedControl"] button:focus,
+        [data-testid="stSidebarCollapsedControl"] button:focus-visible,
+        [data-testid="stSidebarCollapsedControl"] button:active,
+        section[data-testid="stSidebar"] button[kind="header"]:hover,
+        section[data-testid="stSidebar"] button[kind="header"]:focus,
+        section[data-testid="stSidebar"] button[kind="header"]:focus-visible,
+        section[data-testid="stSidebar"] button[kind="header"]:active {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
 
-    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"]:focus-within,
-    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"]:focus-within {
-        border: 1px solid rgba(17, 50, 79, 0.18) !important;
-        box-shadow: none !important;
-    }
+        /* =========================
+           5) SIDEBAR - INPUT CLIENT
+        ========================= */
+        section[data-testid="stSidebar"] .stTextInput > div {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+        }
 
-    /* ===== FILE UPLOADER SIDEBAR - version conservative ===== */
+        section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"],
+        section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"] {
+            background: var(--soda-white) !important;
+            border: 1px solid rgba(17, 50, 79, 0.18) !important;
+            border-radius: 22px !important;
+            min-height: 56px !important;
+            padding: 0 0.9rem !important;
+            box-shadow: none !important;
+            display: flex !important;
+            align-items: center !important;
+        }
 
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
-        background: transparent !important;
-        border: none !important;
-        padding: 0 !important;
-    }
+        section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"] > div,
+        section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"] > div {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            outline: none !important;
+            padding: 0 !important;
+        }
 
-    /* Par défaut, tout le widget uploader est blanc */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"],
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] * {
-        color: #FFFFFF !important;
-    }
+        /* Neutralise les wrappers imbriqués parasites */
+        section[data-testid="stSidebar"] .stTextInput [data-baseweb="input"] [data-baseweb="input"],
+        section[data-testid="stSidebar"] .stTextInput [data-baseweb="input"] [data-baseweb="base-input"],
+        section[data-testid="stSidebar"] .stTextInput [data-baseweb="base-input"] [data-baseweb="input"],
+        section[data-testid="stSidebar"] .stTextInput [data-baseweb="base-input"] [data-baseweb="base-input"] {
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+        }
 
-    /* La dropzone reste blanche avec texte bleu */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] section {
-        background: var(--soda-white) !important;
-        border: 1px dashed rgba(17, 50, 79, 0.20) !important;
-        border-radius: 24px !important;
-        padding: 1.25rem !important;
-        box-shadow: none !important;
-    }
+        section[data-testid="stSidebar"] .stTextInput [data-baseweb="input"] [data-baseweb="input"] > div,
+        section[data-testid="stSidebar"] .stTextInput [data-baseweb="input"] [data-baseweb="base-input"] > div,
+        section[data-testid="stSidebar"] .stTextInput [data-baseweb="base-input"] [data-baseweb="input"] > div,
+        section[data-testid="stSidebar"] .stTextInput [data-baseweb="base-input"] [data-baseweb="base-input"] > div {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+        }
 
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] section,
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] section * {
-        color: var(--soda-blue) !important;
-    }
+        section[data-testid="stSidebar"] .stTextInput input,
+        section[data-testid="stSidebar"] .stTextInput input:hover,
+        section[data-testid="stSidebar"] .stTextInput input:focus,
+        section[data-testid="stSidebar"] .stTextInput input:focus-visible,
+        section[data-testid="stSidebar"] .stTextInput input:active {
+            position: relative;
+            z-index: 2;
+            background: transparent !important;
+            color: var(--soda-blue) !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            font-family: "Epilogue", sans-serif !important;
+            font-weight: 500 !important;
+            -webkit-appearance: none !important;
+            appearance: none !important;
+        }
 
-    /* Bouton Browse files restauré proprement */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] section button {
-        background: var(--soda-white) !important;
-        color: var(--soda-blue) !important;
-        border: 1px solid rgba(17, 50, 79, 0.18) !important;
-        border-radius: 16px !important;
-        box-shadow: none !important;
-        padding: 0.5rem 0.9rem !important;
-    }
+        section[data-testid="stSidebar"] .stTextInput *:focus,
+        section[data-testid="stSidebar"] .stTextInput *:focus-visible {
+            outline: none !important;
+            box-shadow: none !important;
+        }
 
-    /* Ligne du fichier uploadé : pas de capsule sur le bouton croix */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
-        background: transparent !important;
-        box-shadow: none !important;
-    }
+        section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"]:focus-within,
+        section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"]:focus-within {
+            border: 1px solid rgba(17, 50, 79, 0.18) !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
 
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button:not(section button) {
-        border: none !important;
-        border-radius: 0 !important;
-        padding: 0 !important;
-        min-width: 0 !important;
-        width: auto !important;
-        height: auto !important;
-    }
+        /* =========================
+           6) SIDEBAR - FILE UPLOADER
+        ========================= */
+        section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+        }
 
-    /* Icônes héritent de la couleur courante */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] svg {
-        color: currentColor !important;
-    }
-    
-    /* ===== FIX FINAL - Nome clienti uniquement ===== */
-    /* Neutralise la box interne parasite sans toucher au reste */
+        /* Par défaut le widget hérite du blanc */
+        section[data-testid="stSidebar"] [data-testid="stFileUploader"],
+        section[data-testid="stSidebar"] [data-testid="stFileUploader"] * {
+            color: #FFFFFF !important;
+        }
 
-    section[data-testid="stSidebar"] .stTextInput [data-baseweb="input"] [data-baseweb="input"],
-    section[data-testid="stSidebar"] .stTextInput [data-baseweb="input"] [data-baseweb="base-input"],
-    section[data-testid="stSidebar"] .stTextInput [data-baseweb="base-input"] [data-baseweb="input"],
-    section[data-testid="stSidebar"] .stTextInput [data-baseweb="base-input"] [data-baseweb="base-input"] {
-        background: transparent !important;
-        border: none !important;
-        border-radius: 0 !important;
-        box-shadow: none !important;
-        min-height: 0 !important;
-        padding: 0 !important;
-    }
+        /* Dropzone */
+        section[data-testid="stSidebar"] [data-testid="stFileUploader"] section {
+            background: var(--soda-white) !important;
+            border: 1px dashed rgba(17, 50, 79, 0.20) !important;
+            border-radius: 24px !important;
+            padding: 1.25rem !important;
+            box-shadow: none !important;
+        }
 
-    section[data-testid="stSidebar"] .stTextInput [data-baseweb="input"] [data-baseweb="input"] > div,
-    section[data-testid="stSidebar"] .stTextInput [data-baseweb="input"] [data-baseweb="base-input"] > div,
-    section[data-testid="stSidebar"] .stTextInput [data-baseweb="base-input"] [data-baseweb="input"] > div,
-    section[data-testid="stSidebar"] .stTextInput [data-baseweb="base-input"] [data-baseweb="base-input"] > div {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-    }
-    section[data-testid="stSidebar"] .stTextInput input {
-    position: relative;
-    z-index: 2;
-    }
-    
-    /* ===== PATCH CIBLÉ : flèche sidebar + focus Nome clienti ===== */
+        section[data-testid="stSidebar"] [data-testid="stFileUploader"] section,
+        section[data-testid="stSidebar"] [data-testid="stFileUploader"] section * {
+            color: var(--soda-blue) !important;
+        }
 
-    /* Flèche collapse/expand : icône Material en blanc */
-    [data-testid="stSidebarCollapsedControl"] [data-testid="stIconMaterial"],
-    section[data-testid="stSidebar"] [data-testid="stIconMaterial"] {
-        color: #FFFFFF !important;
-    }
+        /* Bouton Browse files */
+        section[data-testid="stSidebar"] [data-testid="stFileUploader"] section button {
+            background: var(--soda-white) !important;
+            color: var(--soda-blue) !important;
+            border: 1px solid rgba(17, 50, 79, 0.18) !important;
+            border-radius: 16px !important;
+            box-shadow: none !important;
+            padding: 0.5rem 0.9rem !important;
+        }
 
-    /* Bouton de la flèche : pas de fond, pas de halo */
-    [data-testid="stSidebarCollapsedControl"] button,
-    section[data-testid="stSidebar"] button[kind="header"] {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-    }
+        /* Ligne du fichier uploadé */
+        section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
+            background: transparent !important;
+            box-shadow: none !important;
+        }
 
-    [data-testid="stSidebarCollapsedControl"] button:hover,
-    [data-testid="stSidebarCollapsedControl"] button:focus,
-    [data-testid="stSidebarCollapsedControl"] button:focus-visible,
-    [data-testid="stSidebarCollapsedControl"] button:active,
-    section[data-testid="stSidebar"] button[kind="header"]:hover,
-    section[data-testid="stSidebar"] button[kind="header"]:focus,
-    section[data-testid="stSidebar"] button[kind="header"]:focus-visible,
-    section[data-testid="stSidebar"] button[kind="header"]:active {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-    }
+        section[data-testid="stSidebar"] [data-testid="stFileUploader"] button:not(section button) {
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            min-width: 0 !important;
+            width: auto !important;
+            height: auto !important;
+        }
 
-    /* Nome clienti : on tue tous les focus parasites à l'intérieur */
-    section[data-testid="stSidebar"] .stTextInput input,
-    section[data-testid="stSidebar"] .stTextInput input:hover,
-    section[data-testid="stSidebar"] .stTextInput input:focus,
-    section[data-testid="stSidebar"] .stTextInput input:focus-visible,
-    section[data-testid="stSidebar"] .stTextInput input:active {
-        border: none !important;
-        outline: none !important;
-        box-shadow: none !important;
-        background: transparent !important;
-        -webkit-appearance: none !important;
-        appearance: none !important;
-    }
+        section[data-testid="stSidebar"] [data-testid="stFileUploader"] svg {
+            color: currentColor !important;
+        }
 
-    /* Neutralise aussi tous les wrappers internes qui peuvent dessiner le rectangle */
-    section[data-testid="stSidebar"] .stTextInput *:focus,
-    section[data-testid="stSidebar"] .stTextInput *:focus-visible {
-        outline: none !important;
-        box-shadow: none !important;
-    }
+        /* =========================
+           7) ZONE PRINCIPALE
+        ========================= */
+        [data-testid="stAppViewContainer"] > .main {
+            background: var(--soda-main-grad) !important;
+        }
 
-    /* On garde seulement la pill extérieure propre */
-    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"],
-    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"] {
-        border-radius: 22px !important;
-        box-shadow: none !important;
-    }
+        .main .block-container {
+            max-width: 1400px;
+            padding: 2rem 2.2rem 2.4rem 2.2rem !important;
+            background: rgba(255, 255, 255, 0.24);
+            border: 1px solid rgba(17, 50, 79, 0.07);
+            border-radius: 28px;
+        }
 
-    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"]:focus-within,
-    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"]:focus-within {
-        border: 1px solid rgba(17, 50, 79, 0.18) !important;
-        box-shadow: none !important;
-        outline: none !important;
-    }
+        [data-testid="stAppViewContainer"] > .main h1,
+        [data-testid="stAppViewContainer"] > .main h2,
+        [data-testid="stAppViewContainer"] > .main h3 {
+            color: var(--soda-blue) !important;
+        }
 
-    /* Si un sous-wrapper interne existe encore, on le rend invisible */
-    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"] > div,
-    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"] > div {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-    }
-    
-    /* ===== Barre du haut = bleu SODA ===== */
+        [data-testid="stAppViewContainer"] > .main p,
+        [data-testid="stAppViewContainer"] > .main label,
+        [data-testid="stAppViewContainer"] > .main .stMarkdown,
+        [data-testid="stAppViewContainer"] > .main span,
+        [data-testid="stAppViewContainer"] > .main li {
+            color: var(--soda-text-soft) !important;
+        }
 
-    header[data-testid="stHeader"] {
-        background: #11324F !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-    }
+        [data-testid="stAppViewContainer"] > .main small {
+            color: rgba(44, 62, 80, 0.78) !important;
+        }
 
-    /* Zone interne du header */
-    header[data-testid="stHeader"] > div {
-        background: transparent !important;
-    }
+        /* =========================
+           8) CHAMPS ZONE PRINCIPALE
+        ========================= */
+        [data-testid="stAppViewContainer"] > .main .stTextArea textarea,
+        [data-testid="stAppViewContainer"] > .main .stTextArea textarea:disabled,
+        [data-testid="stAppViewContainer"] > .main .stTextArea textarea[disabled],
+        [data-testid="stAppViewContainer"] > .main .stTextInput input,
+        [data-testid="stAppViewContainer"] > .main div[data-baseweb="textarea"] textarea,
+        [data-testid="stAppViewContainer"] > .main div[data-baseweb="textarea"] textarea:disabled,
+        [data-testid="stAppViewContainer"] > .main div[data-baseweb="textarea"] textarea[disabled],
+        [data-testid="stAppViewContainer"] > .main div[data-baseweb="select"] > div {
+            background: rgba(255, 255, 255, 0.88) !important;
+            color: var(--soda-blue) !important;
+            -webkit-text-fill-color: var(--soda-blue) !important;
+            caret-color: var(--soda-blue) !important;
+            border: 1px solid var(--soda-border-soft) !important;
+            box-shadow: none !important;
+            opacity: 1 !important;
+        }
 
-    /* Texte / icônes du header en blanc */
-    header[data-testid="stHeader"] * {
-        color: #FFFFFF !important;
-    }
+        /* Patch placeholder réel */
+        [data-testid="stAppViewContainer"] > .main textarea::placeholder,
+        [data-testid="stAppViewContainer"] > .main input::placeholder {
+            color: rgba(17, 50, 79, 0.55) !important;
+            -webkit-text-fill-color: rgba(17, 50, 79, 0.55) !important;
+            opacity: 1 !important;
+        }
 
-    /* Icônes Material du header */
-    header[data-testid="stHeader"] [data-testid="stIconMaterial"] {
-        color: #FFFFFF !important;
-    }
+        /* Patch contenu disabled : ce n'est pas un placeholder, mais la vraie valeur */
+        [data-testid="stAppViewContainer"] > .main textarea:disabled,
+        [data-testid="stAppViewContainer"] > .main textarea[disabled],
+        [data-testid="stAppViewContainer"] > .main textarea[aria-disabled="true"] {
+            color: var(--soda-blue) !important;
+            -webkit-text-fill-color: var(--soda-blue) !important;
+            opacity: 1 !important;
+        }
 
-    /* Boutons du header sans fond parasite */
-    header[data-testid="stHeader"] button,
-    header[data-testid="stHeader"] button:hover,
-    header[data-testid="stHeader"] button:focus,
-    header[data-testid="stHeader"] button:focus-visible,
-    header[data-testid="stHeader"] button:active {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-    }
-    
-    /* ===== HARMONISATION FOND + TYPO ZONE PRINCIPALE ===== */
-
-    /* Fond principal de l'app */
-    .stApp {
-        background: #F4F3EE !important;
-    }
-
-    /* Zone principale hors sidebar */
-    [data-testid="stAppViewContainer"] > .main {
-        background:
-            radial-gradient(circle at top left, rgba(17, 50, 79, 0.07) 0%, transparent 32%),
-            radial-gradient(circle at bottom right, rgba(117, 141, 90, 0.10) 0%, transparent 36%),
-            linear-gradient(180deg, #F7F5F0 0%, #EEF1E8 100%) !important;
-    }
-
-    /* Conteneur principal */
-    .main .block-container {
-        background: rgba(255, 255, 255, 0.24);
-        border: 1px solid rgba(17, 50, 79, 0.07);
-        border-radius: 28px;
-        padding: 2rem 2.2rem 2.4rem 2.2rem !important;
-    }
-
-    /* Titres dans la zone principale */
-    [data-testid="stAppViewContainer"] > .main h1,
-    [data-testid="stAppViewContainer"] > .main h2,
-    [data-testid="stAppViewContainer"] > .main h3 {
-        color: #11324F !important;
-    }
-
-    /* Texte courant dans la zone principale */
-    [data-testid="stAppViewContainer"] > .main p,
-    [data-testid="stAppViewContainer"] > .main label,
-    [data-testid="stAppViewContainer"] > .main .stMarkdown,
-    [data-testid="stAppViewContainer"] > .main span,
-    [data-testid="stAppViewContainer"] > .main li {
-        color: #2C3E50 !important;
-    }
-
-    /* Sous-textes / aides */
-    [data-testid="stAppViewContainer"] > .main small {
-        color: rgba(44, 62, 80, 0.78) !important;
-    }
-
-    /* Textareas et champs de la zone principale */
-    [data-testid="stAppViewContainer"] > .main .stTextArea textarea,
-    [data-testid="stAppViewContainer"] > .main .stTextArea textarea:disabled,
-    [data-testid="stAppViewContainer"] > .main .stTextArea textarea[disabled],
-    [data-testid="stAppViewContainer"] > .main .stTextInput input,
-    [data-testid="stAppViewContainer"] > .main div[data-baseweb="select"] > div {
-        background: rgba(255, 255, 255, 0.88) !important;
-        color: #11324F !important;
-        -webkit-text-fill-color: #11324F !important;
-        border: 1px solid rgba(17, 50, 79, 0.10) !important;
-        box-shadow: none !important;
-        opacity: 1 !important;
-    }
-
-    /* Alertes / blocs info */
-    [data-testid="stAppViewContainer"] > .main [data-testid="stAlert"] {
-        background: rgba(255, 255, 255, 0.72) !important;
-        border: 1px solid rgba(17, 50, 79, 0.08) !important;
-    }
-    
-    /* ===== Texte des box disabled en bleu SODA ===== */
-
-    [data-testid="stAppViewContainer"] > .main .stTextArea textarea,
-    [data-testid="stAppViewContainer"] > .main .stTextArea textarea:disabled,
-    [data-testid="stAppViewContainer"] > .main .stTextArea textarea[disabled],
-    [data-testid="stAppViewContainer"] > .main div[data-baseweb="textarea"] textarea,
-    [data-testid="stAppViewContainer"] > .main div[data-baseweb="textarea"] textarea:disabled,
-    [data-testid="stAppViewContainer"] > .main div[data-baseweb="textarea"] textarea[disabled] {
-        color: #11324F !important;
-        -webkit-text-fill-color: #11324F !important;
-        opacity: 1 !important;
-        caret-color: #11324F !important;
-    }
-
-    /* Placeholder plus doux */
-    [data-testid="stAppViewContainer"] > .main .stTextArea textarea::placeholder,
-    [data-testid="stAppViewContainer"] > .main .stTextArea textarea:disabled::placeholder,
-    [data-testid="stAppViewContainer"] > .main div[data-baseweb="textarea"] textarea::placeholder,
-    [data-testid="stAppViewContainer"] > .main div[data-baseweb="textarea"] textarea:disabled::placeholder {
-        color: rgba(17, 50, 79, 0.55) !important;
-        -webkit-text-fill-color: rgba(17, 50, 79, 0.55) !important;
-        opacity: 1 !important;
-    }
-
-    </style>
-    """
+        [data-testid="stAppViewContainer"] > .main [data-testid="stAlert"] {
+            background: rgba(255, 255, 255, 0.72) !important;
+            border: 1px solid rgba(17, 50, 79, 0.08) !important;
+        }
+        </style>
+        """
     )
 
 
