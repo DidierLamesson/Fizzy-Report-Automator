@@ -314,48 +314,40 @@ def inject_brand_css():
     z-index: 2;
     }
     
-    /* ===== PATCH FINAL MINIMAL ===== */
+    /* ===== PATCH CIBLÉ : flèche sidebar + focus Nome clienti ===== */
 
-    /* 1) Flèche de collapse / expand de la sidebar en blanc */
-    section[data-testid="stSidebar"] button[kind="header"],
-    div[data-testid="stSidebarCollapsedControl"] button {
+    /* Flèche collapse/expand : icône Material en blanc */
+    [data-testid="stSidebarCollapsedControl"] [data-testid="stIconMaterial"],
+    section[data-testid="stSidebar"] [data-testid="stIconMaterial"] {
+        color: #FFFFFF !important;
+    }
+
+    /* Bouton de la flèche : pas de fond, pas de halo */
+    [data-testid="stSidebarCollapsedControl"] button,
+    section[data-testid="stSidebar"] button[kind="header"] {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         outline: none !important;
-        color: #FFFFFF !important;
     }
 
-    section[data-testid="stSidebar"] button[kind="header"] svg,
-    div[data-testid="stSidebarCollapsedControl"] button svg {
-        color: #FFFFFF !important;
-    }
-
-    section[data-testid="stSidebar"] button[kind="header"] svg path,
-    section[data-testid="stSidebar"] button[kind="header"] svg line,
-    section[data-testid="stSidebar"] button[kind="header"] svg polyline,
-    div[data-testid="stSidebarCollapsedControl"] button svg path,
-    div[data-testid="stSidebarCollapsedControl"] button svg line,
-    div[data-testid="stSidebarCollapsedControl"] button svg polyline {
-        stroke: #FFFFFF !important;
-    }
-
+    [data-testid="stSidebarCollapsedControl"] button:hover,
+    [data-testid="stSidebarCollapsedControl"] button:focus,
+    [data-testid="stSidebarCollapsedControl"] button:focus-visible,
+    [data-testid="stSidebarCollapsedControl"] button:active,
     section[data-testid="stSidebar"] button[kind="header"]:hover,
     section[data-testid="stSidebar"] button[kind="header"]:focus,
     section[data-testid="stSidebar"] button[kind="header"]:focus-visible,
-    section[data-testid="stSidebar"] button[kind="header"]:active,
-    div[data-testid="stSidebarCollapsedControl"] button:hover,
-    div[data-testid="stSidebarCollapsedControl"] button:focus,
-    div[data-testid="stSidebarCollapsedControl"] button:focus-visible,
-    div[data-testid="stSidebarCollapsedControl"] button:active {
+    section[data-testid="stSidebar"] button[kind="header"]:active {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         outline: none !important;
     }
 
-    /* 2) On enlève le rectangle quand le champ Nome clienti est cliqué */
+    /* Nome clienti : on tue tous les focus parasites à l'intérieur */
     section[data-testid="stSidebar"] .stTextInput input,
+    section[data-testid="stSidebar"] .stTextInput input:hover,
     section[data-testid="stSidebar"] .stTextInput input:focus,
     section[data-testid="stSidebar"] .stTextInput input:focus-visible,
     section[data-testid="stSidebar"] .stTextInput input:active {
@@ -363,11 +355,36 @@ def inject_brand_css():
         outline: none !important;
         box-shadow: none !important;
         background: transparent !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+    }
+
+    /* Neutralise aussi tous les wrappers internes qui peuvent dessiner le rectangle */
+    section[data-testid="stSidebar"] .stTextInput *:focus,
+    section[data-testid="stSidebar"] .stTextInput *:focus-visible {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    /* On garde seulement la pill extérieure propre */
+    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"],
+    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"] {
+        border-radius: 22px !important;
+        box-shadow: none !important;
     }
 
     section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"]:focus-within,
     section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"]:focus-within {
         border: 1px solid rgba(17, 50, 79, 0.18) !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    /* Si un sous-wrapper interne existe encore, on le rend invisible */
+    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="input"] > div,
+    section[data-testid="stSidebar"] .stTextInput div[data-baseweb="base-input"] > div {
+        background: transparent !important;
+        border: none !important;
         box-shadow: none !important;
         outline: none !important;
     }
