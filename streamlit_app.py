@@ -3148,6 +3148,48 @@ def _draw_body_page_2_food_beverage_cost(
     return float(chart_top + panel_h)
 
 
+BODY_PAGE_3_CFG = {
+    # mêmes marges / logique que les autres pages
+    "side_margin_px": BODY1_CFG["side_margin_px"],
+    "right_edge_margin_px": BODY1_CFG["right_edge_margin_px"],
+    "gap_after_header_px": BODY1_CFG["gap_after_header_px"],
+    # --- Titre section ---
+    "section_title_text": "Incidenza staff",
+    "section_title_font_px": BODY1_CFG["section_title_font_px"],
+    "section_title_gap_after_px": 20,
+    # --- Sous-titre du bloc graphique ---
+    "chart_title_text": "Costo azienda",
+    "chart_title_font_px": 22,
+    "chart_title_gap_after_px": 18,
+    # --- Zone graphique centrée ---
+    "gauge_w_px": 170,
+    "gauge_h_px": 100,
+    "gauge_gap_px": 46,
+    # --- Arc gauge ---
+    "gauge_theta1_deg": 20,
+    "gauge_theta2_deg": 160,
+    "gauge_line_width_px": 26,
+    "gauge_max_pct": 75.0,
+    # couleurs provisoires = comme ton exemple
+    "gauge_base_color": "#3f47bf",
+    "gauge_fill_color": "#72d7cf",
+    # --- Textes sous gauges ---
+    "gauge_value_font_px": 28,
+    "gauge_to_pct_gap_px": -30,
+    "pct_to_month_gap_px": 12,
+    "gauge_month_font_px": 16,
+    "gauge_month_gap_after_px": 16,
+    "vs_label_font_px": 16,
+    "vs_value_font_px": 18,
+    "vs_row_gap_after_month_px": 16,
+    "para_font_px": BODY1_CFG["para_font_px"],
+    "para_linespacing": BODY1_CFG["para_linespacing"],
+    "para_gap_after_vs_px": 24,
+    "para_max_lines": 10,
+    "para_left_px": HEADER1_CFG["line_side_margin_px"],
+}
+
+
 def make_staff_gauge_fig(d):
     """
     Preview Streamlit du bloc gauge de la page 3.
@@ -3644,6 +3686,44 @@ def _draw_body_page_3_staff(
     scale_y = ax_bb.height / H_PX
     text_bottom_from_top_px = (ax_bb.y1 - bb.y0) / scale_y
     return float(text_bottom_from_top_px)
+
+
+FOOTER1_CFG = {
+    # Position du footer (top = position de la ligne du footer, depuis le haut)
+    "top_px": 700,
+    # Ligne (identique header)
+    "line_side_margin_px": HEADER1_CFG.get("line_side_margin_px", 40),
+    "line_width_px": HEADER1_CFG.get("line_width_px", 2),
+    "line_color": HEADER1_CFG.get("line_color", "highlight"),
+    "gap_after_line_px": 26,
+    # Layout colonnes
+    "side_margin_px": BODY1_CFG.get("side_margin_px", 80),  # pour le contenu footer
+    "mid_gap_px": 40,  # espace “vide” au centre (où vit la séparation)
+    "block_inner_gap_px": 60,  # espace entre les 2 sous-colonnes dans chaque bloc
+    # Titres (même taille que "Venduto", même couleur que "Fatturato")
+    "title_font_px": BODY1_CFG.get("left_title_font_px", 20),
+    "title_color": "accent",
+    "title_fontprops": "epilogue_semibold",
+    "gap_after_titles_px": 28,
+    # Labels au-dessus des valeurs (ex: "Dicembre 2025" / "vs 2024")
+    "label_font_px": BODY1_CFG.get("stats_title_font_px", 14),
+    "label_color": "white",
+    "label_fontprops": "epilogue_regular",
+    "gap_label_to_value_px": 16,
+    # Valeurs (même style que valeur Fatturato)
+    "value_font_px": BODY1_CFG.get("stats_value_font_px", 26),
+    "value_color": "highlight",
+    "value_fontprops": "epilogue_semibold",
+    # Pourcent (marge)
+    "marg_decimals": 1,  # 0 => "36%" ; 1 => "36.0%"
+    # Séparateur vertical
+    "vsep_enabled": True,
+    "vsep_color": "highlight",
+    "vsep_width_px": 3,
+    "vsep_dash": (0, (6, 6)),  # motif pointillé
+    "vsep_top_offset_px": 38,  # descend le haut du trait vs la ligne
+    "vsep_height_px": 90,  # hauteur du trait (à ajuster)
+}
 
 
 def _draw_text_top_center_x_px(
