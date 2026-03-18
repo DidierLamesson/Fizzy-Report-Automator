@@ -636,6 +636,39 @@ def month_labels_from_graph_dates(d):
             labels.append(str(dt))
     return labels
 
+    MONTHS_IT_SHORT = {
+        1: "Gen",
+        2: "Feb",
+        3: "Mar",
+        4: "Apr",
+        5: "Mag",
+        6: "Giu",
+        7: "Lug",
+        8: "Ago",
+        9: "Set",
+        10: "Ott",
+        11: "Nov",
+        12: "Dic",
+    }
+
+
+def _rolling_6m_period_label_from_report_date(raw_date):
+    """
+    Retourne le libellé court de la période glissante de 6 mois
+    basée sur la date du report.
+    Exemples :
+    - Febbraio 2026 -> Set-Feb
+    - Gennaio 2026 -> Ago-Gen
+    - Dicembre 2025 -> Lug-Dic
+    """
+    if raw_date is None or not hasattr(raw_date, "month"):
+        return "Lug-Dic"
+
+    end_dt = pd.Timestamp(raw_date)
+    start_dt = end_dt - pd.DateOffset(months=5)
+
+    return f"{MONTHS_IT_SHORT[start_dt.month]}-{MONTHS_IT_SHORT[end_dt.month]}"
+
 
 def _prev_month_label_from_report_date(raw_date):
     months_it = {
@@ -900,6 +933,7 @@ def build_page2_suggestions(d):
     fc_n_1 = _avg_pct(d.get("food_cost_pctg_n_1"))
     bc_n = _avg_pct(d.get("beverage_cost_pctg_n"))
     bc_n_1 = _avg_pct(d.get("beverage_cost_pctg_n_1"))
+    rolling_6m_label = _rolling_6m_period_label_from_report_date(d.get("raw_date_n"))
 
     food_trend = "in miglioramento" if fc_n <= fc_n_1 else "in peggioramento"
     bev_trend = "in miglioramento" if bc_n <= bc_n_1 else "in peggioramento"
@@ -911,7 +945,7 @@ def build_page2_suggestions(d):
     )
 
     beverage_text = (
-        f"Nel periodo Lug-Dic {d['year_n']}, il Beverage Cost medio si attesta al "
+        f"Nel periodo {rolling_6m_label} {d['year_n']}, il Beverage Cost medio si attesta al "
         f"{bc_n:.1f}% rispetto al {bc_n_1:.1f}% dello stesso periodo dell’anno "
         f"precedente, mostrando un andamento {bev_trend}."
     )
@@ -2107,7 +2141,7 @@ def _draw_body_fc_bc_summary(
 
     # --- HEADER "vs N-1" (TOP aligné avec paragraphe) ---
     vs_title = f"vs {d['year_n_1']}"
-    vs_sub = "Lug-Dic"
+    vs_sub = _rolling_6m_period_label_from_report_date(d.get("raw_date_n"))
 
     # centré dans la zone vs
     ax.text(
@@ -2861,7 +2895,7 @@ def _plot_food_cost_axis(axc, d, label):
     axc.plot([], [], marker="o", linestyle="None", color=COLORS["graph1"], label=label)
     leg = axc.legend(
         loc="upper center",
-        bbox_to_anchor=(0.5, 1.02),
+        bbox_to_anchor=(0.5, 1.08),  # un peu plus haut qu'avant
         frameon=False,
         fontsize=10,
         labelcolor=COLORS["white"],
@@ -2883,7 +2917,7 @@ def _plot_food_cost_axis(axc, d, label):
 
     axc.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
     axc.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
-    axc.set_ylim(0, max(25, (max(y) if y else 0) + 5))
+    axc.set_ylim(0, max(25, (max(y) if y else 0) + 8))  # un peu plus d'air au-dessus
 
     axc.grid(False)
     for s in axc.spines.values():
@@ -2926,7 +2960,7 @@ def _plot_beverage_cost_axis(axc, d, label):
     axc.plot([], [], marker="o", linestyle="None", color=bev_color, label=label)
     leg = axc.legend(
         loc="upper center",
-        bbox_to_anchor=(0.5, 1.02),
+        bbox_to_anchor=(0.5, 1.08),  # un peu plus haut qu'avant
         frameon=False,
         fontsize=10,
         labelcolor=COLORS["white"],
@@ -2948,7 +2982,9 @@ def _plot_beverage_cost_axis(axc, d, label):
 
     axc.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
     axc.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
-    axc.set_ylim(0, max(12, (max(y) if y else 0) + 2))
+    axc.set_ylim(
+        0, max(12, (max(y) if y else 0) + 4)
+    )  # marge haute un peu plus confortable
 
     axc.grid(False)
     for s in axc.spines.values():
