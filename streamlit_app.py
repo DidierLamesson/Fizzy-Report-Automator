@@ -636,20 +636,21 @@ def month_labels_from_graph_dates(d):
             labels.append(str(dt))
     return labels
 
-    MONTHS_IT_SHORT = {
-        1: "Gen",
-        2: "Feb",
-        3: "Mar",
-        4: "Apr",
-        5: "Mag",
-        6: "Giu",
-        7: "Lug",
-        8: "Ago",
-        9: "Set",
-        10: "Ott",
-        11: "Nov",
-        12: "Dic",
-    }
+
+MONTHS_IT_SHORT = {
+    1: "Gen",
+    2: "Feb",
+    3: "Mar",
+    4: "Apr",
+    5: "Mag",
+    6: "Giu",
+    7: "Lug",
+    8: "Ago",
+    9: "Set",
+    10: "Ott",
+    11: "Nov",
+    12: "Dic",
+}
 
 
 def _rolling_6m_period_label_from_report_date(raw_date):
