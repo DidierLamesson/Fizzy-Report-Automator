@@ -4147,6 +4147,20 @@ def _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str 
 
 # Pas de footer en page 3 ✅
 
+# =========================
+# 13) CONFIGURATION GLOBALE DES PAGES
+# =========================
+
+# ✅ Taille cible en pixels (format de travail unique pour toutes les pages)
+PAGE_W_PX = 800
+PAGE_H_PX = 1000
+
+# ✅ DPI de référence : fixe la taille physique du PDF
+BASE_DPI = 100
+
+# ✅ Conversion px -> pt pour les overlays PDF PyMuPDF
+PT_PER_PX = 72.0 / BASE_DPI
+
 
 def _px_rect_to_pdf_rect(left_px, top_px, right_px, bottom_px):
     return fitz.Rect(
