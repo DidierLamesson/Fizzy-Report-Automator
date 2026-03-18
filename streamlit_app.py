@@ -797,7 +797,7 @@ def _render_chart_panel_rgba(
     # - laisser respirer le titre en haut
     # - garder les valeurs Y complètes à gauche
     # - préserver les mois inclinés en bas
-    axc = fig.add_axes([0.16, 0.27, 0.76, 0.50], facecolor=COLORS["bg"])
+    axc = fig.add_axes([0.12, 0.24, 0.82, 0.56], facecolor=COLORS["bg"])
     draw_axis_fn(axc, d=d, label=label)
 
     buf = BytesIO()
@@ -2887,16 +2887,20 @@ def _measure_body1_metrics(
 # 9.5) CORPS — PAGE 2 / FOOD & BEVERAGE COST
 # =========================
 BODY_PAGE_2_CFG = {
-    # mêmes colonnes que page 1
-    "side_margin_px": BODY1_CFG["side_margin_px"],  # 80 (gauche)
-    "right_edge_margin_px": BODY1_CFG["right_edge_margin_px"],  # 40 (droite)
-    "col_gap_px": 40,  # espace entre les 2 charts
+    # colonnes du bloc résumé sous les graphiques
+    "side_margin_px": BODY1_CFG["side_margin_px"],
+    "right_edge_margin_px": BODY1_CFG["right_edge_margin_px"],
+    "col_gap_px": 40,
     "left_col_ratio": 0.5,
     "gap_after_header_px": BODY1_CFG["gap_after_header_px"],
     # --- Titre section (fixe) ---
     "section_title_text": "Food & Beverage cost",
     "section_title_font_px": BODY1_CFG["section_title_font_px"],
     "section_title_gap_after_px": 20,
+    # zone spécifique des graphiques : on les étire jusqu'aux bords de la ligne du header
+    "chart_left_margin_px": HEADER1_CFG["line_side_margin_px"],
+    "chart_right_margin_px": HEADER1_CFG["line_side_margin_px"],
+    "chart_col_gap_px": 32,
     # charts
     "chart_h_px": 250,
     "charts_gap_after_title_px": 20,
@@ -3068,16 +3072,19 @@ def _draw_body_page_2_food_beverage_cost(
     def y_from_top(top_px):
         return 1.0 - (top_px / H_PX)
 
-    left_margin = cfg["side_margin_px"]
-    right_margin = cfg.get("right_edge_margin_px", left_margin)
-    gap = cfg["col_gap_px"]
+    chart_left_margin = cfg.get("chart_left_margin_px", cfg["side_margin_px"])
+    chart_right_margin = cfg.get(
+        "chart_right_margin_px",
+        cfg.get("right_edge_margin_px", cfg["side_margin_px"]),
+    )
+    chart_gap = cfg.get("chart_col_gap_px", cfg["col_gap_px"])
 
-    usable_w = W_PX - left_margin - right_margin - gap
+    usable_w = W_PX - chart_left_margin - chart_right_margin - chart_gap
     left_w = int(usable_w * cfg["left_col_ratio"])
     right_w = usable_w - left_w
 
-    left_x0 = left_margin
-    right_x0 = left_margin + left_w + gap
+    left_x0 = chart_left_margin
+    right_x0 = chart_left_margin + left_w + chart_gap
 
     if cfg.get("top_px") is not None:
         y = int(cfg["top_px"])
