@@ -2812,7 +2812,7 @@ BODY_PAGE_2_CFG = {
     "section_title_gap_after_px": 20,
     # charts
     "chart_h_px": 250,
-    "charts_gap_after_title_px": 20,
+    "charts_gap_after_title_px": 40,
     "gap_after_charts_px": 20,
 }
 
