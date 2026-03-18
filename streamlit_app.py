@@ -2812,7 +2812,7 @@ BODY_PAGE_2_CFG = {
     "section_title_gap_after_px": 20,
     # charts
     "chart_h_px": 250,
-    "charts_gap_after_title_px": 40,
+    "charts_gap_after_title_px": 20,
     "gap_after_charts_px": 20,
 }
 
@@ -2856,7 +2856,7 @@ def _plot_food_cost_axis(axc, d, label):
     axc.plot([], [], marker="o", linestyle="None", color=COLORS["graph1"], label=label)
     leg = axc.legend(
         loc="upper center",
-        bbox_to_anchor=(0.5, 1.08),
+        bbox_to_anchor=(0.5, 1.02),
         frameon=False,
         fontsize=10,
         labelcolor=COLORS["white"],
@@ -2929,7 +2929,7 @@ def _plot_beverage_cost_axis(axc, d, label):
     axc.plot([], [], marker="o", linestyle="None", color=bev_color, label=label)
     leg = axc.legend(
         loc="upper center",
-        bbox_to_anchor=(0.5, 1.08),
+        bbox_to_anchor=(0.5, 1.02),
         frameon=False,
         fontsize=10,
         labelcolor=COLORS["white"],
