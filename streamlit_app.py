@@ -1019,8 +1019,8 @@ def _make_report_text_signature(d, restaurant_name: str) -> str:
 def _ensure_report_text_state(d, restaurant_name: str):
     """
     Initialise les suggestions et les textes finaux.
-    - Si le report change : on réinitialise tout.
-    - Si le report ne change pas mais que certaines clés manquent : on les recrée.
+    - Les suggestions sont toujours régénérées à partir du code courant.
+    - Les textes finaux ne sont réinitialisés que si le report change.
     """
     signature = _make_report_text_signature(d, restaurant_name)
 
@@ -1045,17 +1045,16 @@ def _ensure_report_text_state(d, restaurant_name: str):
 
     signature_changed = st.session_state.get(REPORT_TEXT_SIGNATURE_KEY) != signature
 
+    # Toujours remettre à jour les suggestions avec la logique actuelle
+    for k, v in suggestion_defaults.items():
+        st.session_state[k] = v
+
+    # En revanche, on ne reset les textes finaux que si le report change
     if signature_changed:
-        for k, v in suggestion_defaults.items():
-            st.session_state[k] = v
         for k, v in final_defaults.items():
             st.session_state[k] = v
         st.session_state[REPORT_TEXT_SIGNATURE_KEY] = signature
         return
-
-    for k, v in suggestion_defaults.items():
-        if k not in st.session_state:
-            st.session_state[k] = v
 
     for k, v in final_defaults.items():
         if k not in st.session_state:
