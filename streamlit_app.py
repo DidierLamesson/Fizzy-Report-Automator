@@ -767,14 +767,24 @@ def _pad_rgba_to_height_for_width(
     return canvas
 
 
-def _render_chart_panel_rgba(draw_axis_fn, d, label, width_px, raster_dpi=260):
+def _render_chart_panel_rgba(
+    draw_axis_fn,
+    d,
+    label,
+    width_px,
+    height_px,
+    raster_dpi=260,
+):
     """
-    Rend un graphique page 2 dans un panneau rasterisé avec une marge de
-    sécurité généreuse, puis le recadre proprement. L'objectif est d'obtenir
-    un rendu Canva-stable sans couper titres, légende ni labels inclinés.
+    Rend un graphique page 2 dans un panneau rasterisé aux dimensions finales
+    du layout PDF.
+
+    Objectif : conserver un rendu Canva-stable sans rognage des titres,
+    légendes et labels, tout en gardant une échelle visuelle proche du rendu
+    vectoriel initial.
     """
-    fig_w_px = max(int(width_px * 1.12), 520)
-    fig_h_px = max(int(fig_w_px * 0.92), 430)
+    fig_w_px = max(int(width_px * 2.0), 900)
+    fig_h_px = max(int(height_px * 2.0), 700)
 
     fig = plt.figure(
         figsize=(fig_w_px / raster_dpi, fig_h_px / raster_dpi),
@@ -783,14 +793,18 @@ def _render_chart_panel_rgba(draw_axis_fn, d, label, width_px, raster_dpi=260):
     )
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
 
-    axc = fig.add_axes([0.12, 0.24, 0.82, 0.56], facecolor=COLORS["bg"])
+    # Marges calibrées pour :
+    # - laisser respirer le titre en haut
+    # - garder les valeurs Y complètes à gauche
+    # - préserver les mois inclinés en bas
+    axc = fig.add_axes([0.16, 0.27, 0.76, 0.50], facecolor=COLORS["bg"])
     draw_axis_fn(axc, d=d, label=label)
 
     buf = BytesIO()
     fig.savefig(
         buf,
         format="png",
-        bbox_inches="tight",
+        bbox_inches=None,
         pad_inches=0,
         facecolor=fig.get_facecolor(),
         edgecolor="none",
@@ -800,16 +814,7 @@ def _render_chart_panel_rgba(draw_axis_fn, d, label, width_px, raster_dpi=260):
 
     img = Image.open(buf).convert("RGBA")
     img.load()
-
-    # Petite marge bleue supplémentaire pour éviter toute sensation de rognage.
-    pad = 14
-    safe = Image.new(
-        "RGBA",
-        (img.width + pad * 2, img.height + pad * 2),
-        _hex_to_rgba(COLORS["bg"]),
-    )
-    safe.paste(img, (pad, pad))
-    return safe
+    return img
 
 
 def _place_rgba_panel(ax, W_PX, H_PX, img, left_px, top_px, width_px, height_px, z=700):
@@ -3095,33 +3100,22 @@ def _draw_body_page_2_food_beverage_cost(
 
     chart_top = y
 
+    panel_h = float(cfg["chart_h_px"])
+
     food_img = _render_chart_panel_rgba(
         _plot_food_cost_axis,
         d=d,
         label=restaurant_name,
         width_px=left_w,
+        height_px=int(panel_h),
     )
     bev_img = _render_chart_panel_rgba(
         _plot_beverage_cost_axis,
         d=d,
         label=restaurant_name,
         width_px=right_w,
+        height_px=int(panel_h),
     )
-
-    food_h = (
-        left_w * (food_img.height / food_img.width)
-        if food_img.width
-        else cfg["chart_h_px"]
-    )
-    bev_h = (
-        right_w * (bev_img.height / bev_img.width)
-        if bev_img.width
-        else cfg["chart_h_px"]
-    )
-    panel_h = max(float(cfg["chart_h_px"]), float(food_h), float(bev_h))
-
-    food_img = _pad_rgba_to_height_for_width(food_img, left_w, panel_h, COLORS["bg"])
-    bev_img = _pad_rgba_to_height_for_width(bev_img, right_w, panel_h, COLORS["bg"])
 
     _place_rgba_panel(
         ax,
