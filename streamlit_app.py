@@ -724,116 +724,6 @@ def merge_pdf_bytes(*pdf_chunks: bytes) -> bytes:
     return merged
 
 
-def _hex_to_rgba(hex_color: str, alpha: int = 255):
-    hex_color = (hex_color or "#000000").lstrip("#")
-    if len(hex_color) != 6:
-        return (0, 0, 0, alpha)
-    return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4)) + (alpha,)
-
-
-def _pad_rgba_to_height_for_width(
-    img: Image.Image,
-    placed_width_px: int,
-    target_placed_height_px: float,
-    bg_hex: str,
-) -> Image.Image:
-    """
-    Ajoute du padding vertical à une image pour qu'une fois redimensionnée à
-    `placed_width_px`, elle occupe exactement `target_placed_height_px`.
-    """
-    if img.width <= 0 or img.height <= 0 or placed_width_px <= 0:
-        return img
-
-    current_placed_height = placed_width_px * (img.height / img.width)
-    if current_placed_height >= target_placed_height_px - 0.5:
-        return img
-
-    target_src_height = int(
-        round((target_placed_height_px * img.width) / placed_width_px)
-    )
-    if target_src_height <= img.height:
-        return img
-
-    pad_total = target_src_height - img.height
-    pad_top = pad_total // 2
-    pad_bottom = pad_total - pad_top
-
-    canvas = Image.new(
-        "RGBA",
-        (img.width, img.height + pad_total),
-        _hex_to_rgba(bg_hex),
-    )
-    canvas.paste(img, (0, pad_top))
-    return canvas
-
-
-def _render_chart_panel_rgba(
-    draw_axis_fn,
-    d,
-    label,
-    width_px,
-    height_px,
-    raster_dpi=260,
-):
-    """
-    Rend un graphique page 2 dans un panneau rasterisé aux dimensions finales
-    du layout PDF.
-
-    Objectif : conserver un rendu Canva-stable sans rognage des titres,
-    légendes et labels, tout en gardant une échelle visuelle proche du rendu
-    vectoriel initial.
-    """
-    fig_w_px = max(int(width_px * 2.0), 900)
-    fig_h_px = max(int(height_px * 2.0), 700)
-
-    fig = plt.figure(
-        figsize=(fig_w_px / raster_dpi, fig_h_px / raster_dpi),
-        dpi=raster_dpi,
-        facecolor=COLORS["bg"],
-    )
-    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-
-    # Marges calibrées pour :
-    # - laisser respirer le titre en haut
-    # - garder les valeurs Y complètes à gauche
-    # - préserver les mois inclinés en bas
-    axc = fig.add_axes([0.12, 0.24, 0.82, 0.56], facecolor=COLORS["bg"])
-    draw_axis_fn(axc, d=d, label=label)
-
-    buf = BytesIO()
-    fig.savefig(
-        buf,
-        format="png",
-        bbox_inches=None,
-        pad_inches=0,
-        facecolor=fig.get_facecolor(),
-        edgecolor="none",
-    )
-    plt.close(fig)
-    buf.seek(0)
-
-    img = Image.open(buf).convert("RGBA")
-    img.load()
-    return img
-
-
-def _place_rgba_panel(ax, W_PX, H_PX, img, left_px, top_px, width_px, height_px, z=700):
-    """
-    Place une image RGBA au pixel près dans la page.
-    """
-    ax.imshow(
-        img,
-        extent=[
-            left_px / W_PX,
-            (left_px + width_px) / W_PX,
-            (H_PX - (top_px + height_px)) / H_PX,
-            (H_PX - top_px) / H_PX,
-        ],
-        zorder=z,
-        aspect="auto",
-    )
-
-
 def _compute_ratio_pct_series(costs, revenues):
     pct_series = []
     for cost, revenue in zip(costs, revenues):
@@ -1155,11 +1045,9 @@ def _ensure_report_text_state(d, restaurant_name: str):
 
     signature_changed = st.session_state.get(REPORT_TEXT_SIGNATURE_KEY) != signature
 
-    # Toujours remettre à jour les suggestions avec la logique actuelle
     for k, v in suggestion_defaults.items():
         st.session_state[k] = v
 
-    # En revanche, on ne reset les textes finaux que si le report change
     if signature_changed:
         for k, v in final_defaults.items():
             st.session_state[k] = v
@@ -1404,11 +1292,6 @@ def make_beverage_cost_fig(d, label):
     )
 
     return fig
-
-
-# =========================
-# 9) MISE EN PAGE PDF — COMPOSANTS COMMUNS
-# =========================
 
 
 # =========================
@@ -2180,12 +2063,14 @@ def _draw_body_fc_bc_summary(
     def y_from_top(top_px):
         return 1.0 - (top_px / H_PX)
 
+    # --- zones colonnes (mêmes règles que page 1 : right_edge_margin_px = 40) ---
     left_margin = cfg["side_margin_px"]
     right_margin = cfg["right_edge_margin_px"]
     gap = cfg["col_gap_px"]
 
     usable_w = W_PX - left_margin - right_margin - gap
     left_w = int(usable_w * cfg["left_col_ratio"])
+    right_w = usable_w - left_w
 
     left_x0 = left_margin
     left_x1 = left_x0 + left_w
@@ -2193,12 +2078,14 @@ def _draw_body_fc_bc_summary(
     right_x0 = left_x1 + gap
     para_right_edge_px = W_PX - right_margin
 
+    # --- top commun (vs + paragraphe) ---
     if cfg.get("top_px") is not None:
         top_px = int(cfg["top_px"])
     else:
         header_line_y_px = int(cfg.get("header_line_y_px", 0))
         top_px = int(header_line_y_px + cfg["gap_after_header_px"])
 
+    # --- split interne bloc gauche : current | vsep | vs ---
     vs_col_w = int(left_w * cfg["vs_col_ratio"])
     cur_col_w = left_w - vs_col_w
 
@@ -2206,9 +2093,11 @@ def _draw_body_fc_bc_summary(
     vs_x0 = vsep_x_px
     vs_x1 = left_x1
 
+    # --- HEADER "vs N-1" (TOP aligné avec paragraphe) ---
     vs_title = f"vs {d['year_n_1']}"
     vs_sub = _rolling_6m_period_label_from_report_date(d.get("raw_date_n"))
 
+    # centré dans la zone vs
     ax.text(
         x((vs_x0 + vs_x1) / 2),
         y_from_top(top_px),
@@ -2245,6 +2134,7 @@ def _draw_body_fc_bc_summary(
     vsep_top_px = top_px + h_vs_title + 4 + h_vs_sub
     bc_label_bottom_px = None
 
+    # --- données (moyennes % sur 6 mois) ---
     fc_n = _avg_pct(d.get("food_cost_pctg_n"))
     fc_n_1 = _avg_pct(d.get("food_cost_pctg_n_1"))
     bc_n = _avg_pct(d.get("beverage_cost_pctg_n"))
@@ -2255,7 +2145,12 @@ def _draw_body_fc_bc_summary(
         ("BC Medio\nultimi 6 mesi", bc_n, bc_n_1),
     ]
 
+    # --- dessin rows (gauche) ---
     y_row_top = top_px + header_h_px + cfg.get("rows_offset_px", 0)
+
+    _, value_h = _measure_text_px(
+        ax, "21%", cfg["value_font_px"], epilogue_semibold, dpi
+    )
 
     bullet_sz = cfg["bullet_size_px"]
     bullet_gap = cfg["bullet_gap_px"]
@@ -2264,11 +2159,13 @@ def _draw_body_fc_bc_summary(
     bullet_x0 = left_x0 - (bullet_sz + bullet_gap)
 
     cur_right = vsep_x_px - 14
+    vs_left = vsep_x_px + 14
 
     for idx, (label, v_cur, v_vs) in enumerate(rows):
         _, label_h = _measure_text_px(
             ax, label, cfg["label_font_px"], epilogue_regular, dpi
         )
+
         _, value_h = _measure_text_px(
             ax, "21%", cfg["value_font_px"], epilogue_semibold, dpi
         )
@@ -2304,11 +2201,12 @@ def _draw_body_fc_bc_summary(
         )
         if idx == 1:
             bc_label_bottom_px = y_row_top + label_h
-
+        # current
+        cur_txt = _fmt_pct1(v_cur)
         ax.text(
             x(cur_right),
             y_from_top(y_val_top),
-            _fmt_pct1(v_cur),
+            cur_txt,
             ha="right",
             va="top",
             transform=ax.transAxes,
@@ -2318,10 +2216,12 @@ def _draw_body_fc_bc_summary(
             zorder=850,
         )
 
+        # vs
+        vs_txt = _fmt_pct1(v_vs)
         ax.text(
             x(vs_x1 - 10),
             y_from_top(y_val_top),
-            _fmt_pct1(v_vs),
+            vs_txt,
             ha="right",
             va="top",
             transform=ax.transAxes,
@@ -2330,7 +2230,7 @@ def _draw_body_fc_bc_summary(
             color=COLORS["highlight"],
             zorder=850,
         )
-
+        # hauteur row (inchangée pour le flux vertical)
         row_h = (
             max(label_h, (y_val_top - y_row_top + value_h)) + cfg["row_bottom_pad_px"]
         )
@@ -2338,11 +2238,16 @@ def _draw_body_fc_bc_summary(
 
         if idx == 0:
             next_row_top_px = row_bottom_px + cfg["row_gap_px"]
+
+            # ✅ séparateur au milieu entre :
+            # - bas du label FC
+            # - haut du label BC
             fc_label_bottom_px = y_row_top + label_h
             y_sep_px = fc_label_bottom_px + (next_row_top_px - fc_label_bottom_px) / 2
 
             if cfg["hline_enabled"]:
                 cut = cfg["hline_to_vsep_gap_px"]
+
                 ax.hlines(
                     y=y_from_top(y_sep_px),
                     xmin=x(left_x0),
@@ -2351,6 +2256,7 @@ def _draw_body_fc_bc_summary(
                     linewidth=_px_to_pt(cfg["hline_width_px"], dpi),
                     zorder=800,
                 )
+
                 ax.hlines(
                     y=y_from_top(y_sep_px),
                     xmin=x(vsep_x_px + cut),
@@ -2360,19 +2266,26 @@ def _draw_body_fc_bc_summary(
                     zorder=800,
                 )
 
+            # prochaine row inchangée
             y_row_top = next_row_top_px
 
+    left_block_bottom_px = y_row_top
+
+    # --- séparateur vertical (placement calé sur les vrais blocs) ---
     if cfg["vsep_enabled"] and bc_label_bottom_px is not None:
+        y0 = vsep_top_px
+        y1 = bc_label_bottom_px
         ax.vlines(
             x=x(vsep_x_px),
-            ymin=y_from_top(bc_label_bottom_px),
-            ymax=y_from_top(vsep_top_px),
+            ymin=y_from_top(y1),
+            ymax=y_from_top(y0),
             colors=COLORS[cfg["vsep_color"]],
             linewidth=_px_to_pt(cfg["vsep_width_px"], dpi),
             linestyles=cfg["vsep_dash"],
             zorder=900,
         )
 
+    # --- paragraphe justifié (TOP aligné avec "vs ...") ---
     ax.figure.canvas.draw()
     r = ax.figure.canvas.get_renderer()
     ax_bb = ax.get_window_extent(renderer=r)
@@ -2887,20 +2800,16 @@ def _measure_body1_metrics(
 # 9.5) CORPS — PAGE 2 / FOOD & BEVERAGE COST
 # =========================
 BODY_PAGE_2_CFG = {
-    # colonnes du bloc résumé sous les graphiques
-    "side_margin_px": BODY1_CFG["side_margin_px"],
-    "right_edge_margin_px": BODY1_CFG["right_edge_margin_px"],
-    "col_gap_px": 40,
+    # mêmes colonnes que page 1, mais charts alignés sur la ligne du header
+    "side_margin_px": HEADER1_CFG["line_side_margin_px"],  # 40 (gauche)
+    "right_edge_margin_px": BODY1_CFG["right_edge_margin_px"],  # 40 (droite)
+    "col_gap_px": 40,  # espace entre les 2 charts
     "left_col_ratio": 0.5,
     "gap_after_header_px": BODY1_CFG["gap_after_header_px"],
     # --- Titre section (fixe) ---
     "section_title_text": "Food & Beverage cost",
     "section_title_font_px": BODY1_CFG["section_title_font_px"],
     "section_title_gap_after_px": 20,
-    # zone spécifique des graphiques : on les étire jusqu'aux bords de la ligne du header
-    "chart_left_margin_px": HEADER1_CFG["line_side_margin_px"],
-    "chart_right_margin_px": HEADER1_CFG["line_side_margin_px"],
-    "chart_col_gap_px": 32,
     # charts
     "chart_h_px": 250,
     "charts_gap_after_title_px": 20,
@@ -2912,6 +2821,8 @@ def _plot_food_cost_axis(axc, d, label):
     """
     Style unique du graphique Food Cost.
     Utilisé à la fois par la preview Streamlit et par le rendu PDF.
+    Construit dans le même esprit que le graphique page 1 : même moteur vectoriel,
+    même logique de layout partagé entre preview et PDF.
     """
     x_labels = list(reversed(month_labels_from_graph_dates(d)))
     y = list(reversed(d["food_cost_pctg_n"]))
@@ -2928,13 +2839,18 @@ def _plot_food_cost_axis(axc, d, label):
         zorder=3,
     )
 
-    axc.set_title(
+    axc.text(
+        0.0,
+        1.03,
         f"Andamento Food Cost Mensile {d['year_n']}",
+        transform=axc.transAxes,
+        ha="left",
+        va="bottom",
         color=COLORS["white"],
         fontsize=16,
         fontproperties=epilogue_semibold,
-        loc="left",
-        pad=10,
+        clip_on=False,
+        zorder=5,
     )
 
     axc.plot([], [], marker="o", linestyle="None", color=COLORS["graph1"], label=label)
@@ -2963,6 +2879,7 @@ def _plot_food_cost_axis(axc, d, label):
     axc.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
     axc.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
     axc.set_ylim(0, max(25, (max(y) if y else 0) + 8))
+    axc.margins(x=0.06)
 
     axc.grid(False)
     for s in axc.spines.values():
@@ -2975,6 +2892,8 @@ def _plot_beverage_cost_axis(axc, d, label):
     """
     Style unique du graphique Beverage Cost.
     Utilisé à la fois par la preview Streamlit et par le rendu PDF.
+    Construit dans le même esprit que le graphique page 1 : même moteur vectoriel,
+    même logique de layout partagé entre preview et PDF.
     """
     x_labels = list(reversed(month_labels_from_graph_dates(d)))
     y = list(reversed(d["beverage_cost_pctg_n"]))
@@ -2993,13 +2912,18 @@ def _plot_beverage_cost_axis(axc, d, label):
         zorder=3,
     )
 
-    axc.set_title(
+    axc.text(
+        0.0,
+        1.03,
         f"Andamento Beverage Cost Mensile {d['year_n']}",
+        transform=axc.transAxes,
+        ha="left",
+        va="bottom",
         color=COLORS["white"],
         fontsize=16,
         fontproperties=epilogue_semibold,
-        loc="left",
-        pad=10,
+        clip_on=False,
+        zorder=5,
     )
 
     axc.plot([], [], marker="o", linestyle="None", color=bev_color, label=label)
@@ -3028,6 +2952,7 @@ def _plot_beverage_cost_axis(axc, d, label):
     axc.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
     axc.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
     axc.set_ylim(0, max(12, (max(y) if y else 0) + 4))
+    axc.margins(x=0.06)
 
     axc.grid(False)
     for s in axc.spines.values():
@@ -3072,26 +2997,25 @@ def _draw_body_page_2_food_beverage_cost(
     def y_from_top(top_px):
         return 1.0 - (top_px / H_PX)
 
-    chart_left_margin = cfg.get("chart_left_margin_px", cfg["side_margin_px"])
-    chart_right_margin = cfg.get(
-        "chart_right_margin_px",
-        cfg.get("right_edge_margin_px", cfg["side_margin_px"]),
-    )
-    chart_gap = cfg.get("chart_col_gap_px", cfg["col_gap_px"])
+    left_margin = cfg["side_margin_px"]
+    right_margin = cfg.get("right_edge_margin_px", left_margin)
+    gap = cfg["col_gap_px"]
 
-    usable_w = W_PX - chart_left_margin - chart_right_margin - chart_gap
+    usable_w = W_PX - left_margin - right_margin - gap
     left_w = int(usable_w * cfg["left_col_ratio"])
     right_w = usable_w - left_w
 
-    left_x0 = chart_left_margin
-    right_x0 = chart_left_margin + left_w + chart_gap
+    left_x0 = left_margin
+    right_x0 = left_margin + left_w + gap
 
+    # top de body
     if cfg.get("top_px") is not None:
         y = int(cfg["top_px"])
     else:
         header_line_y_px = int(cfg.get("header_line_y_px", 0))
         y = header_line_y_px + cfg["gap_after_header_px"]
 
+    # --- Titre section ---
     h_sec = _draw_text_top_center_px(
         ax,
         y_from_top,
@@ -3106,49 +3030,56 @@ def _draw_body_page_2_food_beverage_cost(
     y += h_sec + cfg["section_title_gap_after_px"] + cfg["charts_gap_after_title_px"]
 
     chart_top = y
+    chart_h = cfg["chart_h_px"]
 
-    panel_h = float(cfg["chart_h_px"])
+    fig = ax.figure
 
-    food_img = _render_chart_panel_rgba(
-        _plot_food_cost_axis,
+    # --- Charts (2 colonnes) ---
+    ax_food = _draw_food_cost_chart_in_page_2(
+        fig,
+        left=x(left_x0),
+        bottom=y_from_top(chart_top + chart_h),
+        width=(left_w / W_PX),
+        height=(chart_h / H_PX),
         d=d,
         label=restaurant_name,
-        width_px=left_w,
-        height_px=int(panel_h),
+        dpi=dpi,
     )
-    bev_img = _render_chart_panel_rgba(
-        _plot_beverage_cost_axis,
+
+    ax_bev = _draw_beverage_cost_chart_in_page_2(
+        fig,
+        left=x(right_x0),
+        bottom=y_from_top(chart_top + chart_h),
+        width=(right_w / W_PX),
+        height=(chart_h / H_PX),
         d=d,
         label=restaurant_name,
-        width_px=right_w,
-        height_px=int(panel_h),
+        dpi=dpi,
     )
 
-    _place_rgba_panel(
-        ax,
-        W_PX,
-        H_PX,
-        food_img,
-        left_px=left_x0,
-        top_px=chart_top,
-        width_px=left_w,
-        height_px=panel_h,
+    # ✅ Mesure du vrai bas rendu (inclut tick labels / titres / etc.)
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+
+    page_bb = ax.get_window_extent(renderer=r)  # bbox de la page (display px)
+    scale_y = page_bb.height / H_PX  # conversion display_px -> layout_px
+
+    def bottom_from_top_layout_px(axc):
+        tight = axc.get_tightbbox(r)  # bbox "tight" (display px)
+        # distance depuis le haut de la page (layout px)
+        return (page_bb.y1 - tight.y0) / scale_y
+
+    true_bottom = max(
+        bottom_from_top_layout_px(ax_food),
+        bottom_from_top_layout_px(ax_bev),
     )
 
-    _place_rgba_panel(
-        ax,
-        W_PX,
-        H_PX,
-        bev_img,
-        left_px=right_x0,
-        top_px=chart_top,
-        width_px=right_w,
-        height_px=panel_h,
-    )
-
-    return float(chart_top + panel_h)
+    return float(true_bottom)
 
 
+# =========================
+# 9.6) CORPS — PAGE 3 / INCIDENZA STAFF
+# =========================
 BODY_PAGE_3_CFG = {
     # mêmes marges / logique que les autres pages
     "side_margin_px": BODY1_CFG["side_margin_px"],
@@ -3439,12 +3370,14 @@ def _draw_body_page_3_staff(
     def y_from_top(top_px):
         return 1.0 - (top_px / H_PX)
 
+    # --- top du body ---
     if cfg.get("top_px") is not None:
         y = int(cfg["top_px"])
     else:
         header_line_y_px = int(cfg.get("header_line_y_px", 0))
         y = header_line_y_px + cfg["gap_after_header_px"]
 
+    # --- Titre section ---
     h_sec = _draw_text_top_center_px(
         ax,
         y_from_top,
@@ -3458,6 +3391,7 @@ def _draw_body_page_3_staff(
     )
     y += h_sec + cfg["section_title_gap_after_px"]
 
+    # --- Titre interne du bloc graphique ---
     h_chart_title = _draw_text_top_center_px(
         ax,
         y_from_top,
@@ -3471,20 +3405,29 @@ def _draw_body_page_3_staff(
     )
     y += h_chart_title + cfg["chart_title_gap_after_px"]
 
+    # --- Données : mois du report + mois précédent ---
     staff_n = list(d.get("staff_cost_pctg_n") or [])
     staff_n_1 = list(d.get("staff_cost_pctg_n_1") or [])
+    raw_dates = list(d.get("graph_cost_dates") or [])
+
+    if not staff_n:
+        return float(y)
+
+    # On aligne les dates sur la longueur réelle des données staff
 
     if len(staff_n) < 2 or len(staff_n_1) < 2:
         return float(y)
 
-    cur_pct = float(staff_n[0])
-    prev_month_pct = float(staff_n[1])
-    cur_vs_pct = float(staff_n_1[0])
-    prev_month_vs_pct = float(staff_n_1[1])
+    cur_pct = float(staff_n[0])  # mois du report
+    prev_month_pct = float(staff_n[1])  # mois m-1
+
+    cur_vs_pct = float(staff_n_1[0])  # même mois en N-1
+    prev_month_vs_pct = float(staff_n_1[1])  # mois m-1 en N-1
 
     cur_label = d["full_date_n"]
     prev_month_label = _prev_month_label_from_report_date(d.get("raw_date_n"))
 
+    # --- Zone gauges centrée ---
     gauge_w = int(cfg["gauge_w_px"])
     gauge_h = int(cfg["gauge_h_px"])
     gauge_gap = int(cfg["gauge_gap_px"])
@@ -3520,6 +3463,8 @@ def _draw_body_page_3_staff(
 
     left_cx = left_gauge_x0 + gauge_w / 2
     right_cx = right_gauge_x0 + gauge_w / 2
+
+    # --- % blancs puis labels des mois sous les gauges ---
     gauge_bottom_px = gauge_top_px + gauge_h
 
     _, pct_h = _measure_text_px(
@@ -3561,6 +3506,7 @@ def _draw_body_page_3_staff(
         z=850,
     )
 
+    # --- Labels des mois sous les gauges ---
     h_m1 = _draw_text_top_center_x_px(
         ax,
         W_PX,
@@ -3590,6 +3536,8 @@ def _draw_body_page_3_staff(
     )
 
     months_h = max(h_m1, h_m2)
+
+    # --- Ligne "vs N-1" alignée à gauche ---
     vs_top_px = months_top_px + months_h + cfg["vs_row_gap_after_month_px"]
 
     _draw_text_top_left_px(
@@ -3633,7 +3581,9 @@ def _draw_body_page_3_staff(
         z=850,
     )
 
+    # --- Texte justifié pleine largeur (hors marges) ---
     analysis_text = (analysis_text or "").strip()
+
     para_top_px = vs_top_px + max(h_vs_0, h_vs_1) + cfg["para_gap_after_vs_px"]
 
     para_left_px = cfg.get("para_left_px", HEADER1_CFG["line_side_margin_px"])
@@ -3644,9 +3594,11 @@ def _draw_body_page_3_staff(
     r = ax.figure.canvas.get_renderer()
     ax_bb = ax.get_window_extent(renderer=r)
     ax_w_render = ax_bb.width
+    scale_y = ax_bb.height / H_PX
 
     col_px_render = ax_w_render * (col_px_layout / W_PX)
 
+    # borne basse max = moitié de la page
     max_lines_sample = "\n".join(["Ag"] * int(cfg["para_max_lines"]))
     max_h_render = _measure_multiline_h_render_px(
         ax,
@@ -3682,12 +3634,17 @@ def _draw_body_page_3_staff(
         zorder=850,
     )
 
+    # bas réel du texte pour le return
     ax.figure.canvas.draw()
     bb = text_obj.get_window_extent(renderer=r)
-    scale_y = ax_bb.height / H_PX
     text_bottom_from_top_px = (ax_bb.y1 - bb.y0) / scale_y
+
     return float(text_bottom_from_top_px)
 
+
+# =========================
+# 9.7) FOOTER COMMUN
+# =========================
 
 FOOTER1_CFG = {
     # Position du footer (top = position de la ligne du footer, depuis le haut)
@@ -4154,6 +4111,7 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str 
 
     dpi = int(ax.figure.dpi)
 
+    # Header bis (sans "Report Mensile")
     header_line_y_px = (
         _draw_header1_bis(
             ax,
@@ -4166,6 +4124,7 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str 
         or 0
     )
 
+    # charts_bottom_px = vrai bas rendu des charts (ticks inclus)
     charts_bottom_px = _draw_body_page_2_food_beverage_cost(
         ax,
         W_PX,
@@ -4194,6 +4153,9 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str 
 # Pas de footer en page 2 ✅
 
 
+# =========================
+# 12) CONSTRUCTION DE LA PAGE 3
+# =========================
 def _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str = ""):
     ax.set_axis_off()
     ax.set_aspect("auto")
@@ -4202,6 +4164,7 @@ def _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str 
 
     dpi = int(ax.figure.dpi)
 
+    # Header bis (sans "Report Mensile")
     header_line_y_px = (
         _draw_header1_bis(
             ax,
@@ -4232,68 +4195,12 @@ def _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str 
 # 13) CONFIGURATION GLOBALE DES PAGES
 # =========================
 
-# ✅ Taille cible en pixels (format de travail unique pour toutes les pages)
+# ✅ Taille cible en pixels (ton nouveau "format")
 PAGE_W_PX = 800
 PAGE_H_PX = 1000
 
 # ✅ DPI de référence : fixe la taille physique du PDF
 BASE_DPI = 100
-
-# ✅ Conversion px -> pt pour les overlays PDF PyMuPDF
-PT_PER_PX = 72.0 / BASE_DPI
-
-
-def _px_rect_to_pdf_rect(left_px, top_px, right_px, bottom_px):
-    return fitz.Rect(
-        left_px * PT_PER_PX,
-        top_px * PT_PER_PX,
-        right_px * PT_PER_PX,
-        bottom_px * PT_PER_PX,
-    )
-
-
-def _overlay_pdf_textbox(
-    pdf_bytes: bytes,
-    page_index: int,
-    rect_px,
-    text: str,
-    font_px: int,
-    align=fitz.TEXT_ALIGN_JUSTIFY,
-) -> bytes:
-    """
-    Injecte un vrai bloc texte PDF dans une page existante.
-    """
-    if not rect_px or not (text or "").strip():
-        return pdf_bytes
-
-    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-    page = doc[page_index]
-
-    fontname = "helv"
-    if FONT_EPILOGUE_REG.exists():
-        try:
-            page.insert_font(
-                fontname="EpilogueRegular", fontfile=str(FONT_EPILOGUE_REG)
-            )
-            fontname = "EpilogueRegular"
-        except Exception:
-            fontname = "helv"
-
-    rect = _px_rect_to_pdf_rect(*rect_px)
-
-    page.insert_textbox(
-        rect,
-        text.strip(),
-        fontname=fontname,
-        fontsize=_px_to_pt(font_px, BASE_DPI),
-        color=(1, 1, 1),
-        align=align,
-    )
-
-    out = doc.tobytes()
-    doc.close()
-    return out
-
 
 # ✅ Taille “physique” (inches) qui correspond à 800x1000 px à BASE_DPI
 PAGE_SIZE_INCH = (PAGE_W_PX / BASE_DPI, PAGE_H_PX / BASE_DPI)
