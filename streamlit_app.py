@@ -4635,10 +4635,18 @@ if uploaded and restaurant_input:
 
     with export_col_action:
         st.subheader("📄 Export PDF")
+        report_dt = (
+            pd.Timestamp(data["raw_date_n"])
+            if data.get("raw_date_n") is not None
+            else None
+        )
+        report_prefix = report_dt.strftime("%y%m") if report_dt is not None else "0000"
+        client_name_safe = str(restaurant_input).strip()
+
         st.download_button(
             label="⬇️ Scarica PDF",
             data=merged_pdf_bytes,
-            file_name=f"Report_{restaurant_input}.pdf",
+            file_name=f"{report_prefix} - Report {client_name_safe}.pdf",
             mime="application/pdf",
         )
 
