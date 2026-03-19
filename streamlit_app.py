@@ -2921,7 +2921,7 @@ def _plot_beverage_cost_axis(axc, d, label):
         label,
         transform=axc.transAxes,
         ha="center",
-        va="top",
+        va="bottom",
         color=COLORS["white"],
         fontsize=10,
         fontproperties=epilogue_regular,
