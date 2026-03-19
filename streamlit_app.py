@@ -4481,13 +4481,13 @@ if uploaded and restaurant_input:
     # =========================
     # FOOD & BEVERAGE COST — graphiques (inchangés)
     # =========================
-    food_title_col_left, food_title_col_right = st.columns([1.2, 1], gap="large")
+    food_title_col_left, food_title_col_right = st.columns([1, 1], gap="large")
     with food_title_col_left:
         st.subheader("📈 Food cost (mensile)")
     with food_title_col_right:
         st.subheader("📈 Beverage cost (mensile)")
 
-    food_col_graph, bev_col_graph = st.columns([1.2, 1], gap="large")
+    food_col_graph, bev_col_graph = st.columns([1, 1], gap="large")
     with food_col_graph:
         food_fig = make_food_cost_fig(data, label=restaurant_input)
         st.pyplot(food_fig)
