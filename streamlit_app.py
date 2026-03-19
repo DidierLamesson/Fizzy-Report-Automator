@@ -2856,7 +2856,7 @@ def _plot_food_cost_axis(axc, d, label):
     axc.set_xticks(range(len(x_labels)))
     axc.set_xticklabels(
         x_labels,
-        rotation=45,
+        rotation=90,
         ha="right",
         color=COLORS["white"],
         fontsize=9,
@@ -2932,7 +2932,7 @@ def _plot_beverage_cost_axis(axc, d, label):
     axc.set_xticks(range(len(x_labels)))
     axc.set_xticklabels(
         x_labels,
-        rotation=45,
+        rotation=90,
         ha="right",
         color=COLORS["white"],
         fontsize=9,
