@@ -2839,25 +2839,24 @@ def _plot_food_cost_axis(axc, d, label):
         zorder=3,
     )
 
-    # Titre ancré dans l'axe (clip_on=True) → pas d'objet flottant dans le PDF
     axc.text(
         0.0,
-        0.99,
+        1.03,
         f"Andamento Food Cost Mensile {d['year_n']}",
         transform=axc.transAxes,
         ha="left",
-        va="top",
+        va="bottom",
         color=COLORS["white"],
         fontsize=12,
         fontproperties=epilogue_semibold,
-        clip_on=True,
+        clip_on=False,
         zorder=5,
     )
 
-    # Label client ancré dans l'axe
+    # Légende ancrée DANS l'axe (clip_on=True) → pas de groupe PDF flottant
     axc.text(
         0.5,
-        0.88,
+        0.97,
         label,
         transform=axc.transAxes,
         ha="center",
@@ -2870,16 +2869,15 @@ def _plot_food_cost_axis(axc, d, label):
     )
 
     axc.set_xticks(range(len(x_labels)))
-    # rotation=0 : élimine les textes rotatifs qui arrivent en diagonale dans Canva
     axc.set_xticklabels(
         x_labels,
-        rotation=0,
-        ha="center",
+        rotation=45,
+        ha="right",
         color=COLORS["white"],
-        fontsize=8,
+        fontsize=9,
         fontproperties=epilogue_regular,
     )
-    axc.tick_params(axis="x", colors=COLORS["white"], labelsize=8, length=0)
+    axc.tick_params(axis="x", colors=COLORS["white"], labelsize=9, length=0)
 
     axc.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
     axc.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
@@ -2917,25 +2915,24 @@ def _plot_beverage_cost_axis(axc, d, label):
         zorder=3,
     )
 
-    # Titre ancré dans l'axe (clip_on=True) → pas d'objet flottant dans le PDF
     axc.text(
         0.0,
-        0.99,
+        1.03,
         f"Andamento Beverage Cost Mensile {d['year_n']}",
         transform=axc.transAxes,
         ha="left",
-        va="top",
+        va="bottom",
         color=COLORS["white"],
         fontsize=12,
         fontproperties=epilogue_semibold,
-        clip_on=True,
+        clip_on=False,
         zorder=5,
     )
 
-    # Label client ancré dans l'axe
+    # Légende ancrée DANS l'axe (clip_on=True) → pas de groupe PDF flottant
     axc.text(
         0.5,
-        0.88,
+        0.97,
         label,
         transform=axc.transAxes,
         ha="center",
@@ -2948,16 +2945,15 @@ def _plot_beverage_cost_axis(axc, d, label):
     )
 
     axc.set_xticks(range(len(x_labels)))
-    # rotation=0 : élimine les textes rotatifs qui arrivent en diagonale dans Canva
     axc.set_xticklabels(
         x_labels,
-        rotation=0,
-        ha="center",
+        rotation=45,
+        ha="right",
         color=COLORS["white"],
-        fontsize=8,
+        fontsize=9,
         fontproperties=epilogue_regular,
     )
-    axc.tick_params(axis="x", colors=COLORS["white"], labelsize=8, length=0)
+    axc.tick_params(axis="x", colors=COLORS["white"], labelsize=9, length=0)
 
     axc.tick_params(axis="y", colors=COLORS["white"], labelsize=9, length=0)
     axc.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, p: f"{v:.0f}%"))
