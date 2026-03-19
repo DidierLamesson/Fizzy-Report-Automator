@@ -1072,7 +1072,7 @@ def _copy_page1_proposals_to_final():
     p2 = st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p2"], "").strip()
 
     parts = [txt for txt in [p1, p2] if txt]
-    st.session_state[FINAL_TEXT_STATE_KEYS["page1_final"]] = "\n\n".join(parts)
+    st.session_state[FINAL_TEXT_STATE_KEYS["page1_final"]] = "\n".join(parts)
 
 
 def _copy_food_proposal_to_final():
@@ -1085,7 +1085,7 @@ def _copy_page2_proposals_to_final():
     food = st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_food"], "").strip()
     bev = st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_bev"], "").strip()
     parts = [t for t in [food, bev] if t]
-    st.session_state[FINAL_TEXT_STATE_KEYS["page2_final"]] = "\n\n".join(parts)
+    st.session_state[FINAL_TEXT_STATE_KEYS["page2_final"]] = "\n".join(parts)
 
 
 def _copy_beverage_proposal_to_final():
