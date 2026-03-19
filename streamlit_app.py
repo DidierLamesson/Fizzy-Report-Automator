@@ -2834,7 +2834,7 @@ def _plot_food_cost_axis(axc, d, label):
         color=COLORS["white"],
         fontsize=12,
         fontproperties=epilogue_semibold,
-        clip_on=False,
+        clip_on=True,
         zorder=5,
     )
 
