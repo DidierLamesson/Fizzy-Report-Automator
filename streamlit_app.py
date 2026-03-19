@@ -2826,7 +2826,7 @@ def _plot_food_cost_axis(axc, d, label):
 
     axc.text(
         0.0,
-        0.98,
+        1.03,
         f"Andamento Food Cost Mensile {d['year_n']}",
         transform=axc.transAxes,
         ha="left",
@@ -2902,7 +2902,7 @@ def _plot_beverage_cost_axis(axc, d, label):
 
     axc.text(
         0.0,
-        0.98,
+        1.03,
         f"Andamento Beverage Cost Mensile {d['year_n']}",
         transform=axc.transAxes,
         ha="left",
