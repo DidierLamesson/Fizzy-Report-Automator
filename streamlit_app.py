@@ -2853,17 +2853,20 @@ def _plot_food_cost_axis(axc, d, label):
         zorder=5,
     )
 
-    axc.plot([], [], marker="o", linestyle="None", color=COLORS["graph1"], label=label)
-    leg = axc.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.02),
-        frameon=False,
+    # Légende ancrée DANS l'axe (clip_on=True) → pas de groupe PDF flottant
+    axc.text(
+        0.5,
+        0.97,
+        label,
+        transform=axc.transAxes,
+        ha="center",
+        va="top",
+        color=COLORS["white"],
         fontsize=10,
-        labelcolor=COLORS["white"],
-        handlelength=0,
+        fontproperties=epilogue_regular,
+        clip_on=True,
+        zorder=5,
     )
-    for t in leg.get_texts():
-        t.set_fontproperties(epilogue_regular)
 
     axc.set_xticks(range(len(x_labels)))
     axc.set_xticklabels(
@@ -2926,17 +2929,20 @@ def _plot_beverage_cost_axis(axc, d, label):
         zorder=5,
     )
 
-    axc.plot([], [], marker="o", linestyle="None", color=bev_color, label=label)
-    leg = axc.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.02),
-        frameon=False,
+    # Légende ancrée DANS l'axe (clip_on=True) → pas de groupe PDF flottant
+    axc.text(
+        0.5,
+        0.97,
+        label,
+        transform=axc.transAxes,
+        ha="center",
+        va="top",
+        color=COLORS["white"],
         fontsize=10,
-        labelcolor=COLORS["white"],
-        handlelength=0,
+        fontproperties=epilogue_regular,
+        clip_on=True,
+        zorder=5,
     )
-    for t in leg.get_texts():
-        t.set_fontproperties(epilogue_regular)
 
     axc.set_xticks(range(len(x_labels)))
     axc.set_xticklabels(
@@ -2977,98 +2983,6 @@ def _draw_beverage_cost_chart_in_page_2(
     """
     axc = fig.add_axes([left, bottom, width, height], facecolor=COLORS["bg"])
     return _plot_beverage_cost_axis(axc, d=d, label=label)
-
-
-def _render_chart_as_png_array(plot_func, d, label, width_px, height_px, dpi):
-    """
-    Rend un graphique dans une figure temporaire et retourne un tableau RGBA.
-    Stratégie : le graphique est "photographié" à haute résolution,
-    ce qui préserve 100% du rendu visuel (rotation 45°, légende, titres hors-axe)
-    tout en l'intégrant comme une image dans le PDF — Canva n'a plus d'objets
-    vectoriels rotatifs à interpréter.
-    """
-    # On rend à 2× la résolution pour conserver la netteté
-    render_dpi = dpi * 2
-    fig_w_in = width_px / dpi
-    fig_h_in = height_px / dpi
-
-    fig_tmp = plt.figure(
-        figsize=(fig_w_in, fig_h_in),
-        dpi=render_dpi,
-        facecolor=COLORS["bg"],
-    )
-    # Marges généreuses pour que titres/légendes hors-axe soient inclus
-    ax_tmp = fig_tmp.add_axes([0.12, 0.22, 0.76, 0.58], facecolor=COLORS["bg"])
-    plot_func(ax_tmp, d, label)
-
-    buf = BytesIO()
-    fig_tmp.savefig(
-        buf,
-        format="png",
-        bbox_inches="tight",
-        pad_inches=0.02,
-        facecolor=fig_tmp.get_facecolor(),
-        edgecolor="none",
-        dpi=render_dpi,
-    )
-    plt.close(fig_tmp)
-    buf.seek(0)
-
-    from PIL import Image as PILImage
-    import numpy as np
-
-    img = PILImage.open(buf).convert("RGBA")
-    return np.array(img)
-
-
-def _draw_food_cost_chart_rasterized(fig, left, bottom, width, height, d, label, dpi):
-    """
-    Version PDF rasterisée du graphique Food Cost.
-    Rendu visuel 100% identique à la version vectorielle,
-    mais encapsulé comme image PNG → aucun texte rotatif dans le PDF.
-    """
-    W_px = int(fig.get_figwidth() * fig.dpi * width)
-    H_px = int(fig.get_figheight() * fig.dpi * height)
-
-    img_array = _render_chart_as_png_array(
-        _plot_food_cost_axis, d, label, W_px, H_px, dpi
-    )
-
-    ax_img = fig.add_axes([left, bottom, width, height], facecolor="none")
-    ax_img.set_axis_off()
-    ax_img.imshow(
-        img_array,
-        aspect="auto",
-        extent=[0, 1, 0, 1],
-        transform=ax_img.transAxes,
-        zorder=5,
-    )
-    return ax_img
-
-
-def _draw_beverage_cost_chart_rasterized(
-    fig, left, bottom, width, height, d, label, dpi
-):
-    """
-    Version PDF rasterisée du graphique Beverage Cost.
-    """
-    W_px = int(fig.get_figwidth() * fig.dpi * width)
-    H_px = int(fig.get_figheight() * fig.dpi * height)
-
-    img_array = _render_chart_as_png_array(
-        _plot_beverage_cost_axis, d, label, W_px, H_px, dpi
-    )
-
-    ax_img = fig.add_axes([left, bottom, width, height], facecolor="none")
-    ax_img.set_axis_off()
-    ax_img.imshow(
-        img_array,
-        aspect="auto",
-        extent=[0, 1, 0, 1],
-        transform=ax_img.transAxes,
-        zorder=5,
-    )
-    return ax_img
 
 
 def _draw_body_page_2_food_beverage_cost(
@@ -3126,8 +3040,8 @@ def _draw_body_page_2_food_beverage_cost(
 
     fig = ax.figure
 
-    # --- Charts rasterisés (PNG intégré) : préserve le visuel 45° sans vectoriel rotatif ---
-    ax_food = _draw_food_cost_chart_rasterized(
+    # --- Charts (2 colonnes) ---
+    ax_food = _draw_food_cost_chart_in_page_2(
         fig,
         left=x(left_x0),
         bottom=y_from_top(chart_top + chart_h),
@@ -3138,7 +3052,7 @@ def _draw_body_page_2_food_beverage_cost(
         dpi=dpi,
     )
 
-    ax_bev = _draw_beverage_cost_chart_rasterized(
+    ax_bev = _draw_beverage_cost_chart_in_page_2(
         fig,
         left=x(right_x0),
         bottom=y_from_top(chart_top + chart_h),
@@ -3149,10 +3063,22 @@ def _draw_body_page_2_food_beverage_cost(
         dpi=dpi,
     )
 
-    # Mesure du bas des charts : avec des axes-image, on utilise directement
-    # la position déclarée (chart_top + chart_h) qui est exacte par construction.
-    # On ajoute une marge fixe pour les titres éventuellement inclus dans le PNG.
-    true_bottom = float(chart_top + chart_h)
+    # ✅ Mesure du vrai bas rendu (inclut tick labels / titres / etc.)
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+
+    page_bb = ax.get_window_extent(renderer=r)  # bbox de la page (display px)
+    scale_y = page_bb.height / H_PX  # conversion display_px -> layout_px
+
+    def bottom_from_top_layout_px(axc):
+        tight = axc.get_tightbbox(r)  # bbox "tight" (display px)
+        # distance depuis le haut de la page (layout px)
+        return (page_bb.y1 - tight.y0) / scale_y
+
+    true_bottom = max(
+        bottom_from_top_layout_px(ax_food),
+        bottom_from_top_layout_px(ax_bev),
+    )
 
     return float(true_bottom)
 
