@@ -2041,21 +2041,13 @@ def _fmt_pct1(v):
 
 
 def _draw_body_fc_bc_summary(
-    ax,
-    W_PX,
-    H_PX,
-    d,
-    restaurant_name: str,
-    analysis_text: str,
-    dpi: int,
-    cfg=None,
-    ax_text=None,
+    ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str, dpi: int, cfg=None
 ):
     """
     Body type screenshot:
     - gauche: FC/BC medio ultimi 6 mesi + vs N-1 (2 lignes)
-    - droite: texte justifié dans ax_text si fourni, sinon dans ax
-    ax_text : axe dédié pour le paragraphe analytique (groupe PDF isolé → Canva).
+    - droite: texte justifié
+    - top align: 'vs N-1' == top du paragraphe
     """
     cfg = {**BODY_FC_BC_SUMMARY_CFG, **(cfg or {})}
 
@@ -2294,26 +2286,18 @@ def _draw_body_fc_bc_summary(
         )
 
     # --- paragraphe justifié (TOP aligné avec "vs ...") ---
-    # --- Paragraphe analytique ---
-    # Si ax_text est fourni, on y dessine le texte dans son propre repère (0..W_PX x 0..H_PX).
-    # Sinon, on dessine dans ax comme avant (compatibilité preview Streamlit).
-    ax_para = ax_text if ax_text is not None else ax
-    H_PX_para = (
-        H_PX if ax_text is None else ax_text.get_ylim()[1]
-    )  # toujours 1 (normalisé)
-
-    ax_para.figure.canvas.draw()
-    r_para = ax_para.figure.canvas.get_renderer()
-    ax_bb_para = ax_para.get_window_extent(renderer=r_para)
-    ax_w_render = ax_bb_para.width
-    scale_y_para = ax_bb_para.height / H_PX
+    ax.figure.canvas.draw()
+    r = ax.figure.canvas.get_renderer()
+    ax_bb = ax.get_window_extent(renderer=r)
+    ax_w_render = ax_bb.width
+    scale_y = ax_bb.height / H_PX
 
     col_px_layout = para_right_edge_px - right_x0
     col_px_render = ax_w_render * (col_px_layout / W_PX)
 
     para_max_bottom_px = cfg.get("para_max_bottom_px")
     if para_max_bottom_px is not None:
-        max_h_render = max(0.0, (para_max_bottom_px - top_px) * scale_y_para)
+        max_h_render = max(0.0, (para_max_bottom_px - top_px) * scale_y)
         text_wrapped = _fit_justified_paragraph_to_height(
             ax,
             (analysis_text or "").strip(),
@@ -2334,41 +2318,19 @@ def _draw_body_fc_bc_summary(
             dpi=dpi,
         )
 
-    if ax_text is not None:
-        # ax_text couvre exactement la zone du paragraphe (colonne droite) :
-        # son repère est [0,1] x [0,1], on mappe right_x0 / top_px dans ce repère.
-        ax_text.set_axis_off()
-        ax_text.set_aspect("auto")
-        ax_text.set_xlim(0, 1)
-        ax_text.set_ylim(0, 1)
-        ax_text.patch.set_alpha(0)
-        ax_text.text(
-            0.0,  # x=0 dans ax_text = bord gauche de la colonne droite
-            1.0,  # y=1 dans ax_text = haut de la zone texte
-            text_wrapped,
-            transform=ax_text.transAxes,
-            ha="left",
-            va="top",
-            color=COLORS["white"],
-            fontsize=_px_to_pt(cfg["para_font_px"], dpi),
-            fontproperties=epilogue_regular,
-            linespacing=cfg["para_linespacing"],
-            zorder=850,
-        )
-    else:
-        ax.text(
-            x(right_x0),
-            y_from_top(top_px),
-            text_wrapped,
-            transform=ax.transAxes,
-            ha="left",
-            va="top",
-            color=COLORS["white"],
-            fontsize=_px_to_pt(cfg["para_font_px"], dpi),
-            fontproperties=epilogue_regular,
-            linespacing=cfg["para_linespacing"],
-            zorder=850,
-        )
+    ax.text(
+        x(right_x0),
+        y_from_top(top_px),
+        text_wrapped,
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        color=COLORS["white"],
+        fontsize=_px_to_pt(cfg["para_font_px"], dpi),
+        fontproperties=epilogue_regular,
+        linespacing=cfg["para_linespacing"],
+        zorder=850,
+    )
 
 
 def _place_img_px(ax, img, W_PX, H_PX, left_px, top_px, width_px, z=1000):
@@ -2891,17 +2853,20 @@ def _plot_food_cost_axis(axc, d, label):
         zorder=5,
     )
 
-    axc.plot([], [], marker="o", linestyle="None", color=COLORS["graph1"], label=label)
-    leg = axc.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.02),
-        frameon=False,
+    # Légende ancrée DANS l'axe (clip_on=True) → pas de groupe PDF flottant
+    axc.text(
+        0.5,
+        0.97,
+        label,
+        transform=axc.transAxes,
+        ha="center",
+        va="top",
+        color=COLORS["white"],
         fontsize=10,
-        labelcolor=COLORS["white"],
-        handlelength=0,
+        fontproperties=epilogue_regular,
+        clip_on=True,
+        zorder=5,
     )
-    for t in leg.get_texts():
-        t.set_fontproperties(epilogue_regular)
 
     axc.set_xticks(range(len(x_labels)))
     axc.set_xticklabels(
@@ -2964,17 +2929,20 @@ def _plot_beverage_cost_axis(axc, d, label):
         zorder=5,
     )
 
-    axc.plot([], [], marker="o", linestyle="None", color=bev_color, label=label)
-    leg = axc.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.02),
-        frameon=False,
+    # Légende ancrée DANS l'axe (clip_on=True) → pas de groupe PDF flottant
+    axc.text(
+        0.5,
+        0.97,
+        label,
+        transform=axc.transAxes,
+        ha="center",
+        va="top",
+        color=COLORS["white"],
         fontsize=10,
-        labelcolor=COLORS["white"],
-        handlelength=0,
+        fontproperties=epilogue_regular,
+        clip_on=True,
+        zorder=5,
     )
-    for t in leg.get_texts():
-        t.set_fontproperties(epilogue_regular)
 
     axc.set_xticks(range(len(x_labels)))
     axc.set_xticklabels(
@@ -3015,98 +2983,6 @@ def _draw_beverage_cost_chart_in_page_2(
     """
     axc = fig.add_axes([left, bottom, width, height], facecolor=COLORS["bg"])
     return _plot_beverage_cost_axis(axc, d=d, label=label)
-
-
-def _render_chart_as_png_array(plot_func, d, label, width_px, height_px, dpi):
-    """
-    Rend un graphique dans une figure temporaire et retourne un tableau RGBA.
-    Stratégie : le graphique est "photographié" à haute résolution,
-    ce qui préserve 100% du rendu visuel (rotation 45°, légende, titres hors-axe)
-    tout en l'intégrant comme une image dans le PDF — Canva n'a plus d'objets
-    vectoriels rotatifs à interpréter.
-    """
-    # On rend à 2× la résolution pour conserver la netteté
-    render_dpi = dpi * 2
-    fig_w_in = width_px / dpi
-    fig_h_in = height_px / dpi
-
-    fig_tmp = plt.figure(
-        figsize=(fig_w_in, fig_h_in),
-        dpi=render_dpi,
-        facecolor=COLORS["bg"],
-    )
-    # Marges généreuses pour que titres/légendes hors-axe soient inclus
-    ax_tmp = fig_tmp.add_axes([0.12, 0.22, 0.76, 0.58], facecolor=COLORS["bg"])
-    plot_func(ax_tmp, d, label)
-
-    buf = BytesIO()
-    fig_tmp.savefig(
-        buf,
-        format="png",
-        bbox_inches="tight",
-        pad_inches=0.02,
-        facecolor=fig_tmp.get_facecolor(),
-        edgecolor="none",
-        dpi=render_dpi,
-    )
-    plt.close(fig_tmp)
-    buf.seek(0)
-
-    from PIL import Image as PILImage
-    import numpy as np
-
-    img = PILImage.open(buf).convert("RGBA")
-    return np.array(img)
-
-
-def _draw_food_cost_chart_rasterized(fig, left, bottom, width, height, d, label, dpi):
-    """
-    Version PDF rasterisée du graphique Food Cost.
-    Rendu visuel 100% identique à la version vectorielle,
-    mais encapsulé comme image PNG → aucun texte rotatif dans le PDF.
-    """
-    W_px = int(fig.get_figwidth() * fig.dpi * width)
-    H_px = int(fig.get_figheight() * fig.dpi * height)
-
-    img_array = _render_chart_as_png_array(
-        _plot_food_cost_axis, d, label, W_px, H_px, dpi
-    )
-
-    ax_img = fig.add_axes([left, bottom, width, height], facecolor="none")
-    ax_img.set_axis_off()
-    ax_img.imshow(
-        img_array,
-        aspect="auto",
-        extent=[0, 1, 0, 1],
-        transform=ax_img.transAxes,
-        zorder=5,
-    )
-    return ax_img
-
-
-def _draw_beverage_cost_chart_rasterized(
-    fig, left, bottom, width, height, d, label, dpi
-):
-    """
-    Version PDF rasterisée du graphique Beverage Cost.
-    """
-    W_px = int(fig.get_figwidth() * fig.dpi * width)
-    H_px = int(fig.get_figheight() * fig.dpi * height)
-
-    img_array = _render_chart_as_png_array(
-        _plot_beverage_cost_axis, d, label, W_px, H_px, dpi
-    )
-
-    ax_img = fig.add_axes([left, bottom, width, height], facecolor="none")
-    ax_img.set_axis_off()
-    ax_img.imshow(
-        img_array,
-        aspect="auto",
-        extent=[0, 1, 0, 1],
-        transform=ax_img.transAxes,
-        zorder=5,
-    )
-    return ax_img
 
 
 def _draw_body_page_2_food_beverage_cost(
@@ -3164,8 +3040,8 @@ def _draw_body_page_2_food_beverage_cost(
 
     fig = ax.figure
 
-    # --- Charts rasterisés (PNG intégré) : préserve le visuel 45° sans vectoriel rotatif ---
-    ax_food = _draw_food_cost_chart_rasterized(
+    # --- Charts (2 colonnes) ---
+    ax_food = _draw_food_cost_chart_in_page_2(
         fig,
         left=x(left_x0),
         bottom=y_from_top(chart_top + chart_h),
@@ -3176,7 +3052,7 @@ def _draw_body_page_2_food_beverage_cost(
         dpi=dpi,
     )
 
-    ax_bev = _draw_beverage_cost_chart_rasterized(
+    ax_bev = _draw_beverage_cost_chart_in_page_2(
         fig,
         left=x(right_x0),
         bottom=y_from_top(chart_top + chart_h),
@@ -3187,10 +3063,22 @@ def _draw_body_page_2_food_beverage_cost(
         dpi=dpi,
     )
 
-    # Mesure du bas des charts : avec des axes-image, on utilise directement
-    # la position déclarée (chart_top + chart_h) qui est exacte par construction.
-    # On ajoute une marge fixe pour les titres éventuellement inclus dans le PNG.
-    true_bottom = float(chart_top + chart_h)
+    # ✅ Mesure du vrai bas rendu (inclut tick labels / titres / etc.)
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+
+    page_bb = ax.get_window_extent(renderer=r)  # bbox de la page (display px)
+    scale_y = page_bb.height / H_PX  # conversion display_px -> layout_px
+
+    def bottom_from_top_layout_px(axc):
+        tight = axc.get_tightbbox(r)  # bbox "tight" (display px)
+        # distance depuis le haut de la page (layout px)
+        return (page_bb.y1 - tight.y0) / scale_y
+
+    true_bottom = max(
+        bottom_from_top_layout_px(ax_food),
+        bottom_from_top_layout_px(ax_bev),
+    )
 
     return float(true_bottom)
 
@@ -4271,39 +4159,12 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str 
     )
     ax_summary.patch.set_alpha(0)  # fond transparent
 
-    # --- ax_text : axe dédié UNIQUEMENT pour le paragraphe analytique ---
-    # Positionné exactement sur la colonne droite (right_x0 -> bord droit).
-    # Dans Canva, ce groupe PDF est un objet texte indépendant, sélectionnable
-    # et modifiable séparément des métriques FC/BC.
-    cfg_sum = {
-        **BODY_FC_BC_SUMMARY_CFG,
-        "top_px": 0,
-        "para_max_bottom_px": float(summary_h_layout_px - 10),
-    }
-    left_margin = cfg_sum["side_margin_px"]
-    right_margin = cfg_sum["right_edge_margin_px"]
-    gap = cfg_sum["col_gap_px"]
-    usable_w = W_PX - left_margin - right_margin - gap
-    left_w = int(usable_w * cfg_sum["left_col_ratio"])
-    right_x0_px = left_margin + left_w + gap  # bord gauche colonne texte
-    right_w_px = W_PX - right_x0_px - right_margin  # largeur colonne texte
-
-    # Position normalisée dans la figure
-    ax_text_left = right_x0_px / W_PX
-    ax_text_bottom = ax_sum_bottom  # même baseline que ax_summary
-    ax_text_width = right_w_px / W_PX
-    ax_text_height = ax_sum_height
-
-    ax_text = ax.figure.add_axes(
-        [ax_text_left, ax_text_bottom, ax_text_width, ax_text_height],
-        facecolor="none",
-    )
-    ax_text.patch.set_alpha(0)
-
+    # On passe top_px=0 car l'ax_summary commence exactement au bon endroit :
+    # la fonction dessine à partir du haut de son propre repère.
     _draw_body_fc_bc_summary(
         ax_summary,
         W_PX,
-        summary_h_layout_px,
+        summary_h_layout_px,  # H_PX local = hauteur de la zone summary
         d,
         restaurant_name,
         analysis_text,
@@ -4312,7 +4173,6 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str 
             "top_px": 0,
             "para_max_bottom_px": float(summary_h_layout_px - 10),
         },
-        ax_text=ax_text,
     )
 
 
