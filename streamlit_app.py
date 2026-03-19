@@ -1890,29 +1890,20 @@ def _justify_line_to_px(ax, line, target_width_px, font_px, fontprops, dpi):
     return "".join(out)
 
 
-def _justify_paragraph_to_px(ax, text, width_px, font_px, fontprops, dpi):
-    # garde les paragraphes (séparés par lignes vides)
+def _wrap_paragraph_simple(ax, text, width_px, font_px, fontprops, dpi):
+    """
+    Wrapping simple SANS justification par espaces.
+    Produit un seul bloc texte dans le PDF → Canva le reçoit comme un objet unique.
+    """
     paras = [p.strip() for p in (text or "").split("\n\n") if p.strip()]
     out_lines = []
-
     for pi, p in enumerate(paras):
-        # wrap par largeur px
         lines = _wrap_text_by_px(
             ax, p.replace("\n", " "), width_px, font_px, fontprops, dpi
         )
-
-        # justifie toutes les lignes sauf la dernière
-        for li, ln in enumerate(lines):
-            if li < len(lines) - 1:
-                out_lines.append(
-                    _justify_line_to_px(ax, ln, width_px, font_px, fontprops, dpi)
-                )
-            else:
-                out_lines.append(ln)
-
+        out_lines.extend(lines)
         if pi < len(paras) - 1:
-            out_lines.append("")  # ligne vide entre paragraphes
-
+            out_lines.append("")
     return "\n".join(out_lines)
 
 
@@ -2276,7 +2267,7 @@ def _draw_body_fc_bc_summary(
             zorder=900,
         )
 
-    # --- paragraphe justifié (TOP aligné avec "vs ...") ---
+    # --- paragraphe (sans justification → objet PDF unique) ---
     ax.figure.canvas.draw()
     r = ax.figure.canvas.get_renderer()
     ax_bb = ax.get_window_extent(renderer=r)
@@ -2286,28 +2277,14 @@ def _draw_body_fc_bc_summary(
     col_px_layout = para_right_edge_px - right_x0
     col_px_render = ax_w_render * (col_px_layout / W_PX)
 
-    para_max_bottom_px = cfg.get("para_max_bottom_px")
-    if para_max_bottom_px is not None:
-        max_h_render = max(0.0, (para_max_bottom_px - top_px) * scale_y)
-        text_wrapped = _fit_justified_paragraph_to_height(
-            ax,
-            (analysis_text or "").strip(),
-            width_px=col_px_render,
-            font_px=cfg["para_font_px"],
-            fontprops=epilogue_regular,
-            dpi=dpi,
-            linespacing=cfg["para_linespacing"],
-            max_height_render_px=max_h_render,
-        )
-    else:
-        text_wrapped = _justify_paragraph_to_px(
-            ax,
-            (analysis_text or "").strip(),
-            width_px=col_px_render,
-            font_px=cfg["para_font_px"],
-            fontprops=epilogue_regular,
-            dpi=dpi,
-        )
+    text_wrapped = _wrap_paragraph_simple(
+        ax,
+        (analysis_text or "").strip(),
+        width_px=col_px_render,
+        font_px=cfg["para_font_px"],
+        fontprops=epilogue_regular,
+        dpi=dpi,
+    )
 
     ax.text(
         x(right_x0),
