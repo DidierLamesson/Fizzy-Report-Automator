@@ -2826,15 +2826,15 @@ def _plot_food_cost_axis(axc, d, label):
 
     axc.text(
         0.0,
-        1.03,
+        0.98,
         f"Andamento Food Cost Mensile {d['year_n']}",
         transform=axc.transAxes,
         ha="left",
-        va="bottom",
+        va="top",
         color=COLORS["white"],
         fontsize=12,
         fontproperties=epilogue_semibold,
-        clip_on=False,
+        clip_on=True,
         zorder=5,
     )
 
@@ -2902,15 +2902,15 @@ def _plot_beverage_cost_axis(axc, d, label):
 
     axc.text(
         0.0,
-        1.03,
+        0.98,
         f"Andamento Beverage Cost Mensile {d['year_n']}",
         transform=axc.transAxes,
         ha="left",
-        va="bottom",
+        va="top",
         color=COLORS["white"],
         fontsize=12,
         fontproperties=epilogue_semibold,
-        clip_on=False,
+        clip_on=True,
         zorder=5,
     )
 
