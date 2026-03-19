@@ -991,8 +991,7 @@ SUGGESTION_TEXT_STATE_KEYS = {
 
 FINAL_TEXT_STATE_KEYS = {
     "page1_final": "page1_final_text",
-    "page2_food_final": "page2_food_final_text",
-    "page2_bev_final": "page2_bev_final_text",
+    "page2_final": "page2_final_text",  # ← une seule clé
     "page3_staff_final": "page3_staff_final_text",
 }
 
@@ -1038,8 +1037,7 @@ def _ensure_report_text_state(d, restaurant_name: str):
 
     final_defaults = {
         FINAL_TEXT_STATE_KEYS["page1_final"]: "",
-        FINAL_TEXT_STATE_KEYS["page2_food_final"]: "",
-        FINAL_TEXT_STATE_KEYS["page2_bev_final"]: "",
+        FINAL_TEXT_STATE_KEYS["page2_final"]: "",  # ← une seule clé
         FINAL_TEXT_STATE_KEYS["page3_staff_final"]: "",
     }
 
@@ -1062,12 +1060,7 @@ def _ensure_report_text_state(d, restaurant_name: str):
 def get_report_text_state():
     return {
         "page1_final": st.session_state.get(FINAL_TEXT_STATE_KEYS["page1_final"], ""),
-        "page2_food_final": st.session_state.get(
-            FINAL_TEXT_STATE_KEYS["page2_food_final"], ""
-        ),
-        "page2_bev_final": st.session_state.get(
-            FINAL_TEXT_STATE_KEYS["page2_bev_final"], ""
-        ),
+        "page2_final": st.session_state.get(FINAL_TEXT_STATE_KEYS["page2_final"], ""),
         "page3_staff_final": st.session_state.get(
             FINAL_TEXT_STATE_KEYS["page3_staff_final"], ""
         ),
@@ -1086,6 +1079,13 @@ def _copy_food_proposal_to_final():
     st.session_state[FINAL_TEXT_STATE_KEYS["page2_food_final"]] = st.session_state.get(
         SUGGESTION_TEXT_STATE_KEYS["page2_food"], ""
     ).strip()
+
+
+def _copy_page2_proposals_to_final():
+    food = st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_food"], "").strip()
+    bev = st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_bev"], "").strip()
+    parts = [t for t in [food, bev] if t]
+    st.session_state[FINAL_TEXT_STATE_KEYS["page2_final"]] = "\n\n".join(parts)
 
 
 def _copy_beverage_proposal_to_final():
@@ -1114,18 +1114,9 @@ def _join_text_blocks(*blocks):
 
 
 def build_report_text_payload(report_texts: dict):
-    page1_text = _join_text_blocks(
-        report_texts.get("page1_final", ""),
-    )
-
-    page2_text = _join_text_blocks(
-        report_texts.get("page2_food_final", ""),
-        report_texts.get("page2_bev_final", ""),
-    )
-
-    page3_text = _join_text_blocks(
-        report_texts.get("page3_staff_final", ""),
-    )
+    page1_text = _join_text_blocks(report_texts.get("page1_final", ""))
+    page2_text = _join_text_blocks(report_texts.get("page2_final", ""))  # ← direct
+    page3_text = _join_text_blocks(report_texts.get("page3_staff_final", ""))
 
     return {
         "page1_analysis_text": page1_text,
@@ -4494,78 +4485,56 @@ if uploaded and restaurant_input:
     st.divider()
 
     # =========================
-    # FOOD COST
+    # FOOD & BEVERAGE COST — graphiques (inchangés)
     # =========================
     food_title_col_left, food_title_col_right = st.columns([1.2, 1], gap="large")
-
     with food_title_col_left:
         st.subheader("📈 Food cost (mensile)")
-
     with food_title_col_right:
-        st.subheader("✍️ Analisa scritta")
+        st.subheader("📈 Beverage cost (mensile)")
 
-    food_col_graph, food_col_text = st.columns([1.2, 1], gap="large")
-
+    food_col_graph, bev_col_graph = st.columns([1.2, 1], gap="large")
     with food_col_graph:
         food_fig = make_food_cost_fig(data, label=restaurant_input)
         st.pyplot(food_fig)
-
-    with food_col_text:
-
-        st.text_area(
-            "💡 Proposta Food Cost",
-            value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_food"], ""),
-            height=150,
-            key=SUGGESTION_TEXT_STATE_KEYS["page2_food"],
-            disabled=True,
-        )
-
-        st.text_area(
-            "📝 Testo finale (modificabile)",
-            height=150,
-            key=FINAL_TEXT_STATE_KEYS["page2_food_final"],
-            placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
-        )
-        btn_spacer, btn_col = st.columns([2.4, 1])
-        with btn_col:
-            st.button(
-                "📥 Usa la proposta",
-                key="use_proposal_food",
-                on_click=_copy_food_proposal_to_final,
-                width="stretch",
-            )
-
-    # =========================
-    # BEVERAGE COST
-    # =========================
-    st.subheader("📈 Beverage cost (mensile)")
-    bev_col_graph, bev_col_text = st.columns([1.2, 1], gap="large")
-
     with bev_col_graph:
         bev_fig = make_beverage_cost_fig(data, label=restaurant_input)
         st.pyplot(bev_fig)
 
-    with bev_col_text:
+    # =========================
+    # TEXTE PAGE 2 — bloc unique (même structure que page 1 et page 3)
+    # =========================
+    st.subheader("✍️ Analisa scritta — Food & Beverage cost")
 
+    p2_col_suggest, p2_col_edit = st.columns([1, 1], gap="large")
+
+    with p2_col_suggest:
+        st.text_area(
+            "💡 Proposta Food Cost",
+            value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_food"], ""),
+            height=150,
+            disabled=True,
+        )
         st.text_area(
             "💡 Proposta Beverage Cost",
             value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_bev"], ""),
             height=150,
-            key=SUGGESTION_TEXT_STATE_KEYS["page2_bev"],
             disabled=True,
         )
+
+    with p2_col_edit:
         st.text_area(
             "📝 Testo finale (modificabile)",
-            height=150,
-            key=FINAL_TEXT_STATE_KEYS["page2_bev_final"],
-            placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
+            height=330,
+            key=FINAL_TEXT_STATE_KEYS["page2_final"],
+            placeholder="Copiez ici les propositions ci-dessus puis modifiez-les.",
         )
         btn_spacer, btn_col = st.columns([2.4, 1])
         with btn_col:
             st.button(
-                "📥 Usa la proposta",
-                key="use_proposal_bev",
-                on_click=_copy_beverage_proposal_to_final,
+                "📥 Usa le proposte",
+                key="use_proposal_page2",
+                on_click=_copy_page2_proposals_to_final,
                 width="stretch",
             )
 
