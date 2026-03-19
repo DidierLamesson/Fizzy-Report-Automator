@@ -2853,17 +2853,20 @@ def _plot_food_cost_axis(axc, d, label):
         zorder=5,
     )
 
-    axc.plot([], [], marker="o", linestyle="None", color=COLORS["graph1"], label=label)
-    leg = axc.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.02),
-        frameon=False,
+    # Légende ancrée DANS l'axe (clip_on=True) → pas de groupe PDF flottant
+    axc.text(
+        0.5,
+        0.97,
+        label,
+        transform=axc.transAxes,
+        ha="center",
+        va="top",
+        color=COLORS["white"],
         fontsize=10,
-        labelcolor=COLORS["white"],
-        handlelength=0,
+        fontproperties=epilogue_regular,
+        clip_on=True,
+        zorder=5,
     )
-    for t in leg.get_texts():
-        t.set_fontproperties(epilogue_regular)
 
     axc.set_xticks(range(len(x_labels)))
     axc.set_xticklabels(
@@ -2926,17 +2929,20 @@ def _plot_beverage_cost_axis(axc, d, label):
         zorder=5,
     )
 
-    axc.plot([], [], marker="o", linestyle="None", color=bev_color, label=label)
-    leg = axc.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.02),
-        frameon=False,
+    # Légende ancrée DANS l'axe (clip_on=True) → pas de groupe PDF flottant
+    axc.text(
+        0.5,
+        0.97,
+        label,
+        transform=axc.transAxes,
+        ha="center",
+        va="top",
+        color=COLORS["white"],
         fontsize=10,
-        labelcolor=COLORS["white"],
-        handlelength=0,
+        fontproperties=epilogue_regular,
+        clip_on=True,
+        zorder=5,
     )
-    for t in leg.get_texts():
-        t.set_fontproperties(epilogue_regular)
 
     axc.set_xticks(range(len(x_labels)))
     axc.set_xticklabels(
@@ -4135,17 +4141,37 @@ def _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str 
         cfg={"header_line_y_px": int(header_line_y_px)},
     )
 
+    # --- Proposition B : ax dédié pour le bloc synthèse FC/BC + texte analytique ---
+    # On positionne cet ax dans la zone basse de la figure (sous les charts),
+    # ce qui isole ce groupe dans le PDF et le rend sélectionnable dans Canva.
+    # Le système de coordonnées interne (top_px=0) est recalibré pour que le
+    # rendu final soit pixel-perfect identique à l'original.
+    summary_top_layout_px = int(charts_bottom_px + 20)
+    summary_h_layout_px = H_PX - summary_top_layout_px
+
+    # Coordonnées normalisées dans la figure (bottom-left origin de matplotlib)
+    ax_sum_bottom = 1.0 - (summary_top_layout_px + summary_h_layout_px) / H_PX
+    ax_sum_height = summary_h_layout_px / H_PX
+
+    ax_summary = ax.figure.add_axes(
+        [0.0, ax_sum_bottom, 1.0, ax_sum_height],
+        facecolor="none",
+    )
+    ax_summary.patch.set_alpha(0)  # fond transparent
+
+    # On passe top_px=0 car l'ax_summary commence exactement au bon endroit :
+    # la fonction dessine à partir du haut de son propre repère.
     _draw_body_fc_bc_summary(
-        ax,
+        ax_summary,
         W_PX,
-        H_PX,
+        summary_h_layout_px,  # H_PX local = hauteur de la zone summary
         d,
         restaurant_name,
         analysis_text,
         dpi,
         cfg={
-            "top_px": int(charts_bottom_px + 20),
-            "para_max_bottom_px": float(H_PX - 10),
+            "top_px": 0,
+            "para_max_bottom_px": float(summary_h_layout_px - 10),
         },
     )
 
