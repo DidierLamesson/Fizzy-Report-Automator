@@ -1890,6 +1890,29 @@ def _justify_line_to_px(ax, line, target_width_px, font_px, fontprops, dpi):
     return "".join(out)
 
 
+def _justify_paragraph_to_px(ax, text, width_px, font_px, fontprops, dpi):
+    """Justifie un paragraphe sur la largeur width_px (en pixels render)."""
+    paras = [p.strip() for p in (text or "").split("\n\n") if p.strip()]
+    out_lines = []
+
+    for pi, p in enumerate(paras):
+        lines = _wrap_text_by_px(
+            ax, p.replace("\n", " "), width_px, font_px, fontprops, dpi
+        )
+        for li, ln in enumerate(lines):
+            if li < len(lines) - 1:
+                out_lines.append(
+                    _justify_line_to_px(ax, ln, width_px, font_px, fontprops, dpi)
+                )
+            else:
+                out_lines.append(ln)
+
+        if pi < len(paras) - 1:
+            out_lines.append("")
+
+    return "\n".join(out_lines)
+
+
 def _wrap_paragraph_simple(ax, text, width_px, font_px, fontprops, dpi):
     """
     Wrapping simple SANS justification par espaces.
