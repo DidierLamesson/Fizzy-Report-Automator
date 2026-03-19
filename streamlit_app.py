@@ -2925,7 +2925,7 @@ def _plot_beverage_cost_axis(axc, d, label):
         color=COLORS["white"],
         fontsize=10,
         fontproperties=epilogue_regular,
-        clip_on=True,
+        clip_on=False,
         zorder=5,
     )
 
