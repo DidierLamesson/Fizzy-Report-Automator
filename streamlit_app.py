@@ -2830,7 +2830,7 @@ def _plot_food_cost_axis(axc, d, label):
         f"Andamento Food Cost Mensile {d['year_n']}",
         transform=axc.transAxes,
         ha="left",
-        va="top",
+        va="bottom",
         color=COLORS["white"],
         fontsize=12,
         fontproperties=epilogue_semibold,
