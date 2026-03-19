@@ -1914,19 +1914,13 @@ def _justify_paragraph_to_px(ax, text, width_px, font_px, fontprops, dpi):
 
 
 def _wrap_paragraph_simple(ax, text, width_px, font_px, fontprops, dpi):
-    """
-    Wrapping simple SANS justification par espaces.
-    Produit un seul bloc texte dans le PDF → Canva le reçoit comme un objet unique.
-    """
     paras = [p.strip() for p in (text or "").split("\n\n") if p.strip()]
     out_lines = []
-    for pi, p in enumerate(paras):
+    for p in paras:
         lines = _wrap_text_by_px(
             ax, p.replace("\n", " "), width_px, font_px, fontprops, dpi
         )
         out_lines.extend(lines)
-        if pi < len(paras) - 1:
-            out_lines.append("")
     return "\n".join(out_lines)
 
 
