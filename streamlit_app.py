@@ -4630,13 +4630,13 @@ if uploaded and restaurant_input:
 
     with export_col_preview:
         st.image(
-            png_bytes_page_1, caption="Aperçu pagina 1 (rendu PDF)", width="stretch"
+            png_bytes_page_1, caption="Anteprima pagina 1 (rendu PDF)", width="stretch"
         )
         st.image(
-            png_bytes_page_2, caption="Aperçu pagina 2 (rendu PDF)", width="stretch"
+            png_bytes_page_2, caption="Anteprima pagina 2 (rendu PDF)", width="stretch"
         )
         st.image(
-            png_bytes_page_3, caption="Aperçu pagina 3 (rendu PDF)", width="stretch"
+            png_bytes_page_3, caption="Anteprima pagina 3 (rendu PDF)", width="stretch"
         )
 
     with export_col_action:
