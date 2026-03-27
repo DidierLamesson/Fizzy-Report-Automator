@@ -840,7 +840,7 @@ def load_data(file):
         df_ra["value"] = df_ra["value"].apply(clean_val)
         df_ra = df_ra[df_ra["value"] > 0]
         df_ra = df_ra.sort_values("value", ascending=True)  # plus grande en haut barh
-        rank_articoli = list(zip(df_ra["label"].astype(str), df_ra["value"]))
+        rank_articoli = list(zip(df_ra["label"].astype(str), df_ra["value"]))[-20:]
 
     if "Export Rank Ricavi" in available_sheets:
         df_rr = pd.read_excel(
@@ -852,7 +852,7 @@ def load_data(file):
         df_rr["value"] = df_rr["value"].apply(clean_val)
         df_rr = df_rr[df_rr["value"] > 0]
         df_rr = df_rr.sort_values("value", ascending=True)
-        rank_ricavi = list(zip(df_rr["label"].astype(str), df_rr["value"]))
+        rank_ricavi = list(zip(df_rr["label"].astype(str), df_rr["value"]))[-20:]
 
     # --- 9. Retour des données ---
     return {
