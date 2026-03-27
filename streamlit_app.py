@@ -3284,7 +3284,8 @@ def make_staff_gauge_fig(d):
     return fig
 
 
-def make_rank_bar_fig(items, value_fmt="qty"):
+# APRÈS
+def make_rank_bar_fig(items, value_fmt="qty", fig_h=None):
     """
     Graphique barres horizontales pour les rankings (Streamlit preview).
     items     : [(label, value), ...] déjà triés asc (la plus grande en haut)
@@ -3298,7 +3299,8 @@ def make_rank_bar_fig(items, value_fmt="qty"):
     values = [float(item[1]) for item in items]
     n = len(labels)
 
-    fig_h = max(4.0, n * 0.38)
+    # APRÈS
+    fig_h = fig_h if fig_h is not None else max(4.0, n * 0.38)
     fig = plt.figure(figsize=(8, fig_h), facecolor=COLORS["bg"])
     ax = fig.add_axes([0.32, 0.04, 0.58, 0.94], facecolor=COLORS["bg"])
 
@@ -4755,7 +4757,10 @@ if uploaded and restaurant_input:
         with rank_col_left:
             st.subheader("🏆 Top Articoli (Quantità)")
             if rank_articoli:
-                fig_art = make_rank_bar_fig(rank_articoli, value_fmt="qty")
+                _shared_h = max(4.0, max(len(rank_articoli), len(rank_ricavi)) * 0.38)
+                fig_art = make_rank_bar_fig(
+                    rank_articoli, value_fmt="qty", fig_h=_shared_h
+                )
                 st.pyplot(fig_art)
             else:
                 st.info("Sheet 'Export Rank Articoli' non trovata o vuota.")
@@ -4763,7 +4768,9 @@ if uploaded and restaurant_input:
         with rank_col_right:
             st.subheader("💰 Top Articoli (Ricavi €)")
             if rank_ricavi:
-                fig_ric = make_rank_bar_fig(rank_ricavi, value_fmt="eur")
+                fig_ric = make_rank_bar_fig(
+                    rank_ricavi, value_fmt="eur", fig_h=_shared_h
+                )
                 st.pyplot(fig_ric)
             else:
                 st.info("Sheet 'Export Rank Ricavi' non trovata o vuota.")
