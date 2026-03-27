@@ -4433,7 +4433,7 @@ if uploaded and restaurant_input:
             "📝 Testo finale (modificabile)",
             height=300,
             key=FINAL_TEXT_STATE_KEYS["page1_final"],
-            placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
+            placeholder="Copia qui la proposta e modificala.",
         )
         btn_spacer, btn_col = st.columns([2.4, 1])
         with btn_col:
@@ -4490,7 +4490,7 @@ if uploaded and restaurant_input:
             "📝 Testo finale (modificabile)",
             height=330,
             key=FINAL_TEXT_STATE_KEYS["page2_final"],
-            placeholder="Copiez ici les propositions ci-dessus puis modifiez-les.",
+            placeholder="Copia qui le proposte e modificala.",
         )
         btn_spacer, btn_col = st.columns([2.4, 1])
         with btn_col:
@@ -4534,7 +4534,7 @@ if uploaded and restaurant_input:
             "📝 Testo finale (modificabile)",
             height=150,
             key=FINAL_TEXT_STATE_KEYS["page3_staff_final"],
-            placeholder="Copiez ici la proposition ci-dessus puis modifiez-la.",
+            placeholder="Copia qui la proposta e modificala.",
         )
         btn_spacer, btn_col = st.columns([2.4, 1])
         with btn_col:
