@@ -120,6 +120,16 @@ def inject_brand_logo():
     )
 
 
+# --- State langue ---
+if "lang" not in st.session_state:
+    st.session_state["lang"] = "it"
+
+
+def _t(it_text, fr_text):
+    """Retourne le texte selon la langue active."""
+    return fr_text if st.session_state["lang"] == "fr" else it_text
+
+
 def inject_brand_css():
     st.html(
         """
@@ -4392,6 +4402,10 @@ if soda_logo_uri:
         """,
         unsafe_allow_html=True,
     )
+lang_label = "🇫🇷 Français" if st.session_state["lang"] == "it" else "🇮🇹 Italiano"
+if st.sidebar.button(lang_label, key="lang_toggle"):
+    st.session_state["lang"] = "fr" if st.session_state["lang"] == "it" else "it"
+    st.rerun()
 
 restaurant_input = st.sidebar.text_input(
     "Nome clienti *", placeholder="es: Ristorante Da Mario"
