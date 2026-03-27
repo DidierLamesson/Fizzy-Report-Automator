@@ -4317,6 +4317,7 @@ def _draw_rank_chart_on_ax(ax, items, value_fmt="qty", dpi=100):
             fontsize=_px_to_pt(10, dpi),
             color=COLORS["white"],
             fontproperties=epilogue_semibold,
+            clip_on=False,
         )
 
     ax.set_yticks(range(n))
@@ -4338,7 +4339,7 @@ def _draw_rank_chart_on_ax(ax, items, value_fmt="qty", dpi=100):
     else:
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{int(v)}"))
 
-    ax.set_xlim(0, max(values) * 1.28)
+    ax.set_xlim(0, max(values))
     ax.grid(axis="x", linestyle="-", alpha=0.15, color=COLORS["white"], zorder=0)
     for s in ax.spines.values():
         s.set_visible(False)
@@ -4423,9 +4424,11 @@ def _draw_a4_page_4(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str 
 
     # --- Titre colonne gauche ---
     ax.text(
-        x(left_x0 + col_w / 2),
+        x(left_x0),
         y_from_top(y_cursor),
         "Quantita venduta",
+        ha="left",
+        va="top",
         ha="center",
         va="top",
         transform=ax.transAxes,
