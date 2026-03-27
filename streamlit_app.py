@@ -4254,7 +4254,7 @@ if soda_logo_uri:
     )
 
 restaurant_input = st.sidebar.text_input(
-    "Nome clienti *", value="es: Ristorante Da Mario"
+    "Nome clienti *", placeholder="es: Ristorante Da Mario"
 )
 uploaded = st.sidebar.file_uploader("Caricare il Report (.xslx))", type="xlsx")
 
