@@ -823,7 +823,40 @@ def load_data(file):
     staff_cost_avg_n = _excel_pct_to_points(df.iloc[46, 2])  # C47
     staff_cost_avg_n_1 = _excel_pct_to_points(df.iloc[46, 3])  # D47
 
-    # --- 8. Retour des données ---
+    # --- 8. Extraction des rankings (optionnel, sheets peuvent être absentes) ---
+    xl_file = pd.ExcelFile(file)
+    available_sheets = xl_file.sheet_names
+
+    rank_articoli = []  # [(label, valeur), ...]
+    rank_ricavi = []
+
+    if "Export Rank Articoli" in available_sheets:
+        df_ra = pd.read_excel(
+            file, sheet_name="Export Rank Articoli", usecols="A:B", header=None
+        )
+        df_ra = df_ra.iloc[1:]  # skip header row
+        df_ra = df_ra.dropna(how="any")  # ignore cellules vides
+        df_ra.columns = ["label", "value"]
+        df_ra["value"] = df_ra["value"].apply(clean_val)
+        df_ra = df_ra[df_ra["value"] > 0]
+        df_ra = df_ra.sort_values(
+            "value", ascending=True
+        )  # plus grande en haut du barh
+        rank_articoli = list(zip(df_ra["label"].astype(str), df_ra["value"]))
+
+    if "Export Rank Ricavi" in available_sheets:
+        df_rr = pd.read_excel(
+            file, sheet_name="Export Rank Ricavi", usecols="A:B", header=None
+        )
+        df_rr = df_rr.iloc[1:]
+        df_rr = df_rr.dropna(how="any")
+        df_rr.columns = ["label", "value"]
+        df_rr["value"] = df_rr["value"].apply(clean_val)
+        df_rr = df_rr[df_rr["value"] > 0]
+        df_rr = df_rr.sort_values("value", ascending=True)
+        rank_ricavi = list(zip(df_rr["label"].astype(str), df_rr["value"]))
+
+    # --- 9. Retour des données ---
     return {
         # Fatturato
         "month_name": mes_it,
@@ -866,6 +899,9 @@ def load_data(file):
         "staff_cost_pctg_n_1": staff_cost_pctg_n_1,
         "staff_cost_avg_n": staff_cost_avg_n,
         "staff_cost_avg_n_1": staff_cost_avg_n_1,
+        # Rankings
+        "rank_articoli": rank_articoli,
+        "rank_ricavi": rank_ricavi,
     }
 
 
@@ -3250,6 +3286,74 @@ def make_staff_gauge_fig(d):
     return fig
 
 
+def make_rank_bar_fig(items, title, value_fmt="qty"):
+    """
+    items   : [(label, value), ...] déjà triés asc (la plus grande sera en haut)
+    title   : titre affiché (non utilisé dans fig, utilisé dans le subheader Streamlit)
+    value_fmt : "qty" → entier,  "eur" → fmt_eur_dot
+    """
+    if not items:
+        return None
+
+    labels = [item[0] for item in items]
+    values = [item[1] for item in items]
+    n = len(labels)
+
+    # Hauteur dynamique : 0.35 pouce par barre, min 4
+    fig_h = max(4, n * 0.38)
+    fig = plt.figure(figsize=(8, fig_h), facecolor=COLORS["bg"])
+    ax = fig.add_axes([0.30, 0.04, 0.62, 0.92], facecolor=COLORS["bg"])
+
+    # Barres — couleur alternée graph1 / graph2
+    colors = [COLORS["graph1"] if i % 2 == 0 else COLORS["graph2"] for i in range(n)]
+    bars = ax.barh(range(n), values, color=colors, height=0.65, zorder=3)
+
+    # Labels des barres (valeur au bout)
+    for i, (bar, v) in enumerate(zip(bars, values)):
+        label_str = (
+            fmt_eur_dot(v)
+            if value_fmt == "eur"
+            else f"{int(round(v)):,}".replace(",", ".")
+        )
+        ax.text(
+            v + max(values) * 0.01,
+            bar.get_y() + bar.get_height() / 2,
+            label_str,
+            va="center",
+            ha="left",
+            fontsize=7,
+            color=COLORS["white"],
+            fontproperties=epilogue_semibold,
+        )
+
+    # Noms des articles (axe Y gauche)
+    ax.set_yticks(range(n))
+    ax.set_yticklabels(
+        labels, fontsize=7, color=COLORS["white"], fontproperties=epilogue_regular
+    )
+    ax.tick_params(axis="y", length=0)
+    ax.tick_params(axis="x", colors=COLORS["white"], labelsize=6, length=0)
+
+    # Axe X formaté
+    if value_fmt == "eur":
+        ax.xaxis.set_major_formatter(
+            ticker.FuncFormatter(lambda x, _: f"{int(x):,}".replace(",", "."))
+        )
+    else:
+        ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{int(x)}"))
+
+    # xlim avec marge pour les labels
+    ax.set_xlim(0, max(values) * 1.25)
+
+    # Style
+    ax.grid(axis="x", linestyle="-", alpha=0.15, color=COLORS["white"], zorder=0)
+    for s in ax.spines.values():
+        s.set_visible(False)
+
+    fig.tight_layout(pad=0.3)
+    return fig
+
+
 def _fmt_pct_no_sign(x, decimals=0):
     if decimals == 0:
         return f"{int(round(float(x)))}%"
@@ -4177,7 +4281,62 @@ def _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str 
 # Pas de footer en page 3 ✅
 
 # =========================
-# 13) CONFIGURATION GLOBALE DES PAGES
+# 13) CONSTRUCTION DE LA PAGE 4
+# =========================
+
+
+def _draw_a4_page_4(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str = ""):
+    ax.set_axis_off()
+    ax.set_aspect("auto")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+
+    dpi = int(ax.figure.dpi)
+
+    # Header bis (sans "Report Mensile")
+    header_line_y_px = (
+        _draw_header1_bis(
+            ax,
+            W_PX=W_PX,
+            H_PX=H_PX,
+            month_label=d["full_date_n"],
+            restaurant_name=restaurant_name,
+            dpi=dpi,
+        )
+        or 0
+    )
+
+    _draw_body_page_3_staff(
+        ax,
+        W_PX,
+        H_PX,
+        d,
+        restaurant_name,
+        analysis_text,
+        dpi,
+        cfg={"header_line_y_px": int(header_line_y_px)},
+    )
+
+
+def _draw_rank_chart_on_ax(ax, items, value_fmt="qty"):
+    """Version PDF du rank bar — dimensions en px absolues."""
+    # même logique que make_rank_bar_fig() mais sans tight_layout
+    # appelée avec un ax déjà positionné dans la page
+
+
+@st.cache_data
+def build_a4_page_4_pdf_bytes(d, restaurant_name, dpi=300) -> bytes: ...
+
+
+# Dans merge_pdf_bytes() :
+merged_pdf_bytes = merge_pdf_bytes(
+    pdf_bytes_page_1,
+    pdf_bytes_page_2,
+    pdf_bytes_page_3,
+    pdf_bytes_page_4,  # ← ajout
+)
+# =========================
+# 14) CONFIGURATION GLOBALE DES PAGES
 # =========================
 
 # ✅ Taille cible en pixels (ton nouveau "format")
@@ -4191,7 +4350,7 @@ BASE_DPI = 100
 PAGE_SIZE_INCH = (PAGE_W_PX / BASE_DPI, PAGE_H_PX / BASE_DPI)
 
 # =========================
-# 14) GENERATION PDF ET PNG
+# 15) GENERATION PDF ET PNG
 # =========================
 
 
@@ -4203,37 +4362,68 @@ def _build_page_bytes(draw_fn, d, restaurant_name, analysis_text, fmt, dpi_rende
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
     draw_fn(ax, PAGE_W_PX, PAGE_H_PX, d, restaurant_name, analysis_text=analysis_text)
     buf = BytesIO()
-    fig.savefig(buf, format=fmt, bbox_inches=None, pad_inches=0, facecolor=fig.get_facecolor(), edgecolor="none")
+    fig.savefig(
+        buf,
+        format=fmt,
+        bbox_inches=None,
+        pad_inches=0,
+        facecolor=fig.get_facecolor(),
+        edgecolor="none",
+    )
     plt.close(fig)
     buf.seek(0)
     return buf.getvalue()
 
 
 @st.cache_data
-def build_a4_pdf_bytes(d, restaurant_name: str, analysis_text: str = "", dpi=300) -> bytes:
-    return _build_page_bytes(_draw_a4_page, d, restaurant_name, analysis_text, "pdf", dpi)
+def build_a4_pdf_bytes(
+    d, restaurant_name: str, analysis_text: str = "", dpi=300
+) -> bytes:
+    return _build_page_bytes(
+        _draw_a4_page, d, restaurant_name, analysis_text, "pdf", dpi
+    )
 
 
-def build_a4_png_preview_bytes(d, restaurant_name: str, analysis_text: str = "", dpi=150) -> bytes:
-    return _build_page_bytes(_draw_a4_page, d, restaurant_name, analysis_text, "png", dpi)
+def build_a4_png_preview_bytes(
+    d, restaurant_name: str, analysis_text: str = "", dpi=150
+) -> bytes:
+    return _build_page_bytes(
+        _draw_a4_page, d, restaurant_name, analysis_text, "png", dpi
+    )
 
 
 @st.cache_data
-def build_a4_page_2_pdf_bytes(d, restaurant_name: str, analysis_text: str = "", dpi=300) -> bytes:
-    return _build_page_bytes(_draw_a4_page_2, d, restaurant_name, analysis_text, "pdf", dpi)
+def build_a4_page_2_pdf_bytes(
+    d, restaurant_name: str, analysis_text: str = "", dpi=300
+) -> bytes:
+    return _build_page_bytes(
+        _draw_a4_page_2, d, restaurant_name, analysis_text, "pdf", dpi
+    )
 
 
-def build_a4_page_2_png_preview_bytes(d, restaurant_name: str, analysis_text: str = "", dpi=150) -> bytes:
-    return _build_page_bytes(_draw_a4_page_2, d, restaurant_name, analysis_text, "png", dpi)
+def build_a4_page_2_png_preview_bytes(
+    d, restaurant_name: str, analysis_text: str = "", dpi=150
+) -> bytes:
+    return _build_page_bytes(
+        _draw_a4_page_2, d, restaurant_name, analysis_text, "png", dpi
+    )
 
 
 @st.cache_data
-def build_a4_page_3_pdf_bytes(d, restaurant_name: str, analysis_text: str = "", dpi=300) -> bytes:
-    return _build_page_bytes(_draw_a4_page_3, d, restaurant_name, analysis_text, "pdf", dpi)
+def build_a4_page_3_pdf_bytes(
+    d, restaurant_name: str, analysis_text: str = "", dpi=300
+) -> bytes:
+    return _build_page_bytes(
+        _draw_a4_page_3, d, restaurant_name, analysis_text, "pdf", dpi
+    )
 
 
-def build_a4_page_3_png_preview_bytes(d, restaurant_name: str, analysis_text: str = "", dpi=150) -> bytes:
-    return _build_page_bytes(_draw_a4_page_3, d, restaurant_name, analysis_text, "png", dpi)
+def build_a4_page_3_png_preview_bytes(
+    d, restaurant_name: str, analysis_text: str = "", dpi=150
+) -> bytes:
+    return _build_page_bytes(
+        _draw_a4_page_3, d, restaurant_name, analysis_text, "png", dpi
+    )
 
 
 # =========================
@@ -4404,6 +4594,34 @@ if uploaded and restaurant_input:
                 on_click=_copy_staff_proposal_to_final,
                 width="stretch",
             )
+
+    # =========================
+    # RANK ARTICOLI & RANK RICAVI
+    # =========================
+    rank_articoli = data.get("rank_articoli", [])
+    rank_ricavi = data.get("rank_ricavi", [])
+
+    if rank_articoli or rank_ricavi:
+        st.divider()
+        rank_col_left, rank_col_right = st.columns([1, 1], gap="large")
+
+        with rank_col_left:
+            st.subheader("🏆 Top Articoli (Quantità)")
+            if rank_articoli:
+                fig_art = make_rank_bar_fig(
+                    rank_articoli, "Rank Articoli", value_fmt="qty"
+                )
+                st.pyplot(fig_art)
+            else:
+                st.info("Sheet 'Export Rank Articoli' non trovata o vuota.")
+
+        with rank_col_right:
+            st.subheader("💰 Top Articoli (Ricavi €)")
+            if rank_ricavi:
+                fig_ric = make_rank_bar_fig(rank_ricavi, "Rank Ricavi", value_fmt="eur")
+                st.pyplot(fig_ric)
+            else:
+                st.info("Sheet 'Export Rank Ricavi' non trovata o vuota.")
 
     # --- Section export PDF ---
     st.divider()
