@@ -4757,6 +4757,7 @@ if uploaded and restaurant_input:
         with rank_col_left:
             st.subheader("🏆 Top Articoli (Quantità)")
             if rank_articoli:
+                _shared_h = max(4.0, max(len(rank_articoli), len(rank_ricavi)) * 0.38)
                 fig_art = make_rank_bar_fig(
                     rank_articoli, value_fmt="qty", fig_h=_shared_h
                 )
