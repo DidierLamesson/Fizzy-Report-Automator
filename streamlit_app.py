@@ -4298,25 +4298,40 @@ def _wrap_rank_label(s, maxchars=_P4_LABEL_MAX_CHR):
     return "\n".join(textwrap.wrap(str(s), maxchars))
 
 
-def _draw_rank_chart_on_ax(ax, items, value_fmt="qty", dpi=100):
+def _draw_rank_chart_on_ax(
+    ax, items, value_fmt="qty", dpi=100, label_reserve_px=110, col_w_px=345
+):
     """
     Graphique barres horizontales pour le PDF.
-    L'ax doit etre positionne APRES la zone labels (voir _draw_a4_page_4).
-    Les labels Y s'etendent a gauche de l'ax grace a clip_on=False.
+    Strategie : l'ax couvre la colonne ENTIERE (labels + barres).
+    On utilise un xlim negatif pour reserver la zone labels a gauche.
+    Les labels sont dessines manuellement en ax.text() dans la zone negative —
+    aucun clip possible puisqu'ils sont dans le repere de l'ax.
     """
     if not items:
         return
 
-    labels = [_wrap_rank_label(item[0]) for item in items]
+    raw_labels = [item[0] for item in items]
     values = [float(item[1]) for item in items]
-    n = len(labels)
+    n = len(values)
+    max_v = max(values)
+
+    # Calcul de l'offset negatif : label_reserve represente X% de la zone de donnees
+    # On veut que data x=0 soit a label_reserve_px du bord gauche de l'ax
+    bar_w_px = col_w_px - label_reserve_px
+    # Si x=0 est a label_reserve_px et x=max_v est a col_w_px :
+    # max_v / bar_w_px = units_per_px  =>  label_reserve en units = max_v * label_reserve_px / bar_w_px
+    label_units = max_v * label_reserve_px / bar_w_px
+    x_min = -label_units
 
     ax.set_facecolor(COLORS["bg"])
+    ax.set_xlim(x_min, max_v)
 
+    # --- Barres (x positif uniquement) ---
     colors = [COLORS["graph1"] if i % 2 == 0 else COLORS["graph2"] for i in range(n)]
-    bars = ax.barh(range(n), values, color=colors, height=0.65, zorder=3)
+    bars = ax.barh(range(n), values, left=0, color=colors, height=0.65, zorder=3)
 
-    # Valeur au bout de chaque barre (peut deborder à droite, clip_on=False)
+    # --- Valeur au bout de chaque barre ---
     for bar, v in zip(bars, values):
         label_str = (
             fmt_eur_dot(v)
@@ -4324,7 +4339,7 @@ def _draw_rank_chart_on_ax(ax, items, value_fmt="qty", dpi=100):
             else f"{int(round(v)):,}".replace(",", ".")
         )
         ax.text(
-            v + max(values) * 0.015,
+            v + max_v * 0.015,
             bar.get_y() + bar.get_height() / 2,
             label_str,
             va="center",
@@ -4333,45 +4348,75 @@ def _draw_rank_chart_on_ax(ax, items, value_fmt="qty", dpi=100):
             color=COLORS["white"],
             fontproperties=epilogue_semibold,
             clip_on=False,
+            zorder=5,
         )
 
-    # Labels Y — s'etendent a GAUCHE de l'ax (clip_on=False)
+    # --- Labels Y dessines manuellement dans la zone negative ---
+    import textwrap
+
+    for i, raw in enumerate(raw_labels):
+        lines = textwrap.wrap(str(raw), _P4_LABEL_MAX_CHR)
+        label_str = "\n".join(lines)
+        ax.text(
+            -label_units * 0.04,  # 4% de marge avant le bord gauche
+            i,
+            label_str,
+            va="center",
+            ha="right",
+            fontsize=_px_to_pt(9, dpi),
+            color=COLORS["white"],
+            fontproperties=epilogue_regular,
+            linespacing=1.3,
+            zorder=5,
+        )
+
+    # --- Masquer les vrais tick labels Y ---
     ax.set_yticks(range(n))
-    ax.set_yticklabels(
-        labels,
-        fontsize=_px_to_pt(9, dpi),
-        color=COLORS["white"],
-        fontproperties=epilogue_regular,
-        ha="right",
-    )
-    ax.yaxis.set_tick_params(length=0, pad=4)
+    ax.set_yticklabels([])
+    ax.tick_params(axis="y", length=0)
     ax.tick_params(
         axis="x", colors=COLORS["white"], labelsize=_px_to_pt(7, dpi), length=0
     )
 
-    # Clip off sur les tick labels Y pour qu'ils sortent de l'ax sans etre coupes
-    for lbl in ax.get_yticklabels():
-        lbl.set_clip_on(False)
-
+    # --- Formatter axe X (zone positive seulement) ---
     if value_fmt == "eur":
         ax.xaxis.set_major_formatter(
-            ticker.FuncFormatter(lambda v, _: f"{int(v):,}".replace(",", "."))
+            ticker.FuncFormatter(
+                lambda v, _: f"{int(v):,}".replace(",", ".") if v >= 0 else ""
+            )
         )
     else:
-        ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{int(v)}"))
+        ax.xaxis.set_major_formatter(
+            ticker.FuncFormatter(lambda v, _: f"{int(v)}" if v >= 0 else "")
+        )
 
-    # xlim = max(values) exactement → bord droit de l'ax = fin de la barre max
-    ax.set_xlim(0, max(values))
+    # Grid uniquement sur la zone positive
+    ax.axvline(x=0, color=COLORS["bg"], linewidth=0)
     ax.grid(axis="x", linestyle="-", alpha=0.15, color=COLORS["white"], zorder=0)
     for s in ax.spines.values():
         s.set_visible(False)
+
+    # Masquer le fond dans la zone labels (rectangle negatif)
+    from matplotlib.patches import Rectangle
+
+    ax.add_patch(
+        Rectangle(
+            (x_min, -0.5),
+            label_units,
+            n,
+            transform=ax.transData,
+            facecolor=COLORS["bg"],
+            edgecolor="none",
+            zorder=2,
+        )
+    )
 
 
 def _draw_a4_page_4(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str = ""):
     """
     Page 4 : Top Articoli (Quantita) + Top Articoli (Ricavi) en 2 colonnes.
-    Les labels Y sont contenus dans la zone allouee (_P4_LABEL_RESERVE),
-    les colonnes sont calees sur les marges du header (line_side_margin_px).
+    Chaque ax couvre la colonne entiere (labels + barres).
+    Les colonnes sont calees exactement sur les marges du header.
     """
     ax.set_axis_off()
     ax.set_aspect("auto")
@@ -4433,23 +4478,14 @@ def _draw_a4_page_4(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str 
     y_cursor += h_sec + 20
 
     # --- Layout 2 colonnes calees sur les marges header ---
-    # Colonne : [_P4_LINE_MARGIN .. _P4_LINE_MARGIN+col_w]
-    #           dont [_P4_LINE_MARGIN .. _P4_LINE_MARGIN+_P4_LABEL_RESERVE] = zone labels
-    #           et   [_P4_LINE_MARGIN+_P4_LABEL_RESERVE .. _P4_LINE_MARGIN+col_w] = zone barres
+    # Chaque ax couvre [col_x0 .. col_x0+col_w] en entier
     total_w = W_PX - 2 * _P4_LINE_MARGIN - _P4_COL_GAP
-    col_w = total_w // 2
+    col_w = total_w // 2  # 345px
 
-    left_col_x0 = _P4_LINE_MARGIN  # bord gauche col gauche
-    right_col_x0 = _P4_LINE_MARGIN + col_w + _P4_COL_GAP  # bord gauche col droite
+    left_col_x0 = _P4_LINE_MARGIN  # 40px
+    right_col_x0 = _P4_LINE_MARGIN + col_w + _P4_COL_GAP  # 415px
 
-    # Les axes de barres démarrent après la réserve labels
-    bar_w = col_w - _P4_LABEL_RESERVE  # 345 - 110 = 235px
-
-    ax_left_x0 = left_col_x0 + _P4_LABEL_RESERVE  # 150px
-    ax_right_x0 = right_col_x0 + _P4_LABEL_RESERVE  # 525px
-    # Vérif : ax_right_x0 + bar_w = 525 + 235 = 760 = W_PX - _P4_LINE_MARGIN ✓
-
-    # --- Titres colonnes (alignés sur le bord gauche de chaque colonne) ---
+    # --- Titres colonnes ---
     title_font_px = BODY1_CFG["left_title_font_px"]
 
     ax.text(
@@ -4477,37 +4513,52 @@ def _draw_a4_page_4(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str 
         zorder=850,
     )
 
-    title_h = 28  # approximation hauteur titre (px)
+    title_h = 28
     chart_top = y_cursor + title_h + 10
-    chart_h = H_PX - 40 - chart_top  # marge basse 40px
+    chart_h = H_PX - 40 - chart_top
 
     fig = ax.figure
 
     # --- Chart Quantita venduta (colonne gauche) ---
+    # L'ax couvre toute la colonne ; _draw_rank_chart_on_ax gere le xlim negatif
     if rank_articoli:
         ax_left = fig.add_axes(
             [
-                x(ax_left_x0),
+                x(left_col_x0),
                 y_from_top(chart_top + chart_h),
-                bar_w / W_PX,
+                col_w / W_PX,
                 chart_h / H_PX,
             ],
             facecolor=COLORS["bg"],
         )
-        _draw_rank_chart_on_ax(ax_left, rank_articoli, value_fmt="qty", dpi=dpi)
+        _draw_rank_chart_on_ax(
+            ax_left,
+            rank_articoli,
+            value_fmt="qty",
+            dpi=dpi,
+            label_reserve_px=_P4_LABEL_RESERVE,
+            col_w_px=col_w,
+        )
 
     # --- Chart Ricavi per articolo (colonne droite) ---
     if rank_ricavi:
         ax_right = fig.add_axes(
             [
-                x(ax_right_x0),
+                x(right_col_x0),
                 y_from_top(chart_top + chart_h),
-                bar_w / W_PX,
+                col_w / W_PX,
                 chart_h / H_PX,
             ],
             facecolor=COLORS["bg"],
         )
-        _draw_rank_chart_on_ax(ax_right, rank_ricavi, value_fmt="eur", dpi=dpi)
+        _draw_rank_chart_on_ax(
+            ax_right,
+            rank_ricavi,
+            value_fmt="eur",
+            dpi=dpi,
+            label_reserve_px=_P4_LABEL_RESERVE,
+            col_w_px=col_w,
+        )
 
 
 @st.cache_data
