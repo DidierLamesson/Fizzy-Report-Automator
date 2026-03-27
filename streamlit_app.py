@@ -4402,11 +4402,6 @@ if soda_logo_uri:
         """,
         unsafe_allow_html=True,
     )
-# APRÈS
-fr_active = st.sidebar.toggle(
-    "🇫🇷 Français", value=(st.session_state["lang"] == "fr"), key="lang_toggle"
-)
-st.session_state["lang"] = "fr" if fr_active else "it"
 
 restaurant_input = st.sidebar.text_input(
     "Nome clienti *", placeholder="es: Ristorante Da Mario"
