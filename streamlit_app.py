@@ -3284,8 +3284,7 @@ def make_staff_gauge_fig(d):
     return fig
 
 
-# APRÈS
-def make_rank_bar_fig(items, value_fmt="qty", fig_h=None):
+def make_rank_bar_fig(items, value_fmt="qty"):
     """
     Graphique barres horizontales pour les rankings (Streamlit preview).
     items     : [(label, value), ...] déjà triés asc (la plus grande en haut)
@@ -3299,8 +3298,7 @@ def make_rank_bar_fig(items, value_fmt="qty", fig_h=None):
     values = [float(item[1]) for item in items]
     n = len(labels)
 
-    # APRÈS
-    fig_h = fig_h if fig_h is not None else max(4.0, n * 0.38)
+    fig_h = max(4.0, n * 0.38)
     fig = plt.figure(figsize=(8, fig_h), facecolor=COLORS["bg"])
     ax = fig.add_axes([0.32, 0.04, 0.58, 0.94], facecolor=COLORS["bg"])
 
@@ -4317,7 +4315,6 @@ def _draw_rank_chart_on_ax(ax, items, value_fmt="qty", dpi=100):
             fontsize=_px_to_pt(10, dpi),
             color=COLORS["white"],
             fontproperties=epilogue_semibold,
-            clip_on=False,
         )
 
     ax.set_yticks(range(n))
@@ -4339,7 +4336,7 @@ def _draw_rank_chart_on_ax(ax, items, value_fmt="qty", dpi=100):
     else:
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{int(v)}"))
 
-    ax.set_xlim(0, max(values))
+    ax.set_xlim(0, max(values) * 1.28)
     ax.grid(axis="x", linestyle="-", alpha=0.15, color=COLORS["white"], zorder=0)
     for s in ax.spines.values():
         s.set_visible(False)
@@ -4428,8 +4425,6 @@ def _draw_a4_page_4(ax, W_PX, H_PX, d, restaurant_name: str, analysis_text: str 
         y_from_top(y_cursor),
         "Quantita venduta",
         ha="left",
-        va="top",
-        ha="center",
         va="top",
         transform=ax.transAxes,
         fontsize=_px_to_pt(BODY1_CFG["left_title_font_px"], dpi),
@@ -4760,10 +4755,7 @@ if uploaded and restaurant_input:
         with rank_col_left:
             st.subheader("🏆 Top Articoli (Quantità)")
             if rank_articoli:
-                _shared_h = max(4.0, max(len(rank_articoli), len(rank_ricavi)) * 0.38)
-                fig_art = make_rank_bar_fig(
-                    rank_articoli, value_fmt="qty", fig_h=_shared_h
-                )
+                fig_art = make_rank_bar_fig(rank_articoli, value_fmt="qty")
                 st.pyplot(fig_art)
             else:
                 st.info("Sheet 'Export Rank Articoli' non trovata o vuota.")
@@ -4771,9 +4763,7 @@ if uploaded and restaurant_input:
         with rank_col_right:
             st.subheader("💰 Top Articoli (Ricavi €)")
             if rank_ricavi:
-                fig_ric = make_rank_bar_fig(
-                    rank_ricavi, value_fmt="eur", fig_h=_shared_h
-                )
+                fig_ric = make_rank_bar_fig(rank_ricavi, value_fmt="eur")
                 st.pyplot(fig_ric)
             else:
                 st.info("Sheet 'Export Rank Ricavi' non trovata o vuota.")
