@@ -576,6 +576,15 @@ inject_brand_css()
 
 inject_brand_logo()
 
+# --- State langue ---
+if "lang" not in st.session_state:
+    st.session_state["lang"] = "it"
+
+
+def _t(it_text, fr_text):
+    """Retourne le texte selon la langue active."""
+    return fr_text if st.session_state["lang"] == "fr" else it_text
+
 
 # =========================
 # 5) HELPERS DE FORMATAGE ET DE CALCUL
@@ -4385,6 +4394,11 @@ if soda_logo_uri:
         """,
         unsafe_allow_html=True,
     )
+
+fr_active = st.sidebar.toggle(
+    "🇫🇷 Français", value=(st.session_state["lang"] == "fr"), key="lang_toggle"
+)
+st.session_state["lang"] = "fr" if fr_active else "it"
 
 restaurant_input = st.sidebar.text_input(
     _t("Nome clienti *", "Nom du client *"),
