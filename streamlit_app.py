@@ -672,26 +672,11 @@ def _rolling_6m_period_label_from_report_date(raw_date):
 
 
 def _prev_month_label_from_report_date(raw_date):
-    months_it = {
-        1: "Gennaio",
-        2: "Febbraio",
-        3: "Marzo",
-        4: "Aprile",
-        5: "Maggio",
-        6: "Giugno",
-        7: "Luglio",
-        8: "Agosto",
-        9: "Settembre",
-        10: "Ottobre",
-        11: "Novembre",
-        12: "Dicembre",
-    }
-
     if raw_date is None or not hasattr(raw_date, "month"):
         return ""
 
     prev_dt = pd.Timestamp(raw_date) - pd.DateOffset(months=1)
-    return f"{months_it[prev_dt.month]} {prev_dt.year}"
+    return f"{MONTHS_IT[prev_dt.month]} {prev_dt.year}"
 
 
 def pdf_bytes_to_png_bytes(
@@ -739,6 +724,7 @@ def _safe_avg(values):
 # =========================
 # 6) CHARGEMENT ET PREPARATION DES DONNEES
 # =========================
+@st.cache_data
 def load_data(file):
     df = pd.read_excel(file, sheet_name="Dati report", header=None)
 
@@ -1075,23 +1061,11 @@ def _copy_page1_proposals_to_final():
     st.session_state[FINAL_TEXT_STATE_KEYS["page1_final"]] = "\n".join(parts)
 
 
-def _copy_food_proposal_to_final():
-    st.session_state[FINAL_TEXT_STATE_KEYS["page2_food_final"]] = st.session_state.get(
-        SUGGESTION_TEXT_STATE_KEYS["page2_food"], ""
-    ).strip()
-
-
 def _copy_page2_proposals_to_final():
     food = st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_food"], "").strip()
     bev = st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_bev"], "").strip()
     parts = [t for t in [food, bev] if t]
     st.session_state[FINAL_TEXT_STATE_KEYS["page2_final"]] = "\n".join(parts)
-
-
-def _copy_beverage_proposal_to_final():
-    st.session_state[FINAL_TEXT_STATE_KEYS["page2_bev_final"]] = st.session_state.get(
-        SUGGESTION_TEXT_STATE_KEYS["page2_bev"], ""
-    ).strip()
 
 
 def _copy_staff_proposal_to_final():
@@ -1341,7 +1315,7 @@ HEADER1_CFG = {
     "pill_pad_x_px": 6,
     "pill_pad_y_px": 6,
     "pill_border_width_px": 2,
-    # --- Espacements verticaux (le layout “suit” automatiquement) ---
+    # --- Espacements verticaux (le layout "suit" automatiquement) ---
     "gap_after_toprow_px": 20,  # espace après la ligne logo/pill avant le titre
     "gap_title_to_restaurant_px": 10,  # espace titre -> restaurant
     "gap_restaurant_to_line_px": 15,  # espace restaurant -> ligne
@@ -1409,7 +1383,7 @@ def _draw_header1(
 ):
     cfg = {**HEADER1_CFG, **(cfg or {})}
 
-    # ✅ imshow-safe : on verrouille le repère “page” et on empêche le letterboxing
+    # ✅ imshow-safe : on verrouille le repère "page" et on empêche le letterboxing
     ax.set_axis_off()
     ax.set_aspect("auto")
     ax.set_xlim(0, 1)
@@ -1503,7 +1477,7 @@ def _draw_header1(
 
         pill_bottom_px = PILL_TOP_PX + PILL_H_PX
 
-    # 3) Curseur vertical : démarre sous la “top row” (logo/pill) de façon modulaire
+    # 3) Curseur vertical : démarre sous la "top row" (logo/pill) de façon modulaire
     toprow_bottom_px = max(logo_bottom_px, pill_bottom_px)
     y_cursor_px = toprow_bottom_px + cfg["gap_after_toprow_px"]
 
@@ -2367,7 +2341,7 @@ def _draw_body1_fatturato(
     """
     cfg = {**BODY1_CFG, **(cfg or {})}
 
-    # ✅ imshow-safe : on verrouille le repère “page”
+    # ✅ imshow-safe : on verrouille le repère "page"
     ax.set_axis_off()
     ax.set_aspect("auto")
     ax.set_xlim(0, 1)
@@ -2596,7 +2570,7 @@ def _draw_body1_fatturato(
     )
     yR += (
         cfg["stats_pct_font_px"] * 2 + cfg["stats_gap_3_px"]
-    )  # avance “assez” (simple & stable)
+    )  # avance "assez" (simple & stable)
 
     # --- ligne sous stats (bord droit à 40px) ---
     if cfg["stats_line_enabled"]:
@@ -3647,7 +3621,7 @@ FOOTER1_CFG = {
     "gap_after_line_px": 26,
     # Layout colonnes
     "side_margin_px": BODY1_CFG.get("side_margin_px", 80),  # pour le contenu footer
-    "mid_gap_px": 40,  # espace “vide” au centre (où vit la séparation)
+    "mid_gap_px": 40,  # espace "vide" au centre (où vit la séparation)
     "block_inner_gap_px": 60,  # espace entre les 2 sous-colonnes dans chaque bloc
     # Titres (même taille que "Venduto", même couleur que "Fatturato")
     "title_font_px": BODY1_CFG.get("left_title_font_px", 20),
@@ -4213,198 +4187,53 @@ PAGE_H_PX = 1000
 # ✅ DPI de référence : fixe la taille physique du PDF
 BASE_DPI = 100
 
-# ✅ Taille “physique” (inches) qui correspond à 800x1000 px à BASE_DPI
+# ✅ Taille "physique" (inches) qui correspond à 800x1000 px à BASE_DPI
 PAGE_SIZE_INCH = (PAGE_W_PX / BASE_DPI, PAGE_H_PX / BASE_DPI)
-
-# --- Page 2 : on garde exactement la même “grille” que la page 1 ---
-PAGE_2_W_PX = PAGE_W_PX
-PAGE_2_H_PX = PAGE_H_PX
-PAGE_2_SIZE_INCH = PAGE_SIZE_INCH
-
-# --- Page 3 : on garde exactement la même “grille” que la page 1 ---
-PAGE_3_W_PX = PAGE_W_PX
-PAGE_3_H_PX = PAGE_H_PX
-PAGE_3_SIZE_INCH = PAGE_SIZE_INCH
 
 # =========================
 # 14) GENERATION PDF ET PNG
 # =========================
 
 
-def build_a4_pdf_bytes(
-    d, restaurant_name: str, analysis_text: str = "", dpi=300
-) -> bytes:
-    """
-    PDF: on verrouille le format à 800x1000 via PAGE_SIZE_INCH + BASE_DPI.
-    Le param `dpi` n'est plus utilisé ici pour éviter de changer la taille physique.
-    """
-    fig = plt.figure(figsize=PAGE_SIZE_INCH, dpi=BASE_DPI, facecolor=COLORS["bg"])
+def _build_page_bytes(draw_fn, d, restaurant_name, analysis_text, fmt, dpi_render):
+    """Factorisation commune des 6 builders PDF/PNG."""
+    use_dpi = BASE_DPI if fmt == "pdf" else dpi_render
+    fig = plt.figure(figsize=PAGE_SIZE_INCH, dpi=use_dpi, facecolor=COLORS["bg"])
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
     ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
-
-    W_PX, H_PX = PAGE_W_PX, PAGE_H_PX
-    _draw_a4_page(
-        ax,
-        W_PX,
-        H_PX,
-        d,
-        restaurant_name,
-        analysis_text=analysis_text,
-    )
-
+    draw_fn(ax, PAGE_W_PX, PAGE_H_PX, d, restaurant_name, analysis_text=analysis_text)
     buf = BytesIO()
-    fig.savefig(
-        buf,
-        format="pdf",
-        bbox_inches=None,
-        pad_inches=0,
-        facecolor=fig.get_facecolor(),
-        edgecolor="none",
-    )
+    fig.savefig(buf, format=fmt, bbox_inches=None, pad_inches=0, facecolor=fig.get_facecolor(), edgecolor="none")
     plt.close(fig)
     buf.seek(0)
     return buf.getvalue()
 
 
-def build_a4_png_preview_bytes(
-    d, restaurant_name: str, analysis_text: str = "", dpi=150
-) -> bytes:
-    """
-    PNG: on peut utiliser `dpi` uniquement pour la netteté de l'aperçu,
-    MAIS le layout reste basé sur 800x1000.
-    """
-    fig = plt.figure(figsize=PAGE_SIZE_INCH, dpi=dpi, facecolor=COLORS["bg"])
-    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
-
-    W_PX, H_PX = PAGE_W_PX, PAGE_H_PX
-    _draw_a4_page(
-        ax,
-        W_PX,
-        H_PX,
-        d,
-        restaurant_name,
-        analysis_text=analysis_text,
-    )
-
-    buf = BytesIO()
-    fig.savefig(
-        buf,
-        format="png",
-        bbox_inches=None,
-        pad_inches=0,
-        facecolor=fig.get_facecolor(),
-        edgecolor="none",
-    )
-    plt.close(fig)
-    buf.seek(0)
-    return buf.getvalue()
+@st.cache_data
+def build_a4_pdf_bytes(d, restaurant_name: str, analysis_text: str = "", dpi=300) -> bytes:
+    return _build_page_bytes(_draw_a4_page, d, restaurant_name, analysis_text, "pdf", dpi)
 
 
-def build_a4_page_2_pdf_bytes(
-    d, restaurant_name: str, analysis_text: str = "", dpi=300
-) -> bytes:
-    """
-    PDF PAGE 2 : même verrouillage de format que page 1 (800x1000 via PAGE_2_SIZE_INCH + BASE_DPI).
-    Le param `dpi` est gardé uniquement pour compat, mais n'influence pas la taille physique.
-    """
-    fig = plt.figure(figsize=PAGE_2_SIZE_INCH, dpi=BASE_DPI, facecolor=COLORS["bg"])
-    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
-
-    W_PX, H_PX = PAGE_2_W_PX, PAGE_2_H_PX
-    _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name, analysis_text=analysis_text)
-
-    buf = BytesIO()
-    fig.savefig(
-        buf,
-        format="pdf",
-        bbox_inches=None,
-        pad_inches=0,
-        facecolor=fig.get_facecolor(),
-        edgecolor="none",
-    )
-    plt.close(fig)
-    buf.seek(0)
-    return buf.getvalue()
+def build_a4_png_preview_bytes(d, restaurant_name: str, analysis_text: str = "", dpi=150) -> bytes:
+    return _build_page_bytes(_draw_a4_page, d, restaurant_name, analysis_text, "png", dpi)
 
 
-def build_a4_page_2_png_preview_bytes(
-    d, restaurant_name: str, analysis_text: str = "", dpi=150
-) -> bytes:
-    """PNG PAGE 2 : `dpi` ne joue que sur la netteté de l'aperçu."""
-    fig = plt.figure(figsize=PAGE_2_SIZE_INCH, dpi=dpi, facecolor=COLORS["bg"])
-    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
-
-    W_PX, H_PX = PAGE_2_W_PX, PAGE_2_H_PX
-    _draw_a4_page_2(ax, W_PX, H_PX, d, restaurant_name, analysis_text=analysis_text)
-
-    buf = BytesIO()
-    fig.savefig(
-        buf,
-        format="png",
-        bbox_inches=None,
-        pad_inches=0,
-        facecolor=fig.get_facecolor(),
-        edgecolor="none",
-    )
-    plt.close(fig)
-    buf.seek(0)
-    return buf.getvalue()
+@st.cache_data
+def build_a4_page_2_pdf_bytes(d, restaurant_name: str, analysis_text: str = "", dpi=300) -> bytes:
+    return _build_page_bytes(_draw_a4_page_2, d, restaurant_name, analysis_text, "pdf", dpi)
 
 
-def build_a4_page_3_pdf_bytes(
-    d, restaurant_name: str, analysis_text: str = "", dpi=300
-) -> bytes:
-    """
-    PDF PAGE 3 : même verrouillage de format que pages 1 et 2.
-    Le param `dpi` est gardé uniquement pour compat.
-    """
-    fig = plt.figure(figsize=PAGE_3_SIZE_INCH, dpi=BASE_DPI, facecolor=COLORS["bg"])
-    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
-
-    W_PX, H_PX = PAGE_3_W_PX, PAGE_3_H_PX
-    _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name, analysis_text=analysis_text)
-
-    buf = BytesIO()
-    fig.savefig(
-        buf,
-        format="pdf",
-        bbox_inches=None,
-        pad_inches=0,
-        facecolor=fig.get_facecolor(),
-        edgecolor="none",
-    )
-    plt.close(fig)
-    buf.seek(0)
-    return buf.getvalue()
+def build_a4_page_2_png_preview_bytes(d, restaurant_name: str, analysis_text: str = "", dpi=150) -> bytes:
+    return _build_page_bytes(_draw_a4_page_2, d, restaurant_name, analysis_text, "png", dpi)
 
 
-def build_a4_page_3_png_preview_bytes(
-    d, restaurant_name: str, analysis_text: str = "", dpi=150
-) -> bytes:
-    """PNG PAGE 3 : `dpi` ne joue que sur la netteté de l'aperçu."""
-    fig = plt.figure(figsize=PAGE_3_SIZE_INCH, dpi=dpi, facecolor=COLORS["bg"])
-    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-    ax = fig.add_axes([0, 0, 1, 1], facecolor=COLORS["bg"])
+@st.cache_data
+def build_a4_page_3_pdf_bytes(d, restaurant_name: str, analysis_text: str = "", dpi=300) -> bytes:
+    return _build_page_bytes(_draw_a4_page_3, d, restaurant_name, analysis_text, "pdf", dpi)
 
-    W_PX, H_PX = PAGE_3_W_PX, PAGE_3_H_PX
-    _draw_a4_page_3(ax, W_PX, H_PX, d, restaurant_name, analysis_text=analysis_text)
 
-    buf = BytesIO()
-    fig.savefig(
-        buf,
-        format="png",
-        bbox_inches=None,
-        pad_inches=0,
-        facecolor=fig.get_facecolor(),
-        edgecolor="none",
-    )
-    plt.close(fig)
-    buf.seek(0)
-    return buf.getvalue()
+def build_a4_page_3_png_preview_bytes(d, restaurant_name: str, analysis_text: str = "", dpi=150) -> bytes:
+    return _build_page_bytes(_draw_a4_page_3, d, restaurant_name, analysis_text, "png", dpi)
 
 
 # =========================
