@@ -735,7 +735,7 @@ def load_data(file):
         anno_n = raw_date.year
     else:
         mes_it = "Mese"
-        anno_n = 2026  # Valeur par défaut
+        anno_n = pd.Timestamp.now().year  # Valeur par défaut : année courante
 
     # --- 2. Extraction des donnees de chiffre d'affaires ---
     fatturato_n = clean_val(df.iloc[8, 2])  # Fatturato N (ligne 9, colonne C)
