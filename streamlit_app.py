@@ -120,16 +120,6 @@ def inject_brand_logo():
     )
 
 
-# --- State langue ---
-if "lang" not in st.session_state:
-    st.session_state["lang"] = "it"
-
-
-def _t(it_text, fr_text):
-    """Retourne le texte selon la langue active."""
-    return fr_text if st.session_state["lang"] == "fr" else it_text
-
-
 def inject_brand_css():
     st.html(
         """
@@ -3294,7 +3284,7 @@ def make_staff_gauge_fig(d):
     return fig
 
 
-def make_rank_bar_fig(items, value_fmt="qty", fig_h=None):
+def make_rank_bar_fig(items, value_fmt="qty"):
     """
     Graphique barres horizontales pour les rankings (Streamlit preview).
     items     : [(label, value), ...] déjà triés asc (la plus grande en haut)
@@ -3304,20 +3294,13 @@ def make_rank_bar_fig(items, value_fmt="qty", fig_h=None):
     if not items:
         return None
 
-    # APRÈS
-    import textwrap
-
-    labels = ["\n".join(textwrap.wrap(item[0], 22)) for item in items]
+    labels = [item[0] for item in items]
     values = [float(item[1]) for item in items]
     n = len(labels)
 
-    fig_h = fig_h if fig_h is not None else max(4.0, n * 0.40)
+    fig_h = max(4.0, n * 0.38)
     fig = plt.figure(figsize=(8, fig_h), facecolor=COLORS["bg"])
-    # APRÈS
     ax = fig.add_axes([0.32, 0.04, 0.58, 0.94], facecolor=COLORS["bg"])
-    ax.set_ylim(-0.5, n - 0.5)
-
-    # Barres alternees graph1 / graph2
 
     # Barres alternees graph1 / graph2
     colors = [COLORS["graph1"] if i % 2 == 0 else COLORS["graph2"] for i in range(n)]
@@ -4389,7 +4372,7 @@ def build_a4_page_3_png_preview_bytes(
 # =========================
 # 15) INTERFACE STREAMLIT
 # =========================
-st.title("Report Fizzy Automatizzazione ⚡️")
+st.title(_t("Report Fizzy Automatizzazione ⚡️", "Automatisation Rapport Fizzy ⚡️"))
 
 soda_logo_uri = _img_to_data_uri(LOGO_PATH)
 
@@ -4402,16 +4385,14 @@ if soda_logo_uri:
         """,
         unsafe_allow_html=True,
     )
-# APRÈS
-fr_active = st.sidebar.toggle(
-    "🇫🇷 Français", value=(st.session_state["lang"] == "fr"), key="lang_toggle"
-)
-st.session_state["lang"] = "fr" if fr_active else "it"
 
 restaurant_input = st.sidebar.text_input(
-    "Nome clienti *", placeholder="es: Ristorante Da Mario"
+    _t("Nome clienti *", "Nom du client *"),
+    placeholder=_t("es: Ristorante Da Mario", "ex : Ristorante Da Mario"),
 )
-uploaded = st.sidebar.file_uploader("Caricare il Report (.xslx))", type="xlsx")
+uploaded = st.sidebar.file_uploader(
+    _t("Carica il Report (.xlsx)", "Charger le Rapport (.xlsx)"), type="xlsx"
+)
 
 if uploaded and restaurant_input:
     data = load_data(uploaded)
@@ -4425,35 +4406,38 @@ if uploaded and restaurant_input:
     col_viz, col_edit = st.columns([1.2, 1], gap="large")
 
     with col_viz:
-        st.subheader("📊 Fatturato (mensile) ")
+        st.subheader(_t("📊 Fatturato (mensile)", "📊 Chiffre d'affaires (mensuel)"))
         preview_fig = make_fatturato_fig(data, label=restaurant_input)
         st.pyplot(preview_fig)
 
     with col_edit:
-        st.subheader("✍️ Analisa scritta")
+        st.subheader(_t("✍️ Analisi scritta", "✍️ Analyse écrite"))
 
         st.text_area(
-            "💡 Proposta paragrafo 1",
+            _t("💡 Proposta paragrafo 1", "💡 Proposition paragraphe 1"),
             value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p1"], ""),
             height=150,
             disabled=True,
         )
         st.text_area(
-            "💡 Proposta paragrafo 2",
+            _t("💡 Proposta paragrafo 2", "💡 Proposition paragraphe 2"),
             value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page1_p2"], ""),
             height=150,
             disabled=True,
         )
         st.text_area(
-            "📝 Testo finale (modificabile)",
+            _t("📝 Testo finale (modificabile)", "📝 Texte final (modifiable)"),
             height=300,
             key=FINAL_TEXT_STATE_KEYS["page1_final"],
-            placeholder="Copia qui la proposta e modificala.",
+            placeholder=_t(
+                "Copia qui la proposta e modificala.",
+                "Copiez ici la proposition ci-dessus puis modifiez-la.",
+            ),
         )
         btn_spacer, btn_col = st.columns([2.4, 1])
         with btn_col:
             st.button(
-                "📥 Usa le proposte",
+                _t("📥 Usa le proposte", "📥 Utiliser les propositions"),
                 key="use_proposal_page1",
                 on_click=_copy_page1_proposals_to_final,
                 width="stretch",
@@ -4467,9 +4451,9 @@ if uploaded and restaurant_input:
     # =========================
     food_title_col_left, food_title_col_right = st.columns([1, 1], gap="large")
     with food_title_col_left:
-        st.subheader("📈 Food cost (mensile)")
+        st.subheader(_t("📈 Food cost (mensile)", "📈 Food cost (mensuel)"))
     with food_title_col_right:
-        st.subheader("📈 Beverage cost (mensile)")
+        st.subheader(_t("📈 Beverage cost (mensile)", "📈 Beverage cost (mensuel)"))
 
     food_col_graph, bev_col_graph = st.columns([1, 1], gap="large")
     with food_col_graph:
@@ -4482,19 +4466,24 @@ if uploaded and restaurant_input:
     # =========================
     # TEXTE PAGE 2 — bloc unique (même structure que page 1 et page 3)
     # =========================
-    st.subheader("✍️ Analisa scritta — Food & Beverage cost")
+    st.subheader(
+        _t(
+            "✍️ Analisi scritta — Food & Beverage cost",
+            "✍️ Analyse écrite — Food & Beverage cost",
+        )
+    )
 
     p2_col_suggest, p2_col_edit = st.columns([1, 1], gap="large")
 
     with p2_col_suggest:
         st.text_area(
-            "💡 Proposta Food Cost",
+            _t("💡 Proposta Food Cost", "💡 Proposition Food Cost"),
             value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_food"], ""),
             height=150,
             disabled=True,
         )
         st.text_area(
-            "💡 Proposta Beverage Cost",
+            _t("💡 Proposta Beverage Cost", "💡 Proposition Beverage Cost"),
             value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page2_bev"], ""),
             height=150,
             disabled=True,
@@ -4502,15 +4491,18 @@ if uploaded and restaurant_input:
 
     with p2_col_edit:
         st.text_area(
-            "📝 Testo finale (modificabile)",
+            _t("📝 Testo finale (modificabile)", "📝 Texte final (modifiable)"),
             height=330,
             key=FINAL_TEXT_STATE_KEYS["page2_final"],
-            placeholder="Copia qui le proposte e modificala.",
+            placeholder=_t(
+                "Copia qui le proposte e modificale.",
+                "Copiez ici les propositions ci-dessus puis modifiez-les.",
+            ),
         )
         btn_spacer, btn_col = st.columns([2.4, 1])
         with btn_col:
             st.button(
-                "📥 Usa le proposte",
+                _t("📥 Usa le proposte", "📥 Utiliser les propositions"),
                 key="use_proposal_page2",
                 on_click=_copy_page2_proposals_to_final,
                 width="stretch",
@@ -4525,10 +4517,10 @@ if uploaded and restaurant_input:
     staff_title_col_left, staff_title_col_right = st.columns([1.2, 1], gap="large")
 
     with staff_title_col_left:
-        st.subheader("📉 Incidenza Staff")
+        st.subheader(_t("📉 Incidenza Staff", "📉 Coût du personnel"))
 
     with staff_title_col_right:
-        st.subheader("✍️ Analisa scritta")
+        st.subheader(_t("✍️ Analisi scritta", "✍️ Analyse écrite"))
 
     staff_col_graph, staff_col_text = st.columns([1.2, 1], gap="large")
 
@@ -4539,22 +4531,25 @@ if uploaded and restaurant_input:
     with staff_col_text:
 
         st.text_area(
-            "💡 Proposta Incidenza Staff",
+            _t("💡 Proposta Incidenza Staff", "💡 Proposition Coût personnel"),
             value=st.session_state.get(SUGGESTION_TEXT_STATE_KEYS["page3_staff"], ""),
             height=150,
             key=SUGGESTION_TEXT_STATE_KEYS["page3_staff"],
             disabled=True,
         )
         st.text_area(
-            "📝 Testo finale (modificabile)",
+            _t("📝 Testo finale (modificabile)", "📝 Texte final (modifiable)"),
             height=150,
             key=FINAL_TEXT_STATE_KEYS["page3_staff_final"],
-            placeholder="Copia qui la proposta e modificala.",
+            placeholder=_t(
+                "Copia qui la proposta e modificala.",
+                "Copiez ici la proposition ci-dessus puis modifiez-la.",
+            ),
         )
         btn_spacer, btn_col = st.columns([2.4, 1])
         with btn_col:
             st.button(
-                "📥 Usa la proposta",
+                _t("📥 Usa la proposta", "📥 Utiliser la proposition"),
                 key="use_proposal_staff",
                 on_click=_copy_staff_proposal_to_final,
                 width="stretch",
@@ -4573,26 +4568,32 @@ if uploaded and restaurant_input:
         rank_col_left, rank_col_right = st.columns([1, 1], gap="large")
 
         with rank_col_left:
-            st.subheader("🏆 Top Articoli (Quantità)")
+            st.subheader(_t("🏆 Top Articoli (Quantità)", "🏆 Top Articles (Quantité)"))
             if rank_articoli:
-                _shared_h = max(4.0, max(len(rank_articoli), len(rank_ricavi)) * 0.40)
-                fig_art = make_rank_bar_fig(
-                    rank_articoli, value_fmt="qty", fig_h=_shared_h
-                )
+                fig_art = make_rank_bar_fig(rank_articoli, value_fmt="qty")
                 st.pyplot(fig_art)
             else:
-                st.info("Sheet 'Export Rank Articoli' non trovata o vuota.")
+                st.info(
+                    _t(
+                        "Sheet 'Export Rank Articoli' non trovata o vuota.",
+                        "Feuille 'Export Rank Articoli' introuvable ou vide.",
+                    )
+                )
 
         with rank_col_right:
-            st.subheader("💰 Top Articoli (Ricavi €)")
+            st.subheader(
+                _t("💰 Top Articoli (Ricavi €)", "💰 Top Articles (Recettes €)")
+            )
             if rank_ricavi:
-                # APRÈS
-                fig_ric = make_rank_bar_fig(
-                    rank_ricavi, value_fmt="eur", fig_h=_shared_h
-                )
+                fig_ric = make_rank_bar_fig(rank_ricavi, value_fmt="eur")
                 st.pyplot(fig_ric)
             else:
-                st.info("Sheet 'Export Rank Ricavi' non trovata o vuota.")
+                st.info(
+                    _t(
+                        "Sheet 'Export Rank Ricavi' non trovata o vuota.",
+                        "Feuille 'Export Rank Ricavi' introuvable ou vide.",
+                    )
+                )
 
         st.divider()
 
@@ -4630,17 +4631,23 @@ if uploaded and restaurant_input:
 
     with export_col_preview:
         st.image(
-            png_bytes_page_1, caption="Anteprima pagina 1 (rendu PDF)", width="stretch"
+            png_bytes_page_1,
+            caption=_t("Anteprima pagina 1 (PDF)", "Aperçu page 1 (PDF)"),
+            width="stretch",
         )
         st.image(
-            png_bytes_page_2, caption="Anteprima pagina 2 (rendu PDF)", width="stretch"
+            png_bytes_page_2,
+            caption=_t("Anteprima pagina 2 (PDF)", "Aperçu page 2 (PDF)"),
+            width="stretch",
         )
         st.image(
-            png_bytes_page_3, caption="Anteprima pagina 3 (rendu PDF)", width="stretch"
+            png_bytes_page_3,
+            caption=_t("Anteprima pagina 3 (PDF)", "Aperçu page 3 (PDF)"),
+            width="stretch",
         )
 
     with export_col_action:
-        st.subheader("📄 Export PDF")
+        st.subheader(_t("📄 Export PDF", "📄 Export PDF"))
         report_dt = (
             pd.Timestamp(data["raw_date_n"])
             if data.get("raw_date_n") is not None
@@ -4650,7 +4657,7 @@ if uploaded and restaurant_input:
         client_name_safe = str(restaurant_input).strip()
 
         st.download_button(
-            label="⬇️ Scarica PDF",
+            label=_t("⬇️ Scarica PDF", "⬇️ Télécharger le PDF"),
             data=merged_pdf_bytes,
             file_name=f"{report_prefix} - Report {client_name_safe}.pdf",
             mime="application/pdf",
@@ -4658,5 +4665,8 @@ if uploaded and restaurant_input:
 
 else:
     st.info(
-        "Importa un file Excel e inserisci il nome del cliente per generare il PDF. 📄"
+        _t(
+            "Importa un file Excel e inserisci il nome del cliente per generare il PDF. 📄",
+            "Importez un fichier Excel et saisissez le nom du client pour générer le PDF. 📄",
+        )
     )
