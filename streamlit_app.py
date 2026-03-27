@@ -3294,17 +3294,20 @@ def make_rank_bar_fig(items, value_fmt="qty", fig_h=None):
     if not items:
         return None
 
+    # APRÈS
     import textwrap
 
     labels = ["\n".join(textwrap.wrap(item[0], 22)) for item in items]
     values = [float(item[1]) for item in items]
     n = len(labels)
 
-    # Compte les lignes effectives (labels sur 2 lignes comptent double)
-    total_lines = sum(lbl.count("\n") + 1 for lbl in labels)
-    fig_h = fig_h if fig_h is not None else max(4.0, total_lines * 0.28)
+    fig_h = fig_h if fig_h is not None else max(4.0, n * 0.40)
     fig = plt.figure(figsize=(8, fig_h), facecolor=COLORS["bg"])
+    # APRÈS
     ax = fig.add_axes([0.32, 0.04, 0.58, 0.94], facecolor=COLORS["bg"])
+    ax.set_ylim(-0.5, n - 0.5)
+
+    # Barres alternees graph1 / graph2
 
     # Barres alternees graph1 / graph2
     colors = [COLORS["graph1"] if i % 2 == 0 else COLORS["graph2"] for i in range(n)]
@@ -4557,16 +4560,7 @@ if uploaded and restaurant_input:
         with rank_col_left:
             st.subheader("🏆 Top Articoli (Quantità)")
             if rank_articoli:
-                # APRÈS
-                import textwrap
-
-                def _count_lines(items, maxw=22):
-                    return sum(len(textwrap.wrap(it[0], maxw)) or 1 for it in items)
-
-                _shared_h = max(
-                    4.0,
-                    max(_count_lines(rank_articoli), _count_lines(rank_ricavi)) * 0.28,
-                )
+                _shared_h = max(4.0, max(len(rank_articoli), len(rank_ricavi)) * 0.40)
                 fig_art = make_rank_bar_fig(
                     rank_articoli, value_fmt="qty", fig_h=_shared_h
                 )
